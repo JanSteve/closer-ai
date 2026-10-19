@@ -18,19 +18,52 @@ from typing import Optional, Tuple, Dict, Any
 
 from src.closer.config import settings
 
-# Supported high-fidelity American neural voices
+# Supported high-fidelity neural voices with natural human timbre
 VOICES = {
-    "guy": "en-US-GuyNeural",        # Male: confident, elite luxury broker tone
-    "aria": "en-US-AriaNeural",      # Female: warm, consultative executive assistant
-    "jenny": "en-US-JennyNeural",    # Female: crisp, articulate
-    "christopher": "en-US-ChristopherNeural"  # Male: authoritative
+    # Female Voices (Natural, human-like, consultative)
+    "aria": "en-US-AriaNeural",                    # Default Female: Warm, consultative executive assistant
+    "jenny": "en-US-JennyNeural",                  # Crisp, natural, friendly
+    "ava": "en-US-AvaNeural",                      # Expressive, polished, highly natural
+    "emma": "en-US-EmmaMultilingualNeural",        # International luxury concierge
+    "michelle": "en-US-MichelleNeural",            # Professional, articulate
+    
+    # Male Voices (Confident, authoritative, luxury broker)
+    "guy": "en-US-GuyNeural",                      # Default Male: Confident, elite luxury broker tone
+    "christopher": "en-US-ChristopherNeural",      # Seasoned, authoritative executive
+    "brian": "en-US-BrianNeural",                  # Relaxed, natural, conversational
+    "eric": "en-US-EricNeural",                    # Friendly, approachable, high-energy
+    "andrew": "en-US-AndrewNeural",                # Warm, polished corporate advisor
+
+    # Global / Cross-Border High-Ticket Accents
+    "neerja": "en-IN-NeerjaNeural",                # Female (India): Warm executive luxury consultant
+    "prabhat": "en-IN-PrabhatNeural",              # Male (India): Professional, authoritative advisor
+    "sonia": "en-GB-SoniaNeural",                  # Female (UK): Prestigious Mayfair concierge
+    "ryan": "en-GB-RyanNeural",                    # Male (UK): Refined, polished broker
+}
+
+# Gender and Persona Aliases for seamless developer ergonomics
+VOICE_ALIASES = {
+    "female": "en-US-AriaNeural",
+    "female_warm": "en-US-AriaNeural",
+    "female_crisp": "en-US-JennyNeural",
+    "female_expressive": "en-US-AvaNeural",
+    "female_luxury": "en-US-EmmaMultilingualNeural",
+    "male": "en-US-GuyNeural",
+    "male_confident": "en-US-GuyNeural",
+    "male_authoritative": "en-US-ChristopherNeural",
+    "male_conversational": "en-US-BrianNeural",
+    "india_female": "en-IN-NeerjaNeural",
+    "india_male": "en-IN-PrabhatNeural",
+    "uk_female": "en-GB-SoniaNeural",
+    "uk_male": "en-GB-RyanNeural",
 }
 
 
 class EdgeTTSVoiceEngine:
     """
-    Synthesizes speech using Microsoft Edge Neural TTS at zero cost,
+    Synthesizes speech using Microsoft Neural TTS at zero cost with unlimited generation,
     with an automatic, resilient offline fallback (macOS 'say' / pure-Python RIFF PCM).
+    Supports male, female, and global accents with dynamic speech rates.
     """
 
     def __init__(
@@ -39,10 +72,23 @@ class EdgeTTSVoiceEngine:
         rate: Optional[str] = None,
         sample_rate: Optional[int] = None
     ):
-        self.default_voice = default_voice or settings.DEFAULT_VOICE
+        raw_voice = default_voice or settings.DEFAULT_VOICE
+        self.default_voice = self._resolve_voice_name(raw_voice)
         self.fallback_voice = settings.FALLBACK_VOICE
         self.rate = rate or settings.SPEECH_RATE
         self.sample_rate = sample_rate or settings.AUDIO_SAMPLE_RATE
+
+    @staticmethod
+    def _resolve_voice_name(voice: Optional[str]) -> str:
+        """Resolves alias or key to full neural voice ID."""
+        if not voice:
+            return "en-US-AriaNeural"
+        v_lower = voice.lower().strip()
+        if v_lower in VOICE_ALIASES:
+            return VOICE_ALIASES[v_lower]
+        if v_lower in VOICES:
+            return VOICES[v_lower]
+        return voice
 
     async def synthesize(
         self,
@@ -57,7 +103,7 @@ class EdgeTTSVoiceEngine:
         Returns (audio_bytes, latency_seconds).
         """
         start_time = time.perf_counter()
-        target_voice = voice or self.default_voice
+        target_voice = self._resolve_voice_name(voice or self.default_voice)
         target_rate = rate or self.rate
         target_sr = sample_rate or self.sample_rate
 
@@ -104,6 +150,7 @@ class EdgeTTSVoiceEngine:
         sample_rate: Optional[int] = None
     ) -> Tuple[bytes, float]:
         """Synchronous wrapper for synthesize."""
+        resolved_voice = self._resolve_voice_name(voice or self.default_voice)
         try:
             # Check if an event loop is already running in current thread
             try:
@@ -112,13 +159,19 @@ class EdgeTTSVoiceEngine:
                 loop = None
 
             if loop and loop.is_running():
-                return self._synthesize_local_fallback_with_latency(text, voice, sample_rate, output_path)
+                import concurrent.futures
+                with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
+                    future = executor.submit(
+                        asyncio.run,
+                        self.synthesize(text, output_path, resolved_voice, rate, sample_rate)
+                    )
+                    return future.result()
             
             return asyncio.run(
-                self.synthesize(text, output_path, voice, rate, sample_rate)
+                self.synthesize(text, output_path, resolved_voice, rate, sample_rate)
             )
         except Exception:
-            return self._synthesize_local_fallback_with_latency(text, voice, sample_rate, output_path)
+            return self._synthesize_local_fallback_with_latency(text, resolved_voice, sample_rate, output_path)
 
     def _ensure_wav_format(self, audio_data: bytes, target_sr: int) -> bytes:
         """Converts raw audio bytes (like MP3) to standard RIFF WAV via ffmpeg if needed."""
@@ -154,13 +207,19 @@ class EdgeTTSVoiceEngine:
         sample_rate: int = 24000
     ) -> bytes:
         """
-        Produces genuine high-quality American English speech using macOS 'say' + 'ffmpeg',
-        or standard RIFF PCM wave synthesis.
+        Produces genuine high-quality American English speech using modern macOS natural voices
+        ('Samantha', 'Shelley', 'Flo', 'Eddy') + 'ffmpeg', or standard RIFF PCM wave synthesis.
         """
-        # Determine macOS voice counterpart
-        mac_voice = "Samantha"  # Warm, professional US female voice
-        if voice and ("guy" in voice.lower() or "male" in voice.lower() or "christopher" in voice.lower()):
-            mac_voice = "Reed (English (US))"
+        # Select natural human voice on macOS
+        target_v = (voice or self.default_voice).lower()
+        if "guy" in target_v or "male" in target_v or "christopher" in target_v or "brian" in target_v or "eric" in target_v:
+            mac_voice = "Eddy (English (US))"
+        elif "flo" in target_v or "jenny" in target_v:
+            mac_voice = "Flo (English (US))"
+        elif "shelley" in target_v or "aria" in target_v or "ava" in target_v:
+            mac_voice = "Shelley (English (US))"
+        else:
+            mac_voice = "Samantha"
 
         # Try macOS native speech synthesis
         if sys.platform == "darwin":

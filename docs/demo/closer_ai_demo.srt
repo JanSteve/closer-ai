@@ -8,11 +8,11 @@ When an ultra-luxury buyer inquires on Instagram or Zillow, Closer AI ingests th
 
 3
 00:00:18,000 --> 00:00:30,000
-Sophia, our AI Inside Sales Agent, conducts an empathetic qualification conversation using zero-cost neural speech with sub-50 millisecond interruption handling.
+Hi Harrison, this is Sophia with Daniel and Associates Luxury Realty. I noticed you requested details on 10484 Bellagio Road in Bel Air. Are you looking at this as a primary residence or a private investment?
 
 4
 00:00:30,000 --> 00:00:42,000
-Closer AI gracefully handles common buyer objections, discovers the buyer's true budget and timeline, and verifies all-cash or pre-approved financing with 100% precision.
+I completely understand you're just browsing online. With off-market estates in Bel Air moving quickly, I'd love to share our private architectural portfolio whenever your timeline aligns.
 
 5
 00:00:42,000 --> 00:00:53,000

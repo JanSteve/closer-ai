@@ -161,8 +161,21 @@ HTML_TEMPLATE = """<!DOCTYPE html>
         <!-- Live Voice/Chat Simulator -->
         <div class="card">
             <div class="card-title">
-                <span>Live Voice Call Simulator (Sophia ISA)</span>
-                <span class="badge" style="background:rgba(16,185,129,0.15); color:var(--emerald); border-color:var(--emerald)">CALL ACTIVE</span>
+                <span>Live Voice Call Simulator</span>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <select id="voiceSelect" style="background:#0c111d; color:#60a5fa; border:1px solid #3b82f6; border-radius:6px; padding:5px 8px; font-size:12px; font-weight:600; outline:none; cursor:pointer;">
+                        <option value="en-US-AriaNeural" selected>👩 Sophia (US Female - Warm Consultative)</option>
+                        <option value="en-US-GuyNeural">👨 Guy (US Male - Confident Luxury Broker)</option>
+                        <option value="en-US-JennyNeural">👩 Jenny (US Female - Crisp Natural)</option>
+                        <option value="en-US-ChristopherNeural">👨 Christopher (US Male - Authoritative)</option>
+                        <option value="en-US-AvaNeural">👩 Ava (US Female - Expressive Concierge)</option>
+                        <option value="en-US-BrianNeural">👨 Brian (US Male - Casual Partner)</option>
+                        <option value="en-IN-NeerjaNeural">👩 Neerja (India Female - Executive)</option>
+                        <option value="en-IN-PrabhatNeural">👨 Prabhat (India Male - Senior Advisor)</option>
+                    </select>
+                    <button class="btn" style="padding:4px 10px; font-size:11px;" onclick="testVoiceSample()">🔊 Test Voice</button>
+                    <span class="badge" style="background:rgba(16,185,129,0.15); color:var(--emerald); border-color:var(--emerald)">CALL ACTIVE</span>
+                </div>
             </div>
             <div class="chat-box" id="chatBox">
                 <div class="msg agent">
@@ -309,11 +322,47 @@ HTML_TEMPLATE = """<!DOCTYPE html>
             sendTurn();
         }
 
+        async function testVoiceSample() {
+            const voice = document.getElementById('voiceSelect').value;
+            const voiceLabel = document.getElementById('voiceSelect').selectedOptions[0].text;
+            const chat = document.getElementById('chatBox');
+            chat.innerHTML += `
+                <div class="msg agent" style="background:#1e293b; border-left:3px solid #f59e0b;">
+                    <div class="msg-meta">Previewing Voice • ${voiceLabel}</div>
+                    <em>"Hello, this is CLOSER AI luxury real estate concierge. How can I assist you with your estate search today?"</em>
+                </div>
+            `;
+            chat.scrollTop = chat.scrollHeight;
+
+            try {
+                const res = await fetch('/api/turn', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        utterance: "PREVIEW_SAMPLE",
+                        voice: voice
+                    })
+                });
+                const data = await res.json();
+                if (data.audio_base64) {
+                    const audio = document.getElementById('audioPlayer');
+                    audio.src = "data:audio/wav;base64," + data.audio_base64;
+                    audio.style.display = "block";
+                    audio.play().catch(e => console.log('Autoplay prevented'));
+                }
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
         async function sendTurn() {
             const input = document.getElementById('userInput');
             const val = input.value.trim();
             if (!val) return;
             input.value = '';
+
+            const voice = document.getElementById('voiceSelect').value;
+            const voiceLabel = document.getElementById('voiceSelect').selectedOptions[0].text.split('(')[0].trim();
 
             const chat = document.getElementById('chatBox');
             chat.innerHTML += `
@@ -328,13 +377,13 @@ HTML_TEMPLATE = """<!DOCTYPE html>
                 const res = await fetch('/api/turn', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({utterance: val})
+                    body: JSON.stringify({utterance: val, voice: voice})
                 });
                 const data = await res.json();
                 
                 chat.innerHTML += `
                     <div class="msg agent">
-                        <div class="msg-meta">Sophia (Daniel & Associates ISA) • Voice Synthesized</div>
+                        <div class="msg-meta">${voiceLabel} (Daniel & Associates ISA) • Voice Synthesized (24kHz)</div>
                         ${data.reply}
                     </div>
                 `;
@@ -405,9 +454,14 @@ class DashboardHTTPHandler(http.server.BaseHTTPRequestHandler):
             body = self.rfile.read(length).decode("utf-8")
             data = json.loads(body) if body else {}
             utterance = data.get("utterance", "")
+            target_voice = data.get("voice", "en-US-AriaNeural")
 
-            reply = self.conversation_engine.process_user_turn(utterance)
-            audio_bytes, _ = self.tts_engine.synthesize_sync(reply)
+            if utterance == "PREVIEW_SAMPLE":
+                reply = "Hello, this is CLOSER AI luxury real estate concierge. How can I assist you with your estate search today?"
+            else:
+                reply = self.conversation_engine.process_user_turn(utterance)
+
+            audio_bytes, _ = self.tts_engine.synthesize_sync(reply, voice=target_voice)
             audio_b64 = base64.b64encode(audio_bytes).decode("utf-8")
 
             dossier = self.conversation_engine.export_dossier()

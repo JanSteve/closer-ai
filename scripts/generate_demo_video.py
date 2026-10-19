@@ -426,30 +426,52 @@ def generate_video():
     render_scene_6(frame_files[5])
     print(f" -> Successfully rendered {len(frame_files)} high-resolution 1080p frames.")
 
-    # Narration Scripts for each scene
-    narrations = [
-        "Welcome to Closer AI, the autonomous voice-native real estate lead qualification engine. In luxury real estate, calling leads within minutes determines who wins the listing.",
-        "When an ultra-luxury buyer inquires on Instagram or Zillow, Closer AI ingests the lead and initiates an outbound carrier phone call in under 500 milliseconds.",
-        "Sophia, our AI Inside Sales Agent, conducts an empathetic qualification conversation using zero-cost neural speech with sub-50 millisecond interruption handling.",
-        "Closer AI gracefully handles common buyer objections, discovers the buyer's true budget and timeline, and verifies all-cash or pre-approved financing with 100% precision.",
-        "Once qualified, Closer AI checks the broker's Google Calendar, books a confirmed private tour, syncs the dossier to Follow Up Boss, and sends an instant SMS invite.",
-        "Engineered by R Jan Steve Daniel. Production ready, open source on GitHub, and built to scale top-producing brokerages worldwide."
+    # Narration Scripts & Voice Pairings (Male Narrator Guy + Female Sophia ISA Aria)
+    scenes_data = [
+        (
+            "Welcome to Closer AI, the autonomous voice-native real estate lead qualification engine. In luxury real estate, calling leads within minutes determines who wins the listing.",
+            "en-US-GuyNeural",
+            9.0
+        ),
+        (
+            "When an ultra-luxury buyer inquires on Instagram or Zillow, Closer AI ingests the lead and initiates an outbound carrier phone call in under 500 milliseconds.",
+            "en-US-GuyNeural",
+            9.0
+        ),
+        (
+            "Hi Harrison, this is Sophia with Daniel and Associates Luxury Realty. I noticed you requested details on 10484 Bellagio Road in Bel Air. Are you looking at this as a primary residence or a private investment?",
+            "en-US-AriaNeural",
+            12.0
+        ),
+        (
+            "I completely understand you're just browsing online. With off-market estates in Bel Air moving quickly, I'd love to share our private architectural portfolio whenever your timeline aligns.",
+            "en-US-AriaNeural",
+            12.0
+        ),
+        (
+            "Once qualified, Closer AI checks the broker's Google Calendar, books a confirmed private tour, syncs the dossier to Follow Up Boss, and sends an instant SMS invite.",
+            "en-US-GuyNeural",
+            11.0
+        ),
+        (
+            "Engineered by R Jan Steve Daniel. Production ready, open source on GitHub, and built to scale top-producing brokerages worldwide.",
+            "en-US-GuyNeural",
+            7.0
+        )
     ]
 
     tts = EdgeTTSVoiceEngine()
     audio_files = []
-    print("\n[+] Synthesizing Voice Narration Soundtrack...")
-    for idx, text in enumerate(narrations, 1):
-        a_path = str(DEMO_DIR / f"audio_scene_{idx}.wav")
-        tts.synthesize_sync(text, output_path=a_path, voice="en-US-GuyNeural")
-        audio_files.append(a_path)
-        print(f" -> Synthesized narration for Scene {idx}")
-
-    # Build Subtitle timeline
-    scene_durations = [9.0, 9.0, 12.0, 12.0, 11.0, 7.0]  # Total: 60.0s
     scenes = []
     cur = 0.0
-    for dur, text in zip(scene_durations, narrations):
+
+    print("\n[+] Synthesizing Ultra-Natural Neural Soundtrack (Male & Female)...")
+    for idx, (text, voice_name, dur) in enumerate(scenes_data, 1):
+        a_path = str(DEMO_DIR / f"audio_scene_{idx}.wav")
+        gender_label = "Female (Sophia)" if "Aria" in voice_name else "Male (Narrator)"
+        print(f" -> Synthesizing Scene {idx} [{gender_label}]: {voice_name}")
+        tts.synthesize_sync(text, output_path=a_path, voice=voice_name)
+        audio_files.append(a_path)
         scenes.append((cur, cur + dur, text))
         cur += dur
 
@@ -469,6 +491,8 @@ def generate_video():
         "-i", str(audio_list_file), "-c", "copy", master_audio
     ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
     print(f" -> Merged master narration audio: {master_audio}")
+
+    scene_durations = [item[2] for item in scenes_data]
 
     # Create image slideshow input
     # Each image shown for its scene duration
