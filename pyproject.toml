@@ -1,0 +1,76 @@
+[build-system]
+requires = ["setuptools>=65.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "closer-ai"
+version = "1.0.0"
+description = "Autonomous Voice-Native Real Estate Lead Qualification Engine"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+authors = [
+    { name = "R Jan Steve Daniel", email = "steve@stevedaniel.me" }
+]
+keywords = [
+    "real-estate",
+    "voice-ai",
+    "inside-sales-agent",
+    "lead-qualification",
+    "edge-tts",
+    "luxury-realty",
+    "speed-to-lead"
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Financial and Insurance Industry",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Communications :: Telephony",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence"
+]
+
+dependencies = [
+    "fastapi>=0.110.0",
+    "uvicorn>=0.28.0",
+    "pydantic>=2.6.0",
+    "edge-tts>=6.1.10",
+    "python-dotenv>=1.0.1",
+    "httpx>=0.27.0",
+    "rich>=13.7.0",
+    "typer>=0.9.0"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.5",
+    "streamlit>=1.32.0",
+    "twilio>=9.0.0",
+    "groq>=0.5.0"
+]
+
+[project.scripts]
+closer = "closer.cli.main:main"
+
+[project.urls]
+Homepage = "https://github.com/JanSteve/closer-ai"
+Documentation = "https://github.com/JanSteve/closer-ai#readme"
+Repository = "https://github.com/JanSteve/closer-ai.git"
+Portfolio = "https://www.stevedaniel.me"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+addopts = "-v --tb=short"
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+asyncio_mode = "auto"

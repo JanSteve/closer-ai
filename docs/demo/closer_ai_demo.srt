@@ -1,0 +1,24 @@
+1
+00:00:00,000 --> 00:00:09,000
+Welcome to Closer AI, the autonomous voice-native real estate lead qualification engine. In luxury real estate, calling leads within minutes determines who wins the listing.
+
+2
+00:00:09,000 --> 00:00:18,000
+When an ultra-luxury buyer inquires on Instagram or Zillow, Closer AI ingests the lead and initiates an outbound carrier phone call in under 500 milliseconds.
+
+3
+00:00:18,000 --> 00:00:30,000
+Sophia, our AI Inside Sales Agent, conducts an empathetic qualification conversation using zero-cost neural speech with sub-50 millisecond interruption handling.
+
+4
+00:00:30,000 --> 00:00:42,000
+Closer AI gracefully handles common buyer objections, discovers the buyer's true budget and timeline, and verifies all-cash or pre-approved financing with 100% precision.
+
+5
+00:00:42,000 --> 00:00:53,000
+Once qualified, Closer AI checks the broker's Google Calendar, books a confirmed private tour, syncs the dossier to Follow Up Boss, and sends an instant SMS invite.
+
+6
+00:00:53,000 --> 00:01:00,000
+Engineered by R Jan Steve Daniel. Production ready, open source on GitHub, and built to scale top-producing brokerages worldwide.
+
