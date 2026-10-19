@@ -21,6 +21,7 @@ from src.closer.config import settings
 # Supported high-fidelity neural voices with natural human timbre
 VOICES = {
     # Female Voices (Natural, human-like, consultative)
+    "sophia": "en-US-AriaNeural",                  # Primary Concierge persona
     "aria": "en-US-AriaNeural",                    # Default Female: Warm, consultative executive assistant
     "jenny": "en-US-JennyNeural",                  # Crisp, natural, friendly
     "ava": "en-US-AvaNeural",                      # Expressive, polished, highly natural
@@ -43,6 +44,7 @@ VOICES = {
 
 # Gender and Persona Aliases for seamless developer ergonomics
 VOICE_ALIASES = {
+    "sophia": "en-US-AriaNeural",
     "female": "en-US-AriaNeural",
     "female_warm": "en-US-AriaNeural",
     "female_crisp": "en-US-JennyNeural",
@@ -223,36 +225,34 @@ class EdgeTTSVoiceEngine:
 
         # Try macOS native speech synthesis
         if sys.platform == "darwin":
+            wav_path = None
             try:
-                with tempfile.NamedTemporaryFile(suffix=".aiff", delete=False) as tf_aiff:
-                    aiff_path = tf_aiff.name
-                wav_path = aiff_path.replace(".aiff", ".wav")
+                with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tf_wav:
+                    wav_path = tf_wav.name
                 
-                # Run say command
-                say_cmd = ["say", "-v", mac_voice, "-r", "185", text, "-o", aiff_path]
+                # Run say command directly producing standard 16-bit PCM WAV at requested sample rate
+                say_cmd = [
+                    "say", "-v", mac_voice,
+                    "--file-format=WAVE",
+                    f"--data-format=LEI16@{sample_rate}",
+                    "-r", "185",
+                    text,
+                    "-o", wav_path
+                ]
                 res = subprocess.run(say_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=5)
                 
-                if res.returncode == 0 and os.path.exists(aiff_path) and os.path.getsize(aiff_path) > 0:
-                    # Convert to exact WAV sample rate (24000 or 48000 Hz)
-                    ff_cmd = [
-                        "ffmpeg", "-y", "-i", aiff_path,
-                        "-ar", str(sample_rate), "-ac", "1",
-                        "-c:a", "pcm_s16le", "-f", "wav", wav_path
-                    ]
-                    ff_res = subprocess.run(ff_cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=5)
-                    if ff_res.returncode == 0 and os.path.exists(wav_path):
-                        with open(wav_path, "rb") as f:
-                            data = f.read()
-                        return data
+                if res.returncode == 0 and os.path.exists(wav_path) and os.path.getsize(wav_path) > 0:
+                    with open(wav_path, "rb") as f:
+                        data = f.read()
+                    return data
             except Exception:
                 pass
             finally:
-                for p in (aiff_path, wav_path):
-                    if 'p' in locals() and os.path.exists(p):
-                        try:
-                            os.remove(p)
-                        except OSError:
-                            pass
+                if wav_path and os.path.exists(wav_path):
+                    try:
+                        os.remove(wav_path)
+                    except OSError:
+                        pass
 
         # Pure Python RIFF PCM Waveform Generator fallback
         word_count = len(text.split())

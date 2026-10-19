@@ -41,12 +41,54 @@ Your goal is to conduct an empathetic, elite qualification conversation, handle 
 - OBJECTION: "How did you get my phone number so fast?"
   RESPONSE: "You had just requested VIP details on our Instagram showcase a moment ago, and our team prides itself on concierge-level responsiveness! I just wanted to see what caught your eye."
 
+# AUTONOMOUS RATIONAL CONCIERGE & DYNAMIC SCRIPT DEVIATION PROTOCOL:
+When a client deviates from the rigid script (e.g., schedule constraints, busy friction, meeting):
+1. RESPECT CLIENT TIME: Never force canned qualification questions or sales pitches when the client signals friction.
+2. EMPATHETIC VALIDATION: Warmly validate their busy schedule with poise and discretion ("I completely understand and respect your schedule").
+3. RATIONAL LOW-FRICTION ALTERNATIVES:
+   - If today is not good and they defer to tomorrow ("today is not good, I will come tomorrow"):
+     Warmly accommodate their request, validate tomorrow for a private walkthrough, and offer morning (11:00 AM) vs. afternoon (2:00 PM) windows.
+   - If busy, in a meeting, driving, or asking for later contact ("I am busy right now, contact me later", "I'm in a meeting"):
+     Politely respect their time and offer two frictionless options: a quick 2-minute callback window or sending the private VIP brochure/dossier via SMS or WhatsApp to browse at their convenience.
+   - If they select SMS or WhatsApp:
+     Confirm immediate dispatch of high-resolution photos and floor plans to their mobile.
+4. DOSSIER CONTINUITY:
+   Seamlessly capture requested timeframes, tour appointments, or follow-up notes in the buyer dossier without breaking conversational coherence.
+
 # BOOKING CONFIRMATION PROTOCOL:
 When the client agrees to a time:
 1. Reiterate the date and time in Pacific Time (PST).
 2. Confirm the best email address for the calendar invite and gate code.
 3. Warm sign-off: "{settings.REALTOR_NAME} is looking forward to meeting you. Have a wonderful rest of your day!"
 """
+
+FRICTION_PLAYBOOK = {
+    "schedule_friction_tomorrow": {
+        "pattern": r"(today\s*(is\s*(not|no\s*good|bad|a\s*wash)|isn'?t|won'?t\s*work|doesn'?t\s*work)|not\s*today|can'?t\s*(do|make\s*it)\s*today|busy\s*today).*(tomorrow|next\s*day)|(come|tour|see\s*it|visit)\s*tomorrow|tomorrow\s*(is\s*better|works?\s*better)",
+        "response": "I completely understand and respect your schedule! Tomorrow would be wonderful for a private tour. Would morning around 11:00 AM or afternoon at 2:00 PM suit you better?",
+        "handled_tag": "Accommodated schedule friction; offered tomorrow morning vs. afternoon showing slots."
+    },
+    "call_tomorrow": {
+        "pattern": r"\b(call(\s*me|\s*back)?\s*tomorrow|reach\s*out\s*tomorrow|talk\s*tomorrow|connect\s*tomorrow)\b",
+        "response": "I completely understand and respect your schedule! Tomorrow would be great to reconnect. Would morning around 11:00 AM or afternoon around 2:00 PM be best for a quick 2-minute call, or shall I text our VIP brochure in the meantime?",
+        "handled_tag": "Accommodated call deferral to tomorrow; offered morning vs afternoon callback windows."
+    },
+    "busy_call_later": {
+        "pattern": r"\b(busy(\s*right\s*now)?|in\s*a\s*(?:[\w-]+\s*)*meeting|in\s*a\s*conference|with\s*a\s*client|in\s*the\s*middle\s*of\s*something|tied\s*up|working|at\s*work|driving|on\s*a\s*call|can'?t\s*(talk|speak|chat)(\s*right\s*now)?|contact\s*me\s*later|call(\s*me|\s*back)?\s*later|not\s*a\s*good\s*time|bad\s*time)\b",
+        "response": "I completely respect your time and won't keep you while you're busy! Would you prefer a quick 2-minute callback later today, or shall I text our private VIP brochure via SMS or WhatsApp for you to review at your convenience?",
+        "handled_tag": "Respected client time constraint; offered callback window or async SMS/WhatsApp brochure."
+    },
+    "colloquial_brush_off": {
+        "pattern": r"(today('?s|\s+is)\s+a\s+wash|catch\s*(you|ya)\s*(on\s*the\s*flip\s*side|later)|rain\s*check|not\s*in\s*the\s*cards|plate\s*is\s*full|swamped|crazy\s*busy)",
+        "response": "I completely understand — let's definitely take a rain check! I'll follow up when things settle down. In the meantime, would you like me to text our private VIP brochure over SMS or WhatsApp so you can review at your leisure?",
+        "handled_tag": "Handled colloquial schedule friction; offered async VIP brochure and follow-up."
+    },
+    "async_sms_whatsapp": {
+        "pattern": r"\b(sms|text\s*(it|me|the\s*details|info|brochure)?|whats\s*app|whatsapp|send\s*(it|info|details|brochure|dossier)\s*(to|via|on)?\s*(my\s*)?(phone|mobile|whatsapp|sms)?)\b",
+        "response": "I'll text our private VIP brochure with high-resolution photography, floor plans, and pricing directly to your mobile right now. Feel free to text back whenever you'd like to arrange a private showing!",
+        "handled_tag": "Dispatched private VIP brochure via SMS/WhatsApp as requested."
+    }
+}
 
 OBJECTION_PLAYBOOK = {
     "just_browsing": {

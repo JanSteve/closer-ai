@@ -158,6 +158,10 @@ class BuyerDossier(_PydanticBaseModel):
     appointment_type: Optional[str] = None  # private_vip_tour, zoom_buyer_strategy, phone_consultation
     appointment_notes: Optional[str] = None
     
+    # Follow-up & Concierge Notes
+    follow_up_note: Optional[str] = None
+    preferred_channel: Optional[str] = None  # phone, sms, whatsapp, email
+    
     # Call Metrics
     call_duration_seconds: int = 0
     total_turns: int = 0
