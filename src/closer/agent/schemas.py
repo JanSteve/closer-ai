@@ -96,12 +96,13 @@ except ImportError:
 
 
 class InboundLead(_PydanticBaseModel):
-    """Represents an inbound real estate lead captured from ads, Zillow, or webhooks."""
+    """Represents an inbound lead captured from ads, portal inquiries, or customer care webhooks."""
     lead_id: str
-    source: str = "instagram_ad"  # instagram_ad, zillow, website_webhook, referral
+    source: str = "instagram_ad"  # instagram_ad, zillow, 99acres, magicbricks, website_webhook, referral
     full_name: str
     phone_number: str
     email: Optional[str] = None
+    market_region: str = "USA"  # "USA" or "INDIA"
     ad_campaign: Optional[str] = "Luxury Estates Showcase - Bel Air & Beverly Hills"
     listing_address: Optional[str] = "10484 Bellagio Rd, Bel Air, CA"
     listing_price: Optional[int] = 6850000
@@ -120,28 +121,37 @@ class ObjectionRecord(_PydanticBaseModel):
 
 class BuyerDossier(_PydanticBaseModel):
     """
-    Extracted qualification profile of the real estate lead.
-    Matches the prompt's required specification:
-    full_name, phone_number, budget_min, budget_max, pre_approved (bool),
-    timeframe (str), qualified (bool), appointment_datetime (optional).
+    Extracted qualification profile of the lead / customer.
+    Supports both US luxury real estate and Indian customer care & lead qualification.
     """
     full_name: Optional[str] = None
     phone_number: Optional[str] = None
     email: Optional[str] = None
+    market_region: str = "USA"  # "USA" or "INDIA"
+    customer_type: str = "lead"  # "lead", "existing_customer", "support_query", "vip_investor"
     
-    # Financial Capacity
+    # Financial Capacity & Currency
     budget_min: Optional[int] = None
     budget_max: Optional[int] = None
-    budget_currency: str = "USD"
+    budget_currency: str = "USD"  # "USD" or "INR"
+    budget_inr_text: Optional[str] = None  # e.g., "₹1.5 - ₹2.5 Crores", "₹85 Lakhs"
     pre_approved: Optional[bool] = None
     lender_name: Optional[str] = None
-    financing_type: str = "conventional"  # cash, jumbo_loan, conventional, private_banking
+    financing_type: str = "conventional"  # cash, jumbo_loan, conventional, private_banking, home_loan_sbi_hdfc
     
-    # Timeline & Property Preferences
+    # Timeline & Property / Service Preferences
     timeframe: Optional[str] = None  # immediate, 1-3_months, 3-6_months, 6-12_months, browsing
-    property_type: Optional[str] = None  # single_family, penthouse, architectural, gated_estate
+    property_type: Optional[str] = None  # single_family, penthouse, architectural, gated_estate, apartment, villa
+    bhk_preference: Optional[str] = None  # 1 BHK, 2 BHK, 3 BHK, 4 BHK, Villa, Penthouse
     target_locations: List[str] = Field(default_factory=list)
     bedroom_min: Optional[int] = None
+    
+    # Indian Customer Care & Support Management
+    ticket_id: Optional[str] = None  # e.g., "CC-98214"
+    query_type: Optional[str] = None  # "pricing", "rera_status", "complaint", "order_status", "site_visit"
+    query_resolved: bool = False
+    whatsapp_dispatched: bool = False
+    whatsapp_status: Optional[str] = None  # "sent", "queued", "requested"
     
     # Qualification Status
     intent_score: int = 50  # 0 to 100

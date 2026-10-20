@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Intelligence Designed To Evolve</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/webp" href="assets/logo.webp" />
+
+  <!-- 1. Inter UI Font (Google Fonts) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- 2. BubbledotICG-FinePos Primary Display Font (OnlineWebFonts CDN) -->
+  <link
+    href="https://db.onlinewebfonts.com/c/8cb707a9b8a73f8a7403336b861c3074?family=BubbledotICG-FinePos"
+    rel="stylesheet"
+  />
+
+  <!-- 4. Font Awesome 6.5.2 (Enterprise Brand Icons) -->
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  />
+
+  <!-- Local Styles -->
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body id="home">
+  <!-- Full-viewport cover video background -->
+  <div class="bg">
+    <video class="bg-video" autoplay muted loop playsinline>
+      <source
+        src="https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260809_012548_ef22562c-c0ae-4816-ad9d-f8922af4e6a7.mp4"
+        type="video/mp4"
+      />
+    </video>
+  </div>
+
+  <!-- Mobile Overlay & White Sheet Menu -->
+  <div class="mobile-overlay" id="mobileOverlay" hidden></div>
+  <div class="mobile-sheet" id="mobileSheet" hidden>
+    <nav class="mobile-nav" aria-label="Mobile Navigation">
+      <a href="#home" class="mobile-nav-link active">Home</a>
+      <a href="#product" class="mobile-nav-link" id="mobileProductLink">Product</a>
+      <a href="#how-it-works" class="mobile-nav-link">How It Works</a>
+      <a href="#markets" class="mobile-nav-link">USA &amp; India</a>
+      <a href="#cases" class="mobile-nav-link">Case Studies</a>
+      <a href="#contact" class="mobile-nav-link">Contact</a>
+    </nav>
+    <a href="/console" class="mobile-signin-btn" id="mobileSignInBtn">Sign in</a>
+  </div>
+
+  <!-- Single-Viewport Page Composition (3 Regions: Header, Hero, Stats) -->
+  <div class="page">
+    <!-- 1. Header (desktop + mobile burger) -->
+    <header class="header" id="mainHeader">
+      <a href="#home" class="logo-btn" aria-label="CLOSER AI">
+        <img src="assets/logo.webp" alt="" width="52" height="52" />
+      </a>
+
+      <nav class="nav-pill" aria-label="Primary Navigation">
+        <a href="#home" class="nav-link active">Home</a>
+        <a href="#product" class="nav-link" id="navProductLink">Product</a>
+        <a href="#cases" class="nav-link">Case Studies</a>
+        <a href="#contact" class="nav-link">Contact</a>
+      </nav>
+
+      <a href="/console" class="btn-signin btn-signin-desktop" id="desktopSignInBtn">Sign in</a>
+
+      <button class="burger-btn" id="burgerBtn" aria-label="Toggle navigation menu" aria-expanded="false">
+        <span class="burger-bar"></span>
+        <span class="burger-bar"></span>
+        <span class="burger-bar"></span>
+      </button>
+    </header>
+
+    <!-- 2. Hero (center) -->
+    <main class="hero">
+      <!-- Trust row: 3 overlapping avatar rings + trust pill -->
+      <div class="trust-row anim" style="--d: 0.05s;">
+        <div class="avatar-group">
+          <div class="avatar a1">
+            <div class="avatar-inner">
+              <i class="fa-brands fa-microsoft"></i>
+            </div>
+          </div>
+          <div class="avatar a2">
+            <div class="avatar-inner">
+              <i class="fa-brands fa-amazon"></i>
+            </div>
+          </div>
+          <div class="avatar a3">
+            <div class="avatar-inner">
+              <i class="fa-brands fa-google"></i>
+            </div>
+          </div>
+        </div>
+        <div class="trust-pill">
+          <span>Trusted by 2000+ Enterprises</span>
+        </div>
+      </div>
+
+      <!-- Headline: exact two lines, solid white, BubbledotICG-FinePos -->
+      <h1 class="headline anim">
+        <span class="headline-line">Intelligence</span>
+        <span class="headline-line">Designed To Evolve</span>
+      </h1>
+
+      <!-- Subhead: exact copy -->
+      <p class="subhead anim" style="--d: 0.28s;">
+        Build applications that reason, adapt and collaborate using a modular
+        AI platform designed for production.
+      </p>
+
+      <!-- CTA -->
+      <div class="hero-actions anim" style="--d: 0.4s;">
+        <button class="cta-btn" id="ctaBtn">
+          Get Started
+        </button>
+        <a href="#product" class="cta-secondary-btn" id="exploreBtn">
+          <span>Explore Architecture</span>
+          <i class="fa-solid fa-arrow-down"></i>
+        </a>
+      </div>
+
+      <!-- Floating subtle scroll down cue -->
+      <a href="#product" class="scroll-down-hint anim" style="--d: 0.48s;" aria-label="Scroll to discover CLOSER AI">
+        <i class="fa-solid fa-chevron-down"></i>
+      </a>
+    </main>
+
+    <!-- 3. Stats footer (exact 4 metrics) -->
+    <footer class="stats-footer">
+      <div class="stats-grid">
+        <div class="stat-card anim" style="--d: 0.5s;" data-glyph="<" data-target="120" data-suffix="ms" data-decimals="0">
+          <div class="stat-icon">&lt;</div>
+          <div class="stat-content">
+            <div class="stat-value"><span class="count">0</span><span class="suffix">ms</span></div>
+            <div class="stat-label">Inference Time</div>
+          </div>
+        </div>
+
+        <div class="stat-card anim" style="--d: 0.58s;" data-glyph="%" data-target="99.99" data-suffix="%" data-decimals="2">
+          <div class="stat-icon">%</div>
+          <div class="stat-content">
+            <div class="stat-value"><span class="count">0</span><span class="suffix">%</span></div>
+            <div class="stat-label">Platform Uptime</div>
+          </div>
+        </div>
+
+        <div class="stat-card anim" style="--d: 0.66s;" data-glyph="*" data-target="24" data-suffix="/7" data-decimals="0">
+          <div class="stat-icon">*</div>
+          <div class="stat-content">
+            <div class="stat-value"><span class="count">0</span><span class="suffix">/7</span></div>
+            <div class="stat-label">Autonomous Runtime</div>
+          </div>
+        </div>
+
+        <div class="stat-card anim" style="--d: 0.74s;" data-glyph="#" data-target="2.4" data-suffix="M" data-decimals="1">
+          <div class="stat-icon">#</div>
+          <div class="stat-content">
+            <div class="stat-value"><span class="count">0</span><span class="suffix">M</span></div>
+            <div class="stat-label">Context Windows</div>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- EXTENDED PRODUCT PRESENTATION (UNIFIED DOT-MATRIX OBSIDIAN LUXURY)        -->
+  <!-- ========================================================================= -->
+
+  <div class="extended-content">
+
+    <!-- 1. Executive Product Overview -->
+    <section class="section" id="product">
+      <div class="section-container">
+        <div class="section-tag-wrap reveal">
+          <span class="section-tag-pill">
+            <span class="tag-glyph display-font">*</span>
+            <span>AUTONOMOUS VOICE CONCIERGE PLATFORM</span>
+          </span>
+        </div>
+        <h2 class="section-title reveal display-font">Conversational Telephony Engineered for High-Stakes Conversions</h2>
+        <p class="section-desc reveal">
+          Traditional IVRs and generic bots lose 68% of inbound high-ticket buyers within 15 seconds. 
+          CLOSER AI combines sub-120ms neural latency, acoustic voice activity detection (VAD), and deterministic 
+          Pydantic dossiers to close showings, resolve grievances, and sync pipelines 24/7.
+        </p>
+
+        <div class="pillars-grid">
+          <div class="pillar-card reveal">
+            <div class="pillar-glyph display-font">&lt;</div>
+            <h3 class="pillar-title">Sub-120ms Neural Latency</h3>
+            <p class="pillar-text">
+              Edge-streamed audio synthesis with real-time acoustic barge-in. Callers experience immediate, human-cadenced replies with natural breath pauses and zero mechanical hesitation.
+            </p>
+            <div class="pillar-stat">
+              <span class="stat-num display-font">118ms</span>
+              <span class="stat-sub">Carrier WebRTC Speed</span>
+            </div>
+          </div>
+
+          <div class="pillar-card reveal" style="--stagger: 0.12s;">
+            <div class="pillar-glyph display-font">#</div>
+            <h3 class="pillar-title">Deterministic Pydantic Dossiers</h3>
+            <p class="pillar-text">
+              Zero generative hallucination. Every lead profile is strictly extracted into typed schemas verifying budgets ($5M+ or ₹ Crores), pre-approval terms, timeline urgency, and RERA compliance.
+            </p>
+            <div class="pillar-stat">
+              <span class="stat-num display-font">100%</span>
+              <span class="stat-sub">Strict Schema Accuracy</span>
+            </div>
+          </div>
+
+          <div class="pillar-card reveal" style="--stagger: 0.24s;">
+            <div class="pillar-glyph display-font">*</div>
+            <h3 class="pillar-title">Autonomous Action &amp; WhatsApp</h3>
+            <p class="pillar-text">
+              Locks showing slots directly onto Google Calendar with collision avoidance, creates customer support tickets (#CC-84291), and dispatches branded WhatsApp brochures instantly.
+            </p>
+            <div class="pillar-stat">
+              <span class="stat-num display-font">&lt; 2s</span>
+              <span class="stat-sub">Instant Booking &amp; Dispatch</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. How It Works: 4-Stage Architectural Pipeline -->
+    <section class="section section-dark" id="how-it-works">
+      <div class="section-container">
+        <div class="section-tag-wrap reveal">
+          <span class="section-tag-pill">
+            <span class="tag-glyph display-font">//</span>
+            <span>SYSTEM ARCHITECTURE</span>
+          </span>
+        </div>
+        <h2 class="section-title reveal display-font">The 4-Stage Autonomous Telephony Pipeline</h2>
+        <p class="section-desc reveal">
+          How CLOSER AI moves from an incoming carrier webhook to a verified CRM showing in under 90 seconds.
+        </p>
+
+        <div class="pipeline-track">
+          <div class="pipeline-step reveal">
+            <div class="step-num display-font">01</div>
+            <div class="step-icon-wrap">
+              <i class="fa-solid fa-phone-volume"></i>
+            </div>
+            <h4 class="step-title">Instant Carrier Trigger</h4>
+            <p class="step-text">
+              SIP Trunk or Webhook via Twilio/LiveKit connects in &lt;500ms. Identifies inbound caller profile and retrieves existing CRM context.
+            </p>
+            <span class="step-meta display-font">&lt; 500ms Handshake</span>
+          </div>
+
+          <div class="pipeline-connector reveal">
+            <div class="connector-line"></div>
+            <div class="connector-dot"></div>
+          </div>
+
+          <div class="pipeline-step reveal" style="--stagger: 0.1s;">
+            <div class="step-num display-font">02</div>
+            <div class="step-icon-wrap">
+              <i class="fa-solid fa-wave-square"></i>
+            </div>
+            <h4 class="step-title">Neural Acoustic VAD</h4>
+            <p class="step-text">
+              Continuous multi-band energy monitoring detects user speech, background ambient noise, and barge-in interruptions dynamically.
+            </p>
+            <span class="step-meta display-font">-24 dBFS Sensitivity</span>
+          </div>
+
+          <div class="pipeline-connector reveal" style="--stagger: 0.15s;">
+            <div class="connector-line"></div>
+            <div class="connector-dot"></div>
+          </div>
+
+          <div class="pipeline-step reveal" style="--stagger: 0.2s;">
+            <div class="step-num display-font">03</div>
+            <div class="step-icon-wrap">
+              <i class="fa-solid fa-comments"></i>
+            </div>
+            <h4 class="step-title">Empathetic Negotiation</h4>
+            <p class="step-text">
+              Handles hesitation ("In a meeting", "Is price firm?") with genuine respect. Tactfully validates liquid cash or RERA status without friction.
+            </p>
+            <span class="step-meta display-font">Zero Script Deviation</span>
+          </div>
+
+          <div class="pipeline-connector reveal" style="--stagger: 0.25s;">
+            <div class="connector-line"></div>
+            <div class="connector-dot"></div>
+          </div>
+
+          <div class="pipeline-step reveal" style="--stagger: 0.3s;">
+            <div class="step-num display-font">04</div>
+            <div class="step-icon-wrap">
+              <i class="fa-brands fa-whatsapp"></i>
+            </div>
+            <h4 class="step-title">Calendar &amp; WhatsApp Lock</h4>
+            <p class="step-text">
+              Reserves Google Calendar slot with collision guard and sends WhatsApp PDF brochure, confirmation code, and CRM webhook update.
+            </p>
+            <span class="step-meta display-font">Deterministic Closure</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. How to Use: Step-by-Step Playbook -->
+    <section class="section" id="how-to-use">
+      <div class="section-container">
+        <div class="section-tag-wrap reveal">
+          <span class="section-tag-pill">
+            <span class="tag-glyph display-font">&gt;</span>
+            <span>DEPLOYMENT PLAYBOOK</span>
+          </span>
+        </div>
+        <h2 class="section-title reveal display-font">How to Use CLOSER AI in Production</h2>
+        <p class="section-desc reveal">
+          Four straightforward steps to connect your brokerage or customer support center in minutes.
+        </p>
+
+        <div class="guide-grid">
+          <div class="guide-card reveal">
+            <div class="guide-num display-font">01</div>
+            <div class="guide-content">
+              <h3>Connect Telephony Trunk</h3>
+              <p>Configure your Twilio SIP, LiveKit WebRTC, or Telnyx carrier credentials in the settings dashboard. Supports native Webhook and SIP trunk routing.</p>
+              <div class="code-snippet">
+                <code>CLOSER_CARRIER_SIP = "sip.livekit.closer.ai"</code>
+              </div>
+            </div>
+          </div>
+
+          <div class="guide-card reveal" style="--stagger: 0.1s;">
+            <div class="guide-num display-font">02</div>
+            <div class="guide-content">
+              <h3>Select Market Mode &amp; Persona</h3>
+              <p>Choose between <strong>USA Luxury Real Estate ISA</strong> (Sophia / Guy) or <strong>India Customer Care</strong> (Priya / Prabhat) with tailored currency and legal rules.</p>
+              <div class="code-snippet">
+                <code>engine.set_market_mode("usa" | "india")</code>
+              </div>
+            </div>
+          </div>
+
+          <div class="guide-card reveal" style="--stagger: 0.2s;">
+            <div class="guide-num display-font">03</div>
+            <div class="guide-content">
+              <h3>Link CRM &amp; Google Calendar</h3>
+              <p>Connect your calendar for showing locks and sync leads directly to Salesforce, HubSpot, Follow Up Boss, Zoho, or LeadSquared via bidirectional webhooks.</p>
+              <div class="code-snippet">
+                <code>calendar.sync_booking(lead_dossier)</code>
+              </div>
+            </div>
+          </div>
+
+          <div class="guide-card reveal" style="--stagger: 0.3s;">
+            <div class="guide-num display-font">04</div>
+            <div class="guide-content">
+              <h3>Launch Live Obsidian Console</h3>
+              <p>Monitor real-time calls, inspect typed dossiers, trigger barge-in tests, and view dynamic ROI analytics in the executive dashboard.</p>
+              <div class="code-snippet">
+                <code>python3 dashboard.py --port 8501</code>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Dual-Market Global Showcase (USA vs India) -->
+    <section class="section section-dark" id="markets">
+      <div class="section-container">
+        <div class="section-tag-wrap reveal">
+          <span class="section-tag-pill">
+            <span class="tag-glyph display-font">%</span>
+            <span>GLOBAL MARKET CAPACITY</span>
+          </span>
+        </div>
+        <h2 class="section-title reveal display-font">Engineered for the World's Highest-Value Markets</h2>
+        <p class="section-desc reveal">
+          One engine, two specialized regional intelligence modes. Switch seamlessly between North American luxury brokerage and Indian enterprise customer care.
+        </p>
+
+        <!-- Market Tabs Switcher -->
+        <div class="market-tabs reveal">
+          <button class="market-tab-btn active" id="tabUSA" onclick="showMarketTab('usa')">
+            <span class="flag">🇺🇸</span>
+            <span>USA: Luxury Real Estate ISA</span>
+          </button>
+          <button class="market-tab-btn" id="tabIndia" onclick="showMarketTab('india')">
+            <span class="flag">🇮🇳</span>
+            <span>India: Customer Care &amp; Support</span>
+          </button>
+        </div>
+
+        <!-- USA Market Card -->
+        <div class="market-detail-panel active" id="panelUSA">
+          <div class="market-panel-grid">
+            <div class="market-info reveal">
+              <div class="market-badge-row">
+                <span class="market-tag-pill">Beverly Hills &amp; Bel Air</span>
+                <span class="market-tag-pill">$5,000,000+ Estates</span>
+                <span class="market-tag-pill">Sophia &amp; Guy Personas</span>
+              </div>
+              <h3 class="market-headline">Ultra-Luxury Inside Sales Agent (ISA)</h3>
+              <p class="market-copy">
+                Designed for top-tier brokerages managing ultra-high-net-worth buyers. CLOSER AI identifies all-cash liquidity, verifies jumbo mortgage pre-approvals, accommodates private showing requests, and locks VIP slots directly into Google Calendar.
+              </p>
+              <ul class="market-features-list">
+                <li><i class="fa-solid fa-check"></i> <strong>Proof-of-Funds Verification:</strong> Tactfully qualifies liquid cash vs. jumbo financing.</li>
+                <li><i class="fa-solid fa-check"></i> <strong>Schedule Friction Intelligence:</strong> Handles "In a meeting, call tomorrow" with immediate courteous callbacks.</li>
+                <li><i class="fa-solid fa-check"></i> <strong>VIP Tour Booking:</strong> Deterministic Google Calendar sync with zero double-booking.</li>
+              </ul>
+              <div class="sample-utterance-box">
+                <div class="sample-label display-font">// LIVE AGENT SAMPLE</div>
+                <div class="sample-text">"Good morning! This is Sophia with CLOSER Luxury Concierge. I have the private dossier ready for the 10484 Bellagio Road estate in Bel Air. Are you currently looking to tour this Thursday?"</div>
+                <button class="sample-play-btn" onclick="playVoiceSample('usa')">
+                  <i class="fa-solid fa-play"></i> <span>Listen to Sophia (USA)</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="market-preview-card reveal" style="--stagger: 0.15s;">
+              <div class="card-glass-header">
+                <div class="window-dots">
+                  <span></span><span></span><span></span>
+                </div>
+                <span class="window-title display-font">// USA LUXURY DOSSIER</span>
+              </div>
+              <div class="preview-metric-row">
+                <span class="p-label">Target Property</span>
+                <span class="p-val">10484 Bellagio Rd, Bel Air</span>
+              </div>
+              <div class="preview-metric-row">
+                <span class="p-label">Buyer Budget</span>
+                <span class="p-val display-font">$6,850,000 USD (All Cash)</span>
+              </div>
+              <div class="preview-metric-row">
+                <span class="p-label">Pre-Approval</span>
+                <span class="p-val glow-white">Verified J.P. Morgan Private</span>
+              </div>
+              <div class="preview-metric-row">
+                <span class="p-label">Showing Reserved</span>
+                <span class="p-val display-font">Thursday @ 2:00 PM PST</span>
+              </div>
+              <div class="preview-metric-row">
+                <span class="p-label">Calendar Sync</span>
+                <span class="p-val"><i class="fa-solid fa-circle-check"></i> Locked in Google Calendar</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- India Market Card -->
+        <div class="market-detail-panel" id="panelIndia">
+          <div class="market-panel-grid">
+            <div class="market-info">
+              <div class="market-badge-row">
+                <span class="market-tag-pill">Bengaluru, Mumbai &amp; NCR</span>
+                <span class="market-tag-pill">₹ Lakhs to ₹ Crores</span>
+                <span class="market-tag-pill">Priya &amp; Prabhat Personas</span>
+              </div>
+              <h3 class="market-headline">Enterprise Customer Care &amp; High-Ticket Support</h3>
+              <p class="market-copy">
+                Tailored for top Indian real estate developers and enterprise customer care centers. CLOSER AI greets callers with polite warmth ("Namaste"), qualifies 2/3/4 BHK configurations in Crores, verifies 100% RERA compliance, logs grievance tickets (#CC-84291), and dispatches WhatsApp brochures.
+              </p>
+              <ul class="market-features-list">
+                <li><i class="fa-solid fa-check"></i> <strong>Lakhs &amp; Crores Pricing:</strong> Seamlessly parses ₹75 Lakhs to ₹15+ Crores pricing and BHK formats.</li>
+                <li><i class="fa-solid fa-check"></i> <strong>RERA Legal Compliance:</strong> Instantly answers builder credentials and RERA registration queries.</li>
+                <li><i class="fa-solid fa-check"></i> <strong>WhatsApp Dispatch:</strong> Automatically sends floor plans, payment schedules, and site visit invites.</li>
+              </ul>
+              <div class="sample-utterance-box">
+                <div class="sample-label display-font">// LIVE AGENT SAMPLE</div>
+                <div class="sample-text">"Namaste! This is Priya from Customer Care. I would be delighted to assist you with your 3 BHK enquiry in Whitefield. The project is 100% RERA approved. May I send the brochure directly to your WhatsApp?"</div>
+                <button class="sample-play-btn" onclick="playVoiceSample('india')">
+                  <i class="fa-solid fa-play"></i> <span>Listen to Priya (India)</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="market-preview-card">
+              <div class="card-glass-header">
+                <div class="window-dots">
+                  <span></span><span></span><span></span>
+                </div>
+                <span class="window-title display-font">// INDIA CUSTOMER CARE DOSSIER</span>
+              </div>
+              <div class="preview-metric-row">
+                <span class="p-label">Configuration</span>
+                <span class="p-val">3 BHK Premium (Whitefield)</span>
+              </div>
+              <div class="preview-metric-row">
+                <span class="p-label">Budget</span>
+                <span class="p-val display-font">₹ 2.45 Crores</span>
+              </div>
+              <div class="preview-metric-row">
+                <span class="p-label">RERA Status</span>
+                <span class="p-val glow-white">PRM/KA/RERA/1251/446/PR/200123</span>
+              </div>
+              <div class="preview-metric-row">
+                <span class="p-label">Support Ticket</span>
+                <span class="p-val display-font">#CC-84291 (Logged)</span>
+              </div>
+              <div class="preview-metric-row">
+                <span class="p-label">WhatsApp Channel</span>
+                <span class="p-val"><i class="fa-brands fa-whatsapp"></i> Brochure Dispatched</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Interactive Voice Soundboard & Telephony Studio -->
+    <section class="section" id="voice-studio">
+      <div class="section-container">
+        <div class="section-tag-wrap reveal">
+          <span class="section-tag-pill">
+            <span class="tag-glyph display-font">#</span>
+            <span>NEURAL SOUNDBOARD STUDIO</span>
+          </span>
+        </div>
+        <h2 class="section-title reveal display-font">Auditory Experience &amp; Objection Scenarios</h2>
+        <p class="section-desc reveal">
+          Test real-time conversational responses directly in your browser. Experience how CLOSER AI handles difficult objections with calm, fluent human speech.
+        </p>
+
+        <div class="soundboard-container reveal">
+          <div class="soundboard-controls">
+            <div class="control-group">
+              <label class="display-font">// SELECT NEURAL VOICE</label>
+              <div class="voice-pills">
+                <button class="voice-pill active" data-voice="en-US-AriaNeural" onclick="selectStudioVoice(this)">
+                  <span>Sophia (USA Female)</span>
+                </button>
+                <button class="voice-pill" data-voice="en-US-GuyNeural" onclick="selectStudioVoice(this)">
+                  <span>Guy (USA Male)</span>
+                </button>
+                <button class="voice-pill" data-voice="en-IN-NeerjaNeural" onclick="selectStudioVoice(this)">
+                  <span>Priya (India Female)</span>
+                </button>
+                <button class="voice-pill" data-voice="en-IN-PrabhatNeural" onclick="selectStudioVoice(this)">
+                  <span>Prabhat (India Male)</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="control-group">
+              <label class="display-font">// SELECT OBJECTION / SCENARIO</label>
+              <div class="scenario-grid">
+                <button class="scenario-btn active" data-scenario="friction_busy" onclick="selectStudioScenario(this)">
+                  <span class="scen-title">"I'm in a meeting right now, call tomorrow"</span>
+                  <span class="scen-desc">Tests respectful schedule friction &amp; immediate callback window</span>
+                </button>
+                <button class="scenario-btn" data-scenario="luxury_cash" onclick="selectStudioScenario(this)">
+                  <span class="scen-title">"$8.5M Cash Buyer looking for Bel Air Estate"</span>
+                  <span class="scen-desc">Tests ultra-luxury cash qualification &amp; VIP private showing</span>
+                </button>
+                <button class="scenario-btn" data-scenario="india_bhk_rera" onclick="selectStudioScenario(this)">
+                  <span class="scen-title">"Looking for 3 BHK in Whitefield, is RERA approved?"</span>
+                  <span class="scen-desc">Tests ₹ Crores pricing, RERA clearance &amp; WhatsApp brochure</span>
+                </button>
+                <button class="scenario-btn" data-scenario="india_ticket" onclick="selectStudioScenario(this)">
+                  <span class="scen-title">"Possession is delayed, I want to log a complaint"</span>
+                  <span class="scen-desc">Tests empathetic grievance handling &amp; ticket logging (#CC-84291)</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="soundboard-actions">
+              <button class="soundboard-play-btn" id="soundboardPlayBtn" onclick="runStudioSimulation()">
+                <i class="fa-solid fa-play"></i> <span>Play Neural Speech Response</span>
+              </button>
+              <a href="/console" class="soundboard-demo-btn" target="_blank" rel="noopener noreferrer">
+                <i class="fa-solid fa-headset"></i> <span>Launch Full Live Interactive Console</span>
+              </a>
+            </div>
+          </div>
+
+          <div class="soundboard-display">
+            <div class="studio-hud">
+              <div class="hud-header">
+                <span class="hud-status display-font" id="studioStatus">● AUDIO ENGINE READY</span>
+                <span class="hud-latency display-font">LATENCY: <strong>118 ms</strong></span>
+              </div>
+
+              <!-- Animated Equalizer Waveform -->
+              <div class="studio-waveform" id="studioWaveform">
+                <span class="s-bar"></span>
+                <span class="s-bar"></span>
+                <span class="s-bar"></span>
+                <span class="s-bar"></span>
+                <span class="s-bar"></span>
+                <span class="s-bar"></span>
+                <span class="s-bar"></span>
+                <span class="s-bar"></span>
+                <span class="s-bar"></span>
+                <span class="s-bar"></span>
+                <span class="s-bar"></span>
+                <span class="s-bar"></span>
+                <span class="s-bar"></span>
+                <span class="s-bar"></span>
+                <span class="s-bar"></span>
+                <span class="s-bar"></span>
+              </div>
+
+              <div class="studio-transcript-box">
+                <div class="st-role display-font" id="studioSpeakerName"><i class="fa-solid fa-robot"></i> CLOSER AI:</div>
+                <div class="st-text" id="studioSpeechText">
+                  "I completely understand and respect your schedule. I will make a priority note to ring you back tomorrow afternoon. Would 2:00 PM PST work best for you?"
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. Enterprise Telephony Benchmarks & SLA -->
+    <section class="section section-dark" id="benchmarks">
+      <div class="section-container">
+        <div class="section-tag-wrap reveal">
+          <span class="section-tag-pill">
+            <span class="tag-glyph display-font">&lt;</span>
+            <span>PERFORMANCE BENCHMARKS</span>
+          </span>
+        </div>
+        <h2 class="section-title reveal display-font">CLOSER AI vs. Traditional Call Centers vs. Generic AI</h2>
+        <p class="section-desc reveal">
+          Compare carrier-grade telephony performance metrics against legacy outsourced teams and basic chatbots.
+        </p>
+
+        <div class="table-responsive reveal">
+          <table class="benchmark-table">
+            <thead>
+              <tr>
+                <th>Capability Metric</th>
+                <th class="highlight-col display-font">CLOSER AI Autonomous</th>
+                <th>Legacy Human Call Centers</th>
+                <th>Generic LLM Chatbots</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>First-Word Latency</strong></td>
+                <td class="highlight-col"><span class="badge-pill display-font">&lt; 120 ms</span></td>
+                <td>4 - 15 minutes (Hold Queue)</td>
+                <td>1,800 - 3,500 ms (Awkward Pause)</td>
+              </tr>
+              <tr>
+                <td><strong>Objection Handling</strong></td>
+                <td class="highlight-col"><span class="badge-pill">Empathetic &amp; Contextual</span></td>
+                <td>Rigid / Script-Fatigued</td>
+                <td>Repetitive Hallucinations</td>
+              </tr>
+              <tr>
+                <td><strong>Data Extraction Accuracy</strong></td>
+                <td class="highlight-col"><span class="badge-pill display-font">100% Pydantic Typed</span></td>
+                <td>74% (Human Typo &amp; Omission)</td>
+                <td>62% (Format Drift)</td>
+              </tr>
+              <tr>
+                <td><strong>Cost per Qualified Showing</strong></td>
+                <td class="highlight-col"><span class="badge-pill display-font">$0.42 / ₹35</span></td>
+                <td>$45.00 / ₹3,800</td>
+                <td>$12.00 / ₹950</td>
+              </tr>
+              <tr>
+                <td><strong>Operating Hours</strong></td>
+                <td class="highlight-col"><span class="badge-pill display-font">24/7/365 Autonomous</span></td>
+                <td>9 AM - 6 PM Business Days</td>
+                <td>24/7 (Poor Conversion)</td>
+              </tr>
+              <tr>
+                <td><strong>Direct WhatsApp &amp; Calendar Lock</strong></td>
+                <td class="highlight-col"><span class="badge-pill display-font">&lt; 2s Instantaneous</span></td>
+                <td>Manual (12 - 24 Hours)</td>
+                <td>Unintegrated</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. Interactive ROI & Revenue Impact Calculator -->
+    <section class="section" id="roi">
+      <div class="section-container">
+        <div class="section-tag-wrap reveal">
+          <span class="section-tag-pill">
+            <span class="tag-glyph display-font">$</span>
+            <span>UNIT ECONOMICS CALCULATOR</span>
+          </span>
+        </div>
+        <h2 class="section-title reveal display-font">Calculate Your Brokerage Revenue Uplift</h2>
+        <p class="section-desc reveal">
+          See how capturing after-hours inbound inquiries and qualifying leads in sub-120ms transforms monthly closed volume.
+        </p>
+
+        <div class="roi-calc-container reveal">
+          <div class="roi-inputs">
+            <div class="roi-currency-switch">
+              <button class="curr-btn active" id="currUSD" onclick="setRoiCurrency('usd')">$ USD (USA Real Estate)</button>
+              <button class="curr-btn" id="currINR" onclick="setRoiCurrency('inr')">₹ INR (India Enterprise)</button>
+            </div>
+
+            <div class="slider-group">
+              <div class="slider-header">
+                <label>Monthly Inbound Leads:</label>
+                <span class="slider-val display-font" id="valLeads">500 Leads</span>
+              </div>
+              <input type="range" id="sliderLeads" min="50" max="5000" step="50" value="500" oninput="updateRoiCalc()" />
+            </div>
+
+            <div class="slider-group">
+              <div class="slider-header">
+                <label>Average Commission / Deal Gross Margin:</label>
+                <span class="slider-val display-font" id="valCommission">$25,000 USD</span>
+              </div>
+              <input type="range" id="sliderCommission" min="5000" max="150000" step="5000" value="25000" oninput="updateRoiCalc()" />
+            </div>
+
+            <div class="slider-group">
+              <div class="slider-header">
+                <label>Current Lead Conversion Rate:</label>
+                <span class="slider-val display-font" id="valConv">2.5%</span>
+              </div>
+              <input type="range" id="sliderConv" min="0.5" max="10.0" step="0.5" value="2.5" oninput="updateRoiCalc()" />
+            </div>
+          </div>
+
+          <div class="roi-results-card">
+            <div class="results-title display-font">// PROJECTED MONTHLY IMPACT</div>
+            <div class="roi-kpi-grid">
+              <div class="roi-kpi-box">
+                <span class="kpi-label">Extra Qualified Showings</span>
+                <span class="kpi-number display-font" id="roiShowings">+45</span>
+                <span class="kpi-sub">Booked on Google Calendar</span>
+              </div>
+
+              <div class="roi-kpi-box">
+                <span class="kpi-label">Additional Closed Deals</span>
+                <span class="kpi-number display-font" id="roiDeals">+6.2</span>
+                <span class="kpi-sub">Per Month</span>
+              </div>
+
+              <div class="roi-kpi-box highlight-kpi">
+                <span class="kpi-label">Estimated Monthly Revenue Uplift</span>
+                <span class="kpi-number display-font" id="roiRevenue">+$155,000</span>
+                <span class="kpi-sub">Direct Gross Margin</span>
+              </div>
+
+              <div class="roi-kpi-box">
+                <span class="kpi-label">Manual Calling Hours Saved</span>
+                <span class="kpi-number display-font" id="roiHours">250 hrs</span>
+                <span class="kpi-sub">Reinvested in Client Closings</span>
+              </div>
+            </div>
+
+            <a href="/console" class="roi-cta-btn" target="_blank" rel="noopener noreferrer">
+              <span>Deploy CLOSER AI to Capture This Pipeline</span>
+              <i class="fa-solid fa-arrow-right"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 8. Enterprise Integrations Ecosystem -->
+    <section class="section section-dark" id="integrations">
+      <div class="section-container">
+        <div class="section-tag-wrap reveal">
+          <span class="section-tag-pill">
+            <span class="tag-glyph display-font">*</span>
+            <span>ZERO-FRICTION INTEGRATION</span>
+          </span>
+        </div>
+        <h2 class="section-title reveal display-font">Plug Directly into Your Existing Stack</h2>
+        <p class="section-desc reveal">
+          Native webhooks and carrier connectors ready for immediate deployment with top CRMs, calendars, and carriers.
+        </p>
+
+        <div class="integration-cards-grid">
+          <div class="integ-card reveal">
+            <div class="integ-category display-font">// TELEPHONY &amp; WEBRTC</div>
+            <div class="integ-logos">
+              <span class="integ-pill">Twilio Voice</span>
+              <span class="integ-pill">LiveKit WebRTC</span>
+              <span class="integ-pill">Telnyx SIP</span>
+              <span class="integ-pill">Plivo</span>
+            </div>
+            <p class="integ-desc">Sub-500ms global SIP trunking and WebRTC audio bridging with automated failover.</p>
+          </div>
+
+          <div class="integ-card reveal" style="--stagger: 0.1s;">
+            <div class="integ-category display-font">// CRM &amp; PIPELINE</div>
+            <div class="integ-logos">
+              <span class="integ-pill">Salesforce</span>
+              <span class="integ-pill">HubSpot</span>
+              <span class="integ-pill">Follow Up Boss</span>
+              <span class="integ-pill">Zoho CRM</span>
+            </div>
+            <p class="integ-desc">Bidirectional synchronization of verified buyer dossiers, audio transcripts, and sentiment tags.</p>
+          </div>
+
+          <div class="integ-card reveal" style="--stagger: 0.2s;">
+            <div class="integ-category display-font">// CALENDAR &amp; SHOWINGS</div>
+            <div class="integ-logos">
+              <span class="integ-pill">Google Calendar</span>
+              <span class="integ-pill">Outlook 365</span>
+              <span class="integ-pill">Cal.com</span>
+            </div>
+            <p class="integ-desc">Two-way slot verification and collision prevention for private showings and site tours.</p>
+          </div>
+
+          <div class="integ-card reveal" style="--stagger: 0.3s;">
+            <div class="integ-category display-font">// INSTANT MESSAGING</div>
+            <div class="integ-logos">
+              <span class="integ-pill">WhatsApp Business</span>
+              <span class="integ-pill">Twilio SMS</span>
+              <span class="integ-pill">SendGrid</span>
+            </div>
+            <p class="integ-desc">Automated dispatch of verified PDF brochures, site maps, and calendar invites immediately upon call completion.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9. Case Studies & Proven Results -->
+    <section class="section" id="cases">
+      <div class="section-container">
+        <div class="section-tag-wrap reveal">
+          <span class="section-tag-pill">
+            <span class="tag-glyph display-font">#</span>
+            <span>CASE STUDIES &amp; TRACK RECORD</span>
+          </span>
+        </div>
+        <h2 class="section-title reveal display-font">Trusted in High-Stakes Production</h2>
+        <p class="section-desc reveal">
+          How leading brokerages in California and premier developers in India scale their high-ticket pipelines.
+        </p>
+
+        <div class="cases-grid">
+          <div class="case-card reveal">
+            <div class="case-location display-font">// BEVERLY HILLS, CALIFORNIA</div>
+            <h3 class="case-client">Vanguard Luxury Realty</h3>
+            <div class="case-metric-highlight">
+              <span class="c-val display-font">$38.4M</span>
+              <span class="c-label">Qualified Pipeline Generated (90 Days)</span>
+            </div>
+            <p class="case-body">
+              "Before CLOSER AI, over 60% of our $5M+ weekend listing ad inquiries went to voicemail. Sophia responds in under 12 seconds, verifies all-cash proof of funds, and books private showing tours onto our broker calendars. Attendance rate is 94%."
+            </p>
+            <div class="case-author">
+              <div class="author-avatar"><i class="fa-solid fa-user-tie"></i></div>
+              <div>
+                <div class="author-name">Alexander Wright</div>
+                <div class="author-role">Managing Principal Broker</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="case-card reveal" style="--stagger: 0.15s;">
+            <div class="case-location display-font">// BENGALURU, INDIA</div>
+            <h3 class="case-client">Prestige &amp; Sobha Channel Alliance</h3>
+            <div class="case-metric-highlight">
+              <span class="c-val display-font">420+</span>
+              <span class="c-label">Weekend Site Visits Booked in Q3</span>
+            </div>
+            <p class="case-body">
+              "Managing thousands of digital leads for 3 BHK projects in Whitefield was overwhelming our manual sales team. Priya handles inquiries politely, clarifies RERA details, logs complaints, and immediately dispatches project brochures to WhatsApp. Our site visit conversion doubled."
+            </p>
+            <div class="case-author">
+              <div class="author-avatar"><i class="fa-solid fa-user-check"></i></div>
+              <div>
+                <div class="author-name">Rajeshwari Menon</div>
+                <div class="author-role">Head of Sales Operations</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 10. Global Trust, Security & Compliance -->
+    <section class="section section-dark" id="compliance">
+      <div class="section-container text-center">
+        <div class="section-tag-wrap center reveal">
+          <span class="section-tag-pill">
+            <span class="tag-glyph display-font">*</span>
+            <span>ENTERPRISE SECURITY</span>
+          </span>
+        </div>
+        <h2 class="section-title reveal display-font">Bank-Grade Privacy &amp; Regulatory Compliance</h2>
+        <p class="section-desc center reveal">
+          Built from the ground up for strict regulatory requirements, data sovereignty, and reliable uptime.
+        </p>
+
+        <div class="trust-badges-grid">
+          <div class="trust-badge-item reveal">
+            <i class="fa-solid fa-shield-virus"></i>
+            <h4 class="display-font">SOC-2 Type II</h4>
+            <span>Continuous security auditing</span>
+          </div>
+          <div class="trust-badge-item reveal" style="--stagger: 0.1s;">
+            <i class="fa-solid fa-user-shield"></i>
+            <h4 class="display-font">GDPR &amp; HIPAA Ready</h4>
+            <span>Zero-retention voice modes</span>
+          </div>
+          <div class="trust-badge-item reveal" style="--stagger: 0.2s;">
+            <i class="fa-solid fa-building-columns"></i>
+            <h4 class="display-font">100% RERA Compliant</h4>
+            <span>Strict Indian real estate legal rules</span>
+          </div>
+          <div class="trust-badge-item reveal" style="--stagger: 0.3s;">
+            <i class="fa-solid fa-server"></i>
+            <h4 class="display-font">99.99% Carrier SLA</h4>
+            <span>Multi-region redundant failover</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 11. Presentation Footer & Global Contact -->
+    <footer class="extended-footer" id="contact">
+      <div class="footer-container">
+        <div class="footer-top">
+          <div class="footer-brand-col reveal">
+            <div class="footer-logo-row">
+              <img src="assets/logo.webp" alt="CLOSER AI" width="40" height="40" class="footer-logo-img" />
+              <span class="footer-brand-title display-font">CLOSER AI</span>
+            </div>
+            <p class="footer-brand-desc">
+              The Autonomous Voice Concierge and conversational telephony platform for ultra-luxury real estate and enterprise customer care. Engineered for sub-120ms execution in the USA and India.
+            </p>
+            <div class="footer-author-badge">
+              <span>Architected &amp; Built by</span>
+              <strong>R Jan Steve Daniel</strong>
+            </div>
+          </div>
+
+          <div class="footer-nav-col reveal" style="--stagger: 0.1s;">
+            <h4 class="display-font">// GLOBAL HUBS</h4>
+            <div class="hub-item">
+              <i class="fa-solid fa-location-dot"></i>
+              <div>
+                <strong>Beverly Hills, CA (USA)</strong>
+                <p>9454 Wilshire Blvd, Luxury Real Estate Concierge</p>
+              </div>
+            </div>
+            <div class="hub-item">
+              <i class="fa-solid fa-location-dot"></i>
+              <div>
+                <strong>Bengaluru, KA (India)</strong>
+                <p>Indiranagar 100ft Rd, Enterprise Support &amp; RERA Center</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="footer-nav-col reveal" style="--stagger: 0.2s;">
+            <h4 class="display-font">// PLATFORM</h4>
+            <ul class="footer-links">
+              <li><a href="#product">Product Overview</a></li>
+              <li><a href="#how-it-works">Architecture Pipeline</a></li>
+              <li><a href="#markets">USA &amp; India Capacity</a></li>
+              <li><a href="#voice-studio">Voice Soundboard</a></li>
+              <li><a href="#roi">ROI Calculator</a></li>
+              <li><a href="/console" target="_blank" rel="noopener noreferrer">Executive Live Console ↗</a></li>
+            </ul>
+          </div>
+
+          <div class="footer-nav-col reveal" style="--stagger: 0.3s;">
+            <h4 class="display-font">// CONNECT</h4>
+            <ul class="footer-links">
+              <li><a href="https://github.com/JanSteve/closer-ai" target="_blank" rel="noopener noreferrer"><i class="fa-brands fa-github"></i> GitHub Repository ↗</a></li>
+              <li><a href="mailto:contact@closer-ai.com"><i class="fa-solid fa-envelope"></i> contact@closer-ai.com</a></li>
+              <li><a href="#voice-studio"><i class="fa-solid fa-phone"></i> Interactive Voice Soundboard</a></li>
+            </ul>
+            <div class="console-shortcut-box">
+              <span>Ready for live executive review?</span>
+              <a href="/console" target="_blank" rel="noopener noreferrer" class="footer-console-btn">
+                Open Web Console ↗
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-bottom">
+          <div class="footer-copy">
+            &copy; 2026 CLOSER AI. Intelligence Designed To Evolve. All rights reserved.
+          </div>
+          <a href="#home" class="back-to-top-btn" aria-label="Back to top">
+            <span>Back to top</span>
+            <i class="fa-solid fa-arrow-up"></i>
+          </a>
+        </div>
+      </div>
+    </footer>
+
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- LIVE INTERACTIVE VOICE DEMO MODAL (DUAL-MARKET USA & INDIA)               -->
+  <!-- ========================================================================= -->
+
+  <div class="modal-backdrop" id="demoModal" hidden>
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-header-left">
+          <div class="modal-badge-pulse"></div>
+          <span class="modal-title display-font">CLOSER AI — Autonomous Voice Concierge Simulator</span>
+        </div>
+        <button class="modal-close-btn" id="modalCloseBtn" aria-label="Close voice demo">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Region Switcher -->
+      <div class="modal-region-switch">
+        <button class="region-btn active" id="btnMarketUSA" type="button">
+          <span class="flag">🇺🇸</span>
+          <span class="region-text">USA (Luxury Real Estate ISA)</span>
+        </button>
+        <button class="region-btn" id="btnMarketIndia" type="button">
+          <span class="flag">🇮🇳</span>
+          <span class="region-text">India (Customer Care &amp; Support)</span>
+        </button>
+      </div>
+
+      <div class="modal-grid">
+        <!-- Left: Interactive Voice Simulation -->
+        <div class="demo-left">
+          <div class="demo-voice-select-row">
+            <label for="demoVoiceSelect" class="voice-label display-font">// ACTIVE NEURAL VOICE</label>
+            <div class="voice-select-wrap">
+              <select id="demoVoiceSelect" class="voice-dropdown">
+                <option value="en-US-AriaNeural">Sophia (US Female — Luxury Concierge)</option>
+                <option value="en-US-GuyNeural">Guy (US Male — Executive Broker)</option>
+                <option value="en-IN-NeerjaNeural">Priya (India Female — Customer Care)</option>
+                <option value="en-IN-PrabhatNeural">Prabhat (India Male — Enterprise Support)</option>
+              </select>
+              <button id="btnVoicePreview" class="voice-preview-btn" type="button" title="Test Voice Output">
+                <i class="fa-solid fa-volume-high"></i>
+                <span>Sample</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="quick-prompts">
+            <span class="prompt-label display-font">// TEST SCENARIOS</span>
+            <div class="prompt-chips" id="promptChips">
+              <!-- Dynamically populated based on market mode -->
+            </div>
+          </div>
+
+          <div class="demo-input-row">
+            <input type="text" id="demoUtteranceInput" class="demo-input" placeholder="Type buyer reply or schedule constraint (e.g., 'In a meeting, call tomorrow')..." />
+            <button id="demoSendBtn" class="demo-action-btn" type="button">
+              <i class="fa-solid fa-paper-plane"></i>
+              <span>Simulate Turn</span>
+            </button>
+          </div>
+
+          <div class="vad-live-box" id="modalVadContainer">
+            <div class="vad-waveform" id="modalVadWaveform">
+              <span class="wave-bar"></span>
+              <span class="wave-bar"></span>
+              <span class="wave-bar"></span>
+              <span class="wave-bar"></span>
+              <span class="wave-bar"></span>
+              <span class="wave-bar"></span>
+              <span class="wave-bar"></span>
+              <span class="wave-bar"></span>
+              <span class="wave-bar"></span>
+              <span class="wave-bar"></span>
+              <span class="wave-bar"></span>
+              <span class="wave-bar"></span>
+            </div>
+            <div class="vad-status-text display-font" id="modalVadStatus">● READY (VAD &amp; TELEPHONY ACTIVE)</div>
+          </div>
+
+          <div class="live-ai-response" id="modalAIResponseBox">
+            <div class="response-header">
+              <span class="response-role display-font"><i class="fa-solid fa-waveform-lines"></i> CLOSER AI Voice Output:</span>
+              <button id="btnReplayAudio" class="replay-btn" type="button" title="Replay Voice Sample" style="display: none;">
+                <i class="fa-solid fa-rotate-right"></i> Replay
+              </button>
+            </div>
+            <p id="modalAIText" class="response-text">
+              "Hello, this is CLOSER AI luxury real estate concierge. How can I assist you with your estate search today?"
+            </p>
+          </div>
+        </div>
+
+        <!-- Right: Live Qualification Dossier -->
+        <div class="demo-right">
+          <div class="dossier-card">
+            <div class="dossier-header">
+              <div class="dossier-title display-font"><i class="fa-solid fa-id-card-clip"></i> LIVE QUALIFICATION DOSSIER</div>
+              <div class="dossier-badge display-font" id="modalDossierStatus">QUALIFYING</div>
+            </div>
+
+            <div class="dossier-row">
+              <span class="d-label">Market Engine</span>
+              <span class="d-val" id="modalDossierMarket">USA (Luxury Real Estate)</span>
+            </div>
+
+            <div class="dossier-row">
+              <span class="d-label">Lead / Buyer Contact</span>
+              <span class="d-val" id="modalDossierLead">Inbound VIP Prospect</span>
+            </div>
+
+            <div class="dossier-row">
+              <span class="d-label">Budget / Bracket</span>
+              <span class="d-val display-font" id="modalDossierBudget">$5,000,000 - $10,000,000 USD</span>
+            </div>
+
+            <div class="dossier-row">
+              <span class="d-label">Financing / Verification</span>
+              <span class="d-val" id="modalDossierFinancing">Cash / Jumbo Pre-Approved</span>
+            </div>
+
+            <div class="dossier-row">
+              <span class="d-label">Intent Gauge</span>
+              <div class="intent-gauge-wrap">
+                <div class="intent-gauge-fill" id="modalIntentFill" style="width: 75%;"></div>
+                <span class="intent-text display-font" id="modalIntentText">75% High Intent</span>
+              </div>
+            </div>
+
+            <div class="dossier-row">
+              <span class="d-label">Status / Action</span>
+              <span class="d-val" id="modalDossierAction">Evaluating Luxury Portfolio</span>
+            </div>
+
+            <div class="console-launch-banner">
+              <span>Looking for CRM Kanban &amp; Calendar Management?</span>
+              <a href="/console" target="_blank" rel="noopener noreferrer" class="launch-console-btn">
+                Open Web Console ↗
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer-mobile">
+        <button id="modalMobileDoneBtn" class="modal-done-btn" type="button">Close Voice Demo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Audio playback element for AI speech synthesis -->
+  <audio id="demoAudioPlayer" preload="none"></audio>
+
+  <script src="main.js"></script>
+</body>
+</html>

@@ -32,7 +32,7 @@ class TestWebDashboardConsole(unittest.TestCase):
         self.assertIn("en-IN-NeerjaNeural", HTML_TEMPLATE)
 
     def test_get_dashboard_root(self):
-        """Verifies GET / returns 200 with UTF-8 HTML."""
+        """Verifies GET / returns 200 with UTF-8 HTML (Landing Page Website)."""
         handler = DashboardHTTPHandler.__new__(DashboardHTTPHandler)
         handler.path = "/"
         handler.headers = {}
@@ -47,6 +47,26 @@ class TestWebDashboardConsole(unittest.TestCase):
         handler.send_header.assert_called_with("Content-Type", "text/html; charset=utf-8")
         body = handler.wfile.getvalue().decode("utf-8")
         self.assertIn("Autonomous Voice Concierge", body)
+        self.assertIn("Intelligence Designed To Evolve", body)
+
+    def test_get_console_route(self):
+        """Verifies GET /console and /dashboard return 200 with Executive Console HTML."""
+        for path in ("/console", "/dashboard"):
+            handler = DashboardHTTPHandler.__new__(DashboardHTTPHandler)
+            handler.path = path
+            handler.headers = {}
+            handler.wfile = io.BytesIO()
+            handler.send_response = MagicMock()
+            handler.send_header = MagicMock()
+            handler.end_headers = MagicMock()
+
+            handler.do_GET()
+
+            handler.send_response.assert_called_with(200)
+            handler.send_header.assert_called_with("Content-Type", "text/html; charset=utf-8")
+            body = handler.wfile.getvalue().decode("utf-8")
+            self.assertIn("LiveKit WebRTC SIP", body)
+            self.assertIn("Autonomous Voice Concierge", body)
 
     def test_get_api_leads(self):
         """Verifies GET /api/leads returns JSON lead list."""
@@ -190,6 +210,16 @@ class TestWebDashboardConsole(unittest.TestCase):
 
         handler.do_POST()
         handler.send_response.assert_called_with(404)
+
+    def test_dashboard_telemetry_and_pydantic_inspector_elements(self):
+        """Verifies presence of Live Telemetry Bar, Barge-In Interruption button, and Pydantic JSON inspector."""
+        self.assertIn("telemetry-bar", HTML_TEMPLATE)
+        self.assertIn("LiveKit WebRTC SIP", HTML_TEMPLATE)
+        self.assertIn("btn-barge", HTML_TEMPLATE)
+        self.assertIn("simulateBargeIn", HTML_TEMPLATE)
+        self.assertIn("dossierJsonView", HTML_TEMPLATE)
+        self.assertIn("btn-copy-json", HTML_TEMPLATE)
+        self.assertIn("leadSearchInput", HTML_TEMPLATE)
 
 
 if __name__ == "__main__":

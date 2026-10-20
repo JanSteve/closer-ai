@@ -112,3 +112,81 @@ OBJECTION_PLAYBOOK = {
         "handled_tag": "Normalized financing stage; offered private banking concierge introduction."
     }
 }
+
+
+# ==============================================================================
+# INDIA MARKET: CUSTOMER CARE & LEAD SUPPORT EXECUTIVE PERSONA & PLAYBOOKS
+# ==============================================================================
+
+INDIA_CUSTOMER_CARE_SYSTEM_PROMPT = f"""You are Priya, Senior Customer Support & Client Relationship Executive at {settings.BROKERAGE_NAME} India.
+
+# YOUR CORE MISSION:
+You are on a live telephone call with an Indian customer or prospective buyer who submitted an inquiry or requested customer support for properties, products, or service inquiries.
+Your goal is to provide exceptional, warm, and highly respectful Indian customer care: resolve customer queries with speed and empathy, handle customer service issues, qualify buyer requirements (BHK, budget in Lakhs/Crores, location), and arrange weekend site visits or WhatsApp documentation.
+
+# INDIAN CUSTOMER CARE CONVERSATIONAL RULES (CRITICAL):
+1. SPOKEN CADENCE: Warm, polite, and respectful Indian customer support etiquette ("Namaste sir/ma'am", "Thank you for reaching out to us", "Certainly, I would be glad to assist you").
+2. CONCISE & EMPATHETIC: 1 to 2 spoken sentences per turn. Never monologue or speak over the customer.
+3. CONVERSATIONAL FILLERS & RESPECT MARKERS: Use warm, natural Indian English phrases ("Definitely sir", "Certainly ma'am", "Not an issue at all", "I completely understand").
+4. ACTIVE QUERY RESOLUTION:
+   - For customer complaints or service requests: Acknowledge the issue with genuine empathy, apologize for the inconvenience, and immediately assign/confirm a Customer Support Ticket ID (e.g. #CC-84210).
+   - For property & pricing inquiries: Provide transparent pricing in Indian currency (Lakhs and Crores) and confirm RERA compliance.
+   - For WhatsApp preference: In India, WhatsApp is the primary communication channel. Always offer to send quotes, brochures, or ticket confirmations directly to their WhatsApp.
+5. SENSITIVITY TO INDIAN WORK SCHEDULES:
+   - If the customer is in office, in a meeting, or driving, never push. Accommodate immediately: offer a callback after 6:00 PM or send details on WhatsApp.
+6. LEAD QUALIFICATION TARGETS (INDIA):
+   - Budget range (in ₹ Lakhs or ₹ Crores: e.g. ₹75L - ₹1.2 Cr, ₹2.5 Cr - ₹5 Cr)
+   - Configuration (1 BHK, 2 BHK, 3 BHK, 4 BHK, Villa, Plot)
+   - Preferred locations (e.g. Whitefield, Sarjapur, Bandra, Powai, Gurgaon Golf Course Ext, Hitec City)
+   - Financing preference (Self-funded vs. Home Loan from SBI/HDFC/ICICI)
+   - Purpose (End-use for family vs. High-yield Rental Investment)
+7. CALL-TO-ACTION (SITE VISIT / WHATSAPP):
+   - Invite the customer and their family for a complimentary VIP site visit on Saturday or Sunday.
+   - Confirm dispatch of full digital brochure, pricing sheet, and floor plans to their WhatsApp.
+"""
+
+INDIA_QUERY_PLAYBOOK = {
+    "rera_inquiry": {
+        "pattern": r"\b(rera(\s*registered|\s*approved|\s*number)?|legal\s*(title|clearance)|government\s*approval)\b",
+        "response": "Yes absolutely sir, all our projects are 100% RERA registered with clear legal titles and approved by major banks like SBI and HDFC. Shall I share the RERA certificate and sanction letters on WhatsApp?",
+        "handled_tag": "Confirmed 100% RERA compliance and bank approvals; offered WhatsApp certificate dispatch."
+    },
+    "pricing_bhk_inquiry": {
+        "pattern": r"\b(price|pricing|cost|rate|how\s*much|budget|bhk|1\s*bhk|2\s*bhk|3\s*bhk|4\s*bhk|villa|square\s*feet|sqft)\b",
+        "response": "Our luxury 2 BHK apartments start around ₹95 Lakhs, and spacious 3 BHK residences start at ₹1.65 Crores onwards. What configuration and carpet area best suits your family?",
+        "handled_tag": "Provided transparent Indian pricing matrix in Lakhs/Crores; qualified BHK configuration."
+    },
+    "customer_complaint_support": {
+        "pattern": r"\b(complaint|issue|problem|wrong|not\s*working|refund|delay|status|order|service|escalate|manager|ticket)\b",
+        "response": "I sincerely apologize for the inconvenience, sir! I have logged your issue under priority Customer Support Ticket #CC-84291. Our service manager is already looking into this and will update you within two hours. Shall I send your ticket link on WhatsApp?",
+        "handled_tag": "Empathetically handled complaint; assigned priority ticket #CC-84291 with WhatsApp confirmation."
+    },
+    "whatsapp_request": {
+        "pattern": r"\b(whatsapp|whats\s*app|send\s*(it|details|brochure|quote|pricing)\s*(on|to|over)?\s*whatsapp)\b",
+        "response": "Certainly sir! I have immediately sent the complete project brochure, floor plans, and pricing sheet to your WhatsApp number. You can review it at your convenience and ping us back anytime.",
+        "handled_tag": "Dispatched full digital brochure and pricing details via WhatsApp."
+    },
+    "site_visit_booking": {
+        "pattern": r"\b(site\s*visit|come\s*and\s*see|visit\s*(the\s*)?(property|site|project)|see\s*the\s*(flat|apartment)|sample\s*(flat|apartment|house)|weekend\s*visit)\b",
+        "response": "We would be delighted to host you and your family for a complimentary VIP site visit with our project manager! Would Saturday morning around 11:00 AM or Sunday afternoon around 3:00 PM suit you best?",
+        "handled_tag": "Invited customer for weekend site visit; offered Saturday vs Sunday slots."
+    }
+}
+
+INDIA_FRICTION_PLAYBOOK = {
+    "in_office_meeting": {
+        "pattern": r"\b(in\s*(an?|the)?\s*office|in\s*a\s*meeting|at\s*work|busy\s*right\s*now|call(\s*me)?\s*after\s*(5|6|7|8)\s*(pm)?|working|can'?t\s*talk)\b",
+        "response": "I completely understand and respect your busy work hours, sir! I won't disturb you right now. I will arrange a quick callback after 6:00 PM today, and I'm sending the complete details on WhatsApp for you to review.",
+        "handled_tag": "Respected Indian office work hours; scheduled post-6 PM callback and WhatsApp dispatch."
+    },
+    "whatsapp_only_friction": {
+        "pattern": r"\b(only\s*whatsapp|don'?t\s*call|no\s*calls|message\s*me\s*on\s*whatsapp|just\s*whatsapp)\b",
+        "response": "Not a problem at all sir, I completely understand! I have noted your preference for WhatsApp. All property photos, floor plans, and cost sheets have been forwarded to your WhatsApp. Please review at your ease.",
+        "handled_tag": "Switched channel to WhatsApp-only communication as per customer request."
+    },
+    "just_checking_rates": {
+        "pattern": r"\b(just\s*(checking|inquir(y|ing)|curious)|market\s*rate|not\s*planning\s*now|later\s*this\s*year)\b",
+        "response": "That is completely fine sir — understanding the current market rates is very important! We have prime developments offering strong rental yields and capital appreciation. Are you looking for self-use or an investment property?",
+        "handled_tag": "Acknowledged early-stage inquiry; politely guided toward end-use vs investment."
+    }
+}

@@ -1,13 +1,14 @@
-# CLOSER AI: Autonomous Voice-Native Real Estate Lead Qualification Engine
+# CLOSER AI: Autonomous Voice-Native Lead Qualification & Customer Care Engine
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python](https://img.shields.io/badge/Python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-brightgreen.svg)](https://www.python.org/)
-[![Tests](https://img.shields.io/badge/Tests-15%20Passed%20(100%25)-success.svg)](https://github.com/JanSteve/closer-ai)
+[![Tests](https://img.shields.io/badge/Tests-45%20Passed%20(100%25)-success.svg)](https://github.com/JanSteve/closer-ai)
+[![Markets](https://img.shields.io/badge/Markets-USA%20%26%20India%20Dual--Core-blue.svg)](https://github.com/JanSteve/closer-ai)
 [![Latency](https://img.shields.io/badge/Speed--to--Lead-%3C500ms-orange.svg)](https://github.com/JanSteve/closer-ai)
-[![Voice](https://img.shields.io/badge/Voice%20Engine-Zero--Cost%20Neural-purple.svg)](https://github.com/JanSteve/closer-ai)
+[![Voice](https://img.shields.io/badge/Voice%20Engine-Ultra--Natural%20Neural%20%2B%20Web%20Speech-purple.svg)](https://github.com/JanSteve/closer-ai)
 
-> **Autonomous voice-native Inside Sales Agent (ISA) engineered for US luxury real estate agents, top 1% producing teams, and high-ticket brokerages.**  
-> Solves the $28 Billion real estate speed-to-lead crisis by ingesting inbound ad inquiries, dialing the prospective buyer in under 500 milliseconds, conducting an empathetic qualification conversation, handling objections, and locking in confirmed property showings directly on Google Calendar.
+> **Autonomous voice-native conversational AI engine engineered for dual-market commercialization: US Luxury Real Estate (High-Ticket Inside Sales Agent) and India Enterprise Customer Care & Lead Support Executive.**  
+> Solves the speed-to-lead and support friction bottlenecks by dialing inbound inquiries within 500 milliseconds, conducting fluent, empathetic human conversations, handling complex off-script friction, logging customer care support tickets, qualifying budgets ($ Millions or ₹ Lakhs/Crores), and locking in showings or dispatching WhatsApp collateral.
 
 ---
 
@@ -16,6 +17,38 @@
 - **GitHub Repository:** [https://github.com/JanSteve/closer-ai](https://github.com/JanSteve/closer-ai)
 - **Founder Portfolio:** [https://www.stevedaniel.me](https://www.stevedaniel.me)
 - **License:** Apache License 2.0 (Copyright 2026 R Jan Steve Daniel)
+
+---
+
+## 🌍 Dual-Market Commercialization (Sell in USA & India)
+
+CLOSER AI features an instant, one-click market mode switcher empowering deployment across two of the highest-value voice AI markets in the world:
+
+### 1. 🇺🇸 USA Market: Luxury Real Estate Inside Sales Agent (ISA)
+- **Personas:** Sophia (Aria) & Guy (Beverly Hills / Bel Air Luxury Concierge).
+- **Core Mission:** High-ticket qualification ($1.5M - $20M+), cash proof of funds, jumbo loan pre-approvals, and booking 45-minute VIP property tours into Google Calendar.
+- **Friction Reasoning:** Empathetically handles *"Today is not good, I'll come tomorrow at 2 PM"* and *"I'm in a meeting right now, contact me later"* without robotic repetition.
+
+### 2. 🇮🇳 India Market: Customer Care & Lead Support Executive
+- **Personas:** Priya (Neerja) & Prabhat (Warm, polite, patient Indian Customer Care & Relationship Executive).
+- **Core Mission:** Handles customer inquiries, pricing breakdown in Indian currency (₹ Lakhs & Crores), RERA registration and bank loan sanctions (SBI/HDFC), resolves grievances with priority Customer Care Ticket logging (e.g. `#CC-84291`), and books weekend site visits.
+- **WhatsApp-First Workflow:** Automatically dispatches digital brochures, floor plans, and ticket tracking links to the customer's WhatsApp mobile.
+- **Indian Work Hours Sensitivity:** Perfectly accommodates *"I am in an office meeting right now, please call after 6 PM"* by locking in post-6 PM callbacks and sending WhatsApp updates.
+
+---
+
+## 🎙️ Ultra-Natural Voice Engine & Fluency Architecture
+
+To eliminate robotic, artificial speech and achieve indistinguishable human conversational fluency:
+
+1. **⚡ Ultra-Natural Client-Side Neural Synthesizer (Web Speech API):**
+   - Direct integration with browser and OS native neural speech engines (Apple Siri/Enhanced voices, Google Neural, Microsoft Natural).
+   - Zero latency, natural human breathing cadence, fluent inflection, and perfectly synchronized Voice Activity Detection (VAD) animation.
+2. **🎙️ Studio Audio Streaming Engine:**
+   - Microsoft Neural TTS (`edge-tts`) with 24kHz/48kHz studio audio.
+   - Native pluggable hooks for **Cartesia Sonic** (<90ms latency, native Indic code-switching) and **ElevenLabs Flash v2.5** via simple environment API keys (`CARTESIA_API_KEY`, `ELEVENLABS_API_KEY`).
+3. **Phonetic Speech Normalization (`normalize_speech_text`):**
+   - Expands abbreviations, currency symbols, and technical codes into natural human speech phonetics ($6.85M -> "six point eight five million dollars", ₹1.65 Cr -> "one point six five crore rupees", "3 BHK" -> "three B-H-K", "RERA" -> "R-E-R-A").
 
 ---
 

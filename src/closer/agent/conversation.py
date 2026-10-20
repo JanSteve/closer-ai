@@ -10,7 +10,14 @@ from typing import List, Dict, Any, Optional, Tuple
 from datetime import datetime, timedelta
 
 from src.closer.config import settings
-from src.closer.agent.prompt import ISA_SYSTEM_PROMPT, OBJECTION_PLAYBOOK, FRICTION_PLAYBOOK
+from src.closer.agent.prompt import (
+    ISA_SYSTEM_PROMPT,
+    OBJECTION_PLAYBOOK,
+    FRICTION_PLAYBOOK,
+    INDIA_CUSTOMER_CARE_SYSTEM_PROMPT,
+    INDIA_QUERY_PLAYBOOK,
+    INDIA_FRICTION_PLAYBOOK
+)
 from src.closer.agent.schemas import InboundLead, BuyerDossier, ObjectionRecord
 
 logger = logging.getLogger(__name__)
@@ -20,9 +27,11 @@ class ConversationEngine:
     """
     Manages the live state of a qualification phone call.
     Handles user utterances, tool invocations, objection detection, and Pydantic dossier extraction.
+    Supports both US Luxury Real Estate ISA and India Customer Care & Lead Support modes.
     """
 
-    def __init__(self, lead: Optional[InboundLead] = None):
+    def __init__(self, lead: Optional[InboundLead] = None, market_mode: str = "usa"):
+        self.market_mode = market_mode.lower()
         self.lead = lead or InboundLead(
             lead_id="sim_lead_001",
             full_name="Alex Morgan",
@@ -32,17 +41,43 @@ class ConversationEngine:
         self.dossier = BuyerDossier(
             full_name=self.lead.full_name,
             phone_number=self.lead.phone_number,
-            email=self.lead.email
+            email=self.lead.email,
+            market_region="INDIA" if self.market_mode == "india" else "USA",
+            budget_currency="INR" if self.market_mode == "india" else "USD"
         )
+        sys_prompt = INDIA_CUSTOMER_CARE_SYSTEM_PROMPT if self.market_mode == "india" else ISA_SYSTEM_PROMPT
         self.messages: List[Dict[str, str]] = [
-            {"role": "system", "content": ISA_SYSTEM_PROMPT}
+            {"role": "system", "content": sys_prompt}
         ]
         self.objections_log: List[ObjectionRecord] = []
         self.turn_count = 0
         self.is_completed = False
 
+    def set_market_mode(self, mode: str) -> None:
+        """Dynamically switches between 'usa' and 'india' market modes."""
+        self.market_mode = mode.lower()
+        if self.market_mode == "india":
+            self.dossier.market_region = "INDIA"
+            self.dossier.budget_currency = "INR"
+            self.messages = [{"role": "system", "content": INDIA_CUSTOMER_CARE_SYSTEM_PROMPT}]
+        else:
+            self.market_mode = "usa"
+            self.dossier.market_region = "USA"
+            self.dossier.budget_currency = "USD"
+            self.messages = [{"role": "system", "content": ISA_SYSTEM_PROMPT}]
+
     def get_initial_greeting(self) -> str:
         """Generates the sub-500ms initial call greeting."""
+        if self.market_mode == "india":
+            first_name = self.lead.full_name.split()[0] if self.lead.full_name else "Sir"
+            greeting = (
+                f"Namaste {first_name}, this is Priya from {settings.BROKERAGE_NAME} Customer Care & Client Relations. "
+                f"Thank you for contacting us — I'm following up on your recent inquiry. How may I assist you today?"
+            )
+            self.messages.append({"role": "assistant", "content": greeting})
+            self.turn_count += 1
+            return greeting
+
         first_name = self.lead.full_name.split()[0] if self.lead.full_name else "there"
         address_snippet = self.lead.listing_address or "our Bel Air estate showcase"
         
@@ -59,7 +94,7 @@ class ConversationEngine:
         """
         Receives buyer transcript turn, extracts qualification entities,
         handles script deviations & schedule friction, handles objections,
-        and returns the next ISA response.
+        and returns the next agent response.
         """
         clean_input = user_utterance.strip()
         self.messages.append({"role": "user", "content": clean_input})
@@ -68,6 +103,12 @@ class ConversationEngine:
         # 1. Update dossier extraction from new utterance
         self._extract_entities(clean_input)
         
+        # In India Customer Care Mode: Route to dedicated Indian customer care engine
+        if self.market_mode == "india":
+            india_reply = self._process_india_turn(clean_input)
+            self.messages.append({"role": "assistant", "content": india_reply})
+            return india_reply
+
         # 2. Autonomous rational concierge: handle script deviations, schedule friction & busy constraints
         deviation_response = self._handle_script_deviation(clean_input)
         if deviation_response:
@@ -90,6 +131,83 @@ class ConversationEngine:
         reply = self._generate_qualification_turn(clean_input)
         self.messages.append({"role": "assistant", "content": reply})
         return reply
+
+    def _process_india_turn(self, clean_input: str) -> str:
+        """Processes turn under India Customer Care & Lead Support mode."""
+        t = clean_input.lower()
+
+        # 1. Check Indian Friction Playbook
+        for key, play in INDIA_FRICTION_PLAYBOOK.items():
+            if re.search(play["pattern"], t):
+                tag = play["handled_tag"]
+                if tag not in self.dossier.objections_handled:
+                    self.dossier.objections_handled.append(tag)
+                if key == "in_office_meeting":
+                    self.dossier.follow_up_note = "Customer in office/meeting; scheduled callback after 6:00 PM and sent WhatsApp brochure."
+                    self.dossier.timeframe = "callback_after_6pm"
+                    self.dossier.whatsapp_dispatched = True
+                    self.dossier.whatsapp_status = "sent"
+                    self.dossier.preferred_channel = "WhatsApp/Phone"
+                elif key == "whatsapp_only_friction":
+                    self.dossier.preferred_channel = "WhatsApp"
+                    self.dossier.whatsapp_dispatched = True
+                    self.dossier.whatsapp_status = "sent"
+                    self.dossier.follow_up_note = "Customer requested communication strictly on WhatsApp."
+                self._score_lead()
+                return play["response"]
+
+        # 2. Check Indian Query Playbook
+        for key, play in INDIA_QUERY_PLAYBOOK.items():
+            if re.search(play["pattern"], t):
+                tag = play["handled_tag"]
+                if tag not in self.dossier.objections_handled:
+                    self.dossier.objections_handled.append(tag)
+                if key == "customer_complaint_support":
+                    self.dossier.customer_type = "support_query"
+                    self.dossier.query_type = "customer_complaint"
+                    self.dossier.ticket_id = "CC-84291"
+                    self.dossier.query_resolved = True
+                    self.dossier.whatsapp_status = "sent"
+                    self.dossier.whatsapp_dispatched = True
+                    self.dossier.follow_up_note = "Logged priority ticket #CC-84291; manager resolution within 2 hours."
+                elif key == "whatsapp_request":
+                    self.dossier.whatsapp_dispatched = True
+                    self.dossier.whatsapp_status = "sent"
+                    self.dossier.preferred_channel = "WhatsApp"
+                elif key == "site_visit_booking":
+                    self.dossier.appointment_type = "weekend_site_visit"
+                    self.dossier.timeframe = "this_weekend"
+                    self.dossier.appointment_notes = "Complimentary VIP site visit with family"
+                self._score_lead()
+                return play["response"]
+
+        # 3. Dynamic Indian Consultative Response & Slot Confirmation
+        if any(w in t for w in ["saturday", "sunday", "11 am", "11:00", "3 pm", "3:00"]):
+            day = "Saturday 11:00 AM" if ("saturday" in t or "11" in t) else "Sunday 3:00 PM"
+            self.dossier.appointment_datetime = day
+            self.dossier.appointment_type = "weekend_site_visit"
+            self.dossier.appointment_notes = f"Confirmed site visit for {day} with project relationship manager"
+            self.dossier.follow_up_note = f"Confirmed VIP site visit for {day}."
+            self.is_completed = True
+            self._score_lead()
+            return (
+                f"Excellent! I have confirmed your VIP site visit for {day}. "
+                "Our project manager will welcome you and your family at the site lounge. "
+                "I have also sent the Google Maps location and visit pass directly to your WhatsApp."
+            )
+
+        if any(w in t for w in ["yes", "sure", "okay", "fine"]):
+            self.dossier.whatsapp_dispatched = True
+            self.dossier.whatsapp_status = "sent"
+            return (
+                "Wonderful! I have forwarded the full digital brochure, carpet area details, and payment schedules "
+                "to your WhatsApp number. Would you like to schedule a private site visit this weekend?"
+            )
+
+        return (
+            "Thank you for sharing that! Our team is dedicated to providing you complete transparency and support. "
+            "Shall I share the complete project details and pricing options directly on your WhatsApp?"
+        )
 
     def _extract_entities(self, text: str) -> None:
         """Extracts budget, pre-approval, timeframe, and location from transcript."""
@@ -162,6 +280,55 @@ class ConversationEngine:
         elif "modern" in t or "contemporary" in t:
             self.dossier.property_type = "Modern Architectural"
 
+        # Indian INR Budget extraction (Lakhs & Crores)
+        cr_match = re.search(r'(?:₹|rs\.?|inr)?\s*(\d+(?:\.\d+)?)\s*(?:cr\b|crores?\b)', t)
+        if cr_match:
+            cr_val = float(cr_match.group(1))
+            amount = int(cr_val * 10_000_000)
+            self.dossier.budget_max = amount
+            self.dossier.budget_min = int(amount * 0.8)
+            self.dossier.budget_currency = "INR"
+            self.dossier.budget_inr_text = f"₹{cr_val} Crores"
+        else:
+            lakh_match = re.search(r'(?:₹|rs\.?|inr)?\s*(\d+(?:\.\d+)?)\s*(?:lakhs?\b|lacs?\b|l\b)', t)
+            if lakh_match:
+                lakh_val = float(lakh_match.group(1))
+                amount = int(lakh_val * 100_000)
+                self.dossier.budget_max = amount
+                self.dossier.budget_min = int(amount * 0.8)
+                self.dossier.budget_currency = "INR"
+                self.dossier.budget_inr_text = f"₹{int(lakh_val)} Lakhs"
+
+        # Indian BHK configuration
+        bhk_match = re.search(r'\b(1|2|3|4|5)\s*bhk\b', t)
+        if bhk_match:
+            self.dossier.bhk_preference = f"{bhk_match.group(1)} BHK"
+            self.dossier.property_type = f"{bhk_match.group(1)} BHK Luxury Apartment"
+        elif "villa" in t:
+            self.dossier.bhk_preference = "Luxury Villa"
+            self.dossier.property_type = "Gated Community Villa"
+
+        # Indian Target locations
+        for loc in ["Whitefield", "Sarjapur", "Indiranagar", "Koramangala", "Bengaluru", "Bangalore",
+                    "Bandra", "Powai", "Andheri", "Worli", "Mumbai", "Thane",
+                    "Gurgaon", "Noida", "Delhi", "Hitec City", "Gachibowli", "Hyderabad", "Pune", "Chennai"]:
+            if loc.lower() in t and loc not in self.dossier.target_locations:
+                self.dossier.target_locations.append(loc)
+
+        # WhatsApp channel
+        if "whatsapp" in t or "whats app" in t:
+            self.dossier.preferred_channel = "WhatsApp"
+            self.dossier.whatsapp_dispatched = True
+            self.dossier.whatsapp_status = "sent"
+
+        # Customer Care Dispute / Ticket
+        if any(w in t for w in ["complaint", "issue", "problem", "ticket", "refund", "not working", "wrong"]):
+            self.dossier.customer_type = "support_query"
+            self.dossier.query_type = "customer_complaint"
+            if not self.dossier.ticket_id:
+                self.dossier.ticket_id = "CC-84291"
+            self.dossier.query_resolved = True
+
         # Email detection
         email_match = re.search(r'[\w\.-]+@[\w\.-]+\.\w+', text)
         if email_match:
@@ -176,7 +343,21 @@ class ConversationEngine:
         reasons = []
 
         # Budget scoring
-        if self.dossier.budget_max:
+        if self.dossier.budget_currency == "INR":
+            if self.dossier.budget_max:
+                if self.dossier.budget_max >= 20_000_000:
+                    score += 35
+                    reasons.append("Ultra-luxury INR budget (₹2 Cr+)")
+                elif self.dossier.budget_max >= 10_000_000:
+                    score += 25
+                    reasons.append("Premium INR budget (₹1 Cr+)")
+                elif self.dossier.budget_max >= 5_000_000:
+                    score += 15
+                    reasons.append("Standard INR budget (₹50 Lakhs+)")
+            elif self.dossier.bhk_preference:
+                score += 20
+                reasons.append(f"Identified requirement: {self.dossier.bhk_preference}")
+        elif self.dossier.budget_max:
             if self.dossier.budget_max >= 5_000_000:
                 score += 30
                 reasons.append("Ultra-luxury budget ($5M+)")
@@ -583,12 +764,16 @@ class ConversationEngine:
         """Returns the final structured qualification dossier."""
         self.dossier.total_turns = self.turn_count
         if not self.dossier.summary:
-            budget_str = f"${self.dossier.budget_max:,}" if self.dossier.budget_max else "Not disclosed"
+            if self.dossier.budget_currency == "INR":
+                budget_str = self.dossier.budget_inr_text or (f"₹{self.dossier.budget_max:,}" if self.dossier.budget_max else "Not disclosed")
+            else:
+                budget_str = f"${self.dossier.budget_max:,}" if self.dossier.budget_max else "Not disclosed"
             notes_str = f" Notes: {self.dossier.follow_up_note}" if self.dossier.follow_up_note else ""
+            ticket_str = f" Ticket: {self.dossier.ticket_id}." if self.dossier.ticket_id else ""
             self.dossier.summary = (
                 f"Lead {self.dossier.full_name} qualified with intent score {self.dossier.intent_score}/100. "
                 f"Budget: {budget_str}. Financing: {self.dossier.financing_type}. "
                 f"Timeline: {self.dossier.timeframe or 'Flexible'}. "
-                f"Appointment: {self.dossier.appointment_datetime or 'Pending follow-up'}.{notes_str}"
+                f"Appointment: {self.dossier.appointment_datetime or 'Pending follow-up'}.{ticket_str}{notes_str}"
             )
         return self.dossier

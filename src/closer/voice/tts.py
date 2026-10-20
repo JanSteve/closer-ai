@@ -35,9 +35,15 @@ VOICES = {
     "eric": "en-US-EricNeural",                    # Friendly, approachable, high-energy
     "andrew": "en-US-AndrewNeural",                # Warm, polished corporate advisor
 
+    # India Market & Customer Care Voices (Polite, Patient, Consultative)
+    "neerja": "en-IN-NeerjaNeural",                # Female (India): Warm executive customer care consultant
+    "priya": "en-IN-NeerjaNeural",                 # Female (India): Senior customer support representative
+    "kavya": "en-IN-NeerjaNeural",                 # Female (India): Friendly relationship executive
+    "prabhat": "en-IN-PrabhatNeural",              # Male (India): Professional, authoritative corporate advisor
+    "aarav": "en-IN-PrabhatNeural",                # Male (India): Senior customer care executive
+    "rishi": "en-IN-PrabhatNeural",                # Male (India): Consultative customer support
+
     # Global / Cross-Border High-Ticket Accents
-    "neerja": "en-IN-NeerjaNeural",                # Female (India): Warm executive luxury consultant
-    "prabhat": "en-IN-PrabhatNeural",              # Male (India): Professional, authoritative advisor
     "sonia": "en-GB-SoniaNeural",                  # Female (UK): Prestigious Mayfair concierge
     "ryan": "en-GB-RyanNeural",                    # Male (UK): Refined, polished broker
 }
@@ -56,9 +62,52 @@ VOICE_ALIASES = {
     "male_conversational": "en-US-BrianNeural",
     "india_female": "en-IN-NeerjaNeural",
     "india_male": "en-IN-PrabhatNeural",
+    "priya": "en-IN-NeerjaNeural",
+    "neerja": "en-IN-NeerjaNeural",
+    "prabhat": "en-IN-PrabhatNeural",
+    "aarav": "en-IN-PrabhatNeural",
+    "india_customer_care": "en-IN-NeerjaNeural",
+    "india_support_male": "en-IN-PrabhatNeural",
     "uk_female": "en-GB-SoniaNeural",
     "uk_male": "en-GB-RyanNeural",
 }
+
+
+def normalize_speech_text(text: str) -> str:
+    """
+    Normalizes conversational text for ultra-natural, fluent human speech:
+    - Converts numbers & currency into natural spoken words ($6.85M -> 6 point 85 million dollars)
+    - Expands Indian currency (₹1.65 Cr -> 1.65 crore rupees, ₹95L -> 95 lakh rupees)
+    - Expands acronyms (3 BHK -> 3 B-H-K, RERA -> Ray-ra)
+    - Softens punctuation and removes markdown formatting for seamless cadence
+    """
+    if not text:
+        return text
+
+    import re
+    # Strip markdown symbols
+    clean = re.sub(r'[*_`#]', '', text)
+
+    # US Currency
+    clean = re.sub(r'\$(\d+(?:\.\d+)?)\s*(?:m\b|million\b)', r'\1 million dollars', clean, flags=re.IGNORECASE)
+    clean = re.sub(r'\$(\d+(?:\.\d+)?)\s*(?:k\b|thousand\b)', r'\1 thousand dollars', clean, flags=re.IGNORECASE)
+    clean = re.sub(r'\$(\d+(?:,\d{3})+)', lambda m: f"{int(m.group(1).replace(',', '')):,} dollars", clean)
+
+    # Indian Currency (Lakhs and Crores)
+    clean = re.sub(r'(?:₹|rs\.?|inr)\s*(\d+(?:\.\d+)?)\s*(?:cr\b|crores?\b)', r'\1 crore rupees', clean, flags=re.IGNORECASE)
+    clean = re.sub(r'(?:₹|rs\.?|inr)\s*(\d+(?:\.\d+)?)\s*(?:lakhs?\b|lacs?\b|l\b)', r'\1 lakh rupees', clean, flags=re.IGNORECASE)
+
+    # Real Estate & Support Phonetics
+    clean = re.sub(r'\b(\d)\s*bhk\b', r'\1 B-H-K', clean, flags=re.IGNORECASE)
+    clean = re.sub(r'\brera\b', 'R-E-R-A', clean, flags=re.IGNORECASE)
+    clean = re.sub(r'\bsms\b', 'S-M-S', clean, flags=re.IGNORECASE)
+    clean = re.sub(r'\bwhatsapp\b', 'Whats App', clean, flags=re.IGNORECASE)
+    clean = re.sub(r'#?CC-(\d+)', r'Ticket C-C \1', clean)
+
+    # Replace double dashes and technical syntax with natural speaking pauses
+    clean = re.sub(r'\s*--\s*', ', ', clean)
+    clean = re.sub(r'\s{2,}', ' ', clean)
+    return clean.strip()
 
 
 class EdgeTTSVoiceEngine:
@@ -109,29 +158,47 @@ class EdgeTTSVoiceEngine:
         target_rate = rate or self.rate
         target_sr = sample_rate or self.sample_rate
 
+        clean_text = normalize_speech_text(text)
         audio_bytes: Optional[bytes] = None
 
+        # 0. Check for Cartesia or ElevenLabs production API keys if configured
+        cartesia_key = os.environ.get("CARTESIA_API_KEY", "").strip()
+        elevenlabs_key = os.environ.get("ELEVENLABS_API_KEY", "").strip()
+
+        if cartesia_key:
+            try:
+                audio_bytes = await self._synthesize_cartesia(clean_text, target_voice, cartesia_key, target_sr)
+            except Exception:
+                audio_bytes = None
+
+        if not audio_bytes and elevenlabs_key:
+            try:
+                audio_bytes = await self._synthesize_elevenlabs(clean_text, target_voice, elevenlabs_key)
+            except Exception:
+                audio_bytes = None
+
         # 1. Attempt edge-tts synthesis if edge_tts is importable
-        try:
-            import edge_tts
-            communicate = edge_tts.Communicate(text, target_voice, rate=target_rate)
-            raw_audio = bytearray()
-            async for chunk in communicate.stream():
-                if chunk["type"] == "audio":
-                    raw_audio.extend(chunk["data"])
-            
-            if len(raw_audio) > 0:
-                audio_bytes = bytes(raw_audio)
-                # If output needs to be WAV and raw_audio is MP3, convert or write
-                if output_path and output_path.endswith(".wav"):
-                    audio_bytes = self._ensure_wav_format(audio_bytes, target_sr)
-        except Exception:
-            # Fallback triggered immediately if offline or edge-tts fails
-            audio_bytes = None
+        if not audio_bytes:
+            try:
+                import edge_tts
+                communicate = edge_tts.Communicate(clean_text, target_voice, rate=target_rate)
+                raw_audio = bytearray()
+                async for chunk in communicate.stream():
+                    if chunk["type"] == "audio":
+                        raw_audio.extend(chunk["data"])
+                
+                if len(raw_audio) > 0:
+                    audio_bytes = bytes(raw_audio)
+                    # If output needs to be WAV and raw_audio is MP3, convert or write
+                    if output_path and output_path.endswith(".wav"):
+                        audio_bytes = self._ensure_wav_format(audio_bytes, target_sr)
+            except Exception:
+                # Fallback triggered immediately if offline or edge-tts fails
+                audio_bytes = None
 
         # 2. Resilient local fallback (guarantees 100% offline uptime and <100ms latency)
         if not audio_bytes:
-            audio_bytes = self._synthesize_local_fallback(text, target_voice, target_sr)
+            audio_bytes = self._synthesize_local_fallback(clean_text, target_voice, target_sr)
 
         latency = time.perf_counter() - start_time
 
@@ -142,6 +209,48 @@ class EdgeTTSVoiceEngine:
                 f.write(audio_bytes)
 
         return audio_bytes, latency
+
+    async def _synthesize_cartesia(self, text: str, voice: str, api_key: str, sample_rate: int) -> Optional[bytes]:
+        """Synthesizes audio using Cartesia Sonic API (<90ms latency, native Indian/US accents)."""
+        import httpx
+        url = "https://api.cartesia.ai/tts/bytes"
+        headers = {
+            "X-API-Key": api_key,
+            "Cartesia-Version": "2024-06-10",
+            "Content-Type": "application/json"
+        }
+        # Select appropriate Cartesia voice id
+        is_indic = any(w in voice.lower() for w in ["india", "neerja", "prabhat", "priya", "rishi"])
+        voice_id = "e043697e-1dc6-4f44-ad26-78cc7ce4f526" if is_indic else "a0e99841-438c-4a64-b679-ae501e7d6091"
+        payload = {
+            "model_id": "sonic-multilingual" if is_indic else "sonic-english",
+            "transcript": text,
+            "voice": {"mode": "id", "id": voice_id},
+            "output_format": {"container": "wav", "sample_rate": sample_rate, "encoding": "pcm_s16le"}
+        }
+        async with httpx.AsyncClient(timeout=4.0) as client:
+            resp = await client.post(url, headers=headers, json=payload)
+            if resp.status_code == 200 and len(resp.content) > 44:
+                return resp.content
+        return None
+
+    async def _synthesize_elevenlabs(self, text: str, voice: str, api_key: str) -> Optional[bytes]:
+        """Synthesizes audio using ElevenLabs Turbo v2.5 / Flash API."""
+        import httpx
+        # Default Adam / Rachel or Indian voice ID
+        voice_id = "21m00Tcm4TlvDq8ikWAM"
+        url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
+        headers = {"xi-api-key": api_key, "Content-Type": "application/json"}
+        payload = {
+            "text": text,
+            "model_id": "eleven_multilingual_v2",
+            "voice_settings": {"stability": 0.5, "similarity_boost": 0.8}
+        }
+        async with httpx.AsyncClient(timeout=4.0) as client:
+            resp = await client.post(url, headers=headers, json=payload)
+            if resp.status_code == 200 and len(resp.content) > 44:
+                return resp.content
+        return None
 
     def synthesize_sync(
         self,
@@ -214,7 +323,9 @@ class EdgeTTSVoiceEngine:
         """
         # Select natural human voice on macOS
         target_v = (voice or self.default_voice).lower()
-        if "guy" in target_v or "male" in target_v or "christopher" in target_v or "brian" in target_v or "eric" in target_v:
+        if any(w in target_v for w in ["india", "neerja", "prabhat", "priya", "rishi", "aarav", "kavya"]):
+            mac_voice = "Rishi"
+        elif "guy" in target_v or "male" in target_v or "christopher" in target_v or "brian" in target_v or "eric" in target_v:
             mac_voice = "Eddy (English (US))"
         elif "flo" in target_v or "jenny" in target_v:
             mac_voice = "Flo (English (US))"
