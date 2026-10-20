@@ -517,7 +517,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function playAudioResponse(audioBase64, fallbackText) {
+  function playAudioResponse(audioBase64, fallbackText, onEndedCallback) {
     if (audioBase64) {
       lastAudioBase64 = audioBase64;
       if (btnReplayAudio) btnReplayAudio.style.display = 'inline-flex';
@@ -526,24 +526,28 @@ document.addEventListener('DOMContentLoaded', () => {
       startSpeakingUI();
 
       demoAudioPlayer.play().catch(() => {
-        speakBrowserTTS(fallbackText);
+        speakBrowserTTS(fallbackText, onEndedCallback);
       });
 
       demoAudioPlayer.onended = () => {
         stopSpeakingUI();
+        if (onEndedCallback) onEndedCallback();
       };
       demoAudioPlayer.onerror = () => {
         stopSpeakingUI();
-        speakBrowserTTS(fallbackText);
+        speakBrowserTTS(fallbackText, onEndedCallback);
       };
       return;
     }
 
-    speakBrowserTTS(fallbackText);
+    speakBrowserTTS(fallbackText, onEndedCallback);
   }
 
-  function speakBrowserTTS(text) {
-    if (!('speechSynthesis' in window)) return;
+  function speakBrowserTTS(text, onEndedCallback) {
+    if (!('speechSynthesis' in window)) {
+      if (onEndedCallback) onEndedCallback();
+      return;
+    }
     window.speechSynthesis.cancel();
 
     const cleanText = text.replace(/₹/g, 'Rupees ').replace(/\$/g, 'Dollars ');
@@ -563,8 +567,14 @@ document.addEventListener('DOMContentLoaded', () => {
     utterance.pitch = 1.0;
 
     utterance.onstart = () => startSpeakingUI();
-    utterance.onend = () => stopSpeakingUI();
-    utterance.onerror = () => stopSpeakingUI();
+    utterance.onend = () => {
+      stopSpeakingUI();
+      if (onEndedCallback) onEndedCallback();
+    };
+    utterance.onerror = () => {
+      stopSpeakingUI();
+      if (onEndedCallback) onEndedCallback();
+    };
 
     window.speechSynthesis.speak(utterance);
   }
@@ -832,10 +842,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  window.playVoiceSample = function (market) {
-    const text = market === 'usa'
-      ? "Good morning! This is Sophia with CLOSER Luxury Concierge. I have the private dossier ready for the 10484 Bellagio Road estate in Bel Air. Are you currently looking to tour this Thursday?"
-      : "Namaste! This is Priya from Customer Care. I would be delighted to assist you with your 3 BHK enquiry in Whitefield. The project is 100% RERA approved. May I send the brochure directly to your WhatsApp?";
+  window.playVoiceSample = async function (market) {
+    const isIndia = market === 'india';
+    const text = isIndia
+      ? "Namaste! This is Priya from Customer Care. I would be delighted to assist you with your 3 BHK enquiry in Whitefield. The project is 100% RERA approved. May I send the brochure directly to your WhatsApp?"
+      : "Good morning! This is Sophia with CLOSER Luxury Concierge. I have the private dossier ready for the 10484 Bellagio Road estate in Bel Air. Are you currently looking to tour this Thursday?";
+    const voice = isIndia ? 'en-IN-NeerjaNeural' : 'en-US-AriaNeural';
+
+    try {
+      const res = await fetch('/api/turn', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ utterance: 'STUDIO_SAMPLE', text: text, voice: voice })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.audio_base64) {
+          playAudioResponse(data.audio_base64, data.reply);
+          return;
+        }
+      }
+    } catch {
+      // Fallback to local speech
+    }
 
     speakBrowserTTS(text);
   };
@@ -845,23 +874,42 @@ document.addEventListener('DOMContentLoaded', () => {
   // -------------------------------------------------------------------------
   let studioSelectedVoice = 'en-US-AriaNeural';
   let studioSelectedScenario = 'friction_busy';
+  let studioSelectedRate = '-3%';
+  let studioSelectedSpeed = '1.0';
+  let isAcousticCellular = false;
 
   const STUDIO_SCENARIOS = {
     friction_busy: {
       speaker: 'CLOSER AI (Sophia / Guy):',
-      text: 'I completely understand and respect your schedule. I will make a priority note to ring you back tomorrow afternoon. Would 2:00 PM work best for you?'
+      text: "I completely understand and respect your schedule. I will make a priority note to ring you back tomorrow afternoon. Would 2:00 PM work best for you?"
+    },
+    just_browsing: {
+      speaker: 'CLOSER AI (Sophia):',
+      text: "Gotcha, totally understand... Browsing is the most exciting part! Many of our private clients start looking a few months out. If a quiet off-market property with skyline views opened up at the right number, what would be your ideal timeline?"
     },
     luxury_cash: {
       speaker: 'CLOSER AI (Sophia):',
-      text: 'Excellent. For an all-cash acquisition in Bel Air at $8.5M, we coordinate direct proof-of-funds with private escrow. Would you prefer a Thursday private walkthrough?'
+      text: "Excellent. For an all-cash acquisition in Bel Air at $8.5M, we coordinate direct proof-of-funds with private escrow. Would you prefer a Thursday private walkthrough?"
+    },
+    exclusive_listing: {
+      speaker: 'CLOSER AI (Guy):',
+      text: "That's wonderful — having great representation is crucial! Are you officially committed with an exclusive agreement, or are you open to seeing private pocket listings before they hit the MLS?"
+    },
+    india_greeting: {
+      speaker: 'CLOSER AI (Priya):',
+      text: "Namaste sir... This is Priya from Customer Care and Client Relations. Thank you for reaching out to us regarding your residential inquiry in Bangalore. How may I assist you today?"
     },
     india_bhk_rera: {
       speaker: 'CLOSER AI (Priya):',
-      text: 'Namaste! The 3 BHK residences in Whitefield priced at ₹2.45 Crores are 100% RERA approved with Karnataka registration PRM/KA/RERA/1251. I have dispatched the floor plan to your WhatsApp.'
+      text: "Namaste! The 3 BHK residences in Whitefield priced at ₹2.45 Crores are 100% RERA approved with Karnataka registration PRM/KA/RERA/1251. I have dispatched the floor plan to your WhatsApp."
     },
     india_ticket: {
       speaker: 'CLOSER AI (Prabhat):',
-      text: 'I completely understand your concern regarding possession timelines. I have logged official priority grievance ticket #CC-84291 with our project engineering directorate. You will receive an SMS and WhatsApp update within 2 hours.'
+      text: "I completely understand your concern regarding possession timelines. I have logged official priority grievance ticket #CC-84291 with our project engineering directorate. You will receive an SMS and WhatsApp update within 2 hours."
+    },
+    india_office_hours: {
+      speaker: 'CLOSER AI (Priya / Prabhat):',
+      text: "I completely understand and respect your busy office hours, sir! I won't disturb you right now. I will ring you back after 6:00 PM today, and I have already forwarded all property photos and cost sheets to your WhatsApp."
     }
   };
 
@@ -869,6 +917,28 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelectorAll('.voice-pill').forEach((btn) => btn.classList.remove('active'));
     el.classList.add('active');
     studioSelectedVoice = el.getAttribute('data-voice') || 'en-US-AriaNeural';
+  };
+
+  window.setStudioCadence = function (el, rate, speed) {
+    document.querySelectorAll('.cadence-pill').forEach((btn) => btn.classList.remove('active'));
+    el.classList.add('active');
+    studioSelectedRate = rate || '-3%';
+    studioSelectedSpeed = speed || '1.0';
+  };
+
+  window.setAcousticMode = function (isCellular) {
+    isAcousticCellular = !!isCellular;
+    const btnStudio = document.getElementById('btnAcousticStudio');
+    const btnCell = document.getElementById('btnAcousticCellular');
+    if (btnStudio && btnCell) {
+      if (isCellular) {
+        btnStudio.classList.remove('active');
+        btnCell.classList.add('active');
+      } else {
+        btnStudio.classList.add('active');
+        btnCell.classList.remove('active');
+      }
+    }
   };
 
   window.selectStudioScenario = function (el) {
@@ -884,25 +954,52 @@ document.addEventListener('DOMContentLoaded', () => {
     if (textEl && item) textEl.textContent = `"${item.text}"`;
   };
 
-  window.runStudioSimulation = function () {
-    const item = STUDIO_SCENARIOS[studioSelectedScenario];
+  window.runStudioSimulation = async function () {
+    const item = STUDIO_SCENARIOS[studioSelectedScenario] || STUDIO_SCENARIOS['friction_busy'];
     const waveform = document.getElementById('studioWaveform');
     const statusEl = document.getElementById('studioStatus');
 
     if (waveform) waveform.classList.add('is-playing');
     if (statusEl) {
-      statusEl.textContent = '● TRANSMITTING NEURAL AUDIO';
+      statusEl.textContent = isAcousticCellular ? '● CELLULAR IVR STREAMING (8kHz)' : '● TRANSMITTING NEURAL AUDIO';
       statusEl.style.color = '#38bdf8';
     }
 
-    if (!('speechSynthesis' in window)) {
-      setTimeout(() => {
-        if (waveform) waveform.classList.remove('is-playing');
-        if (statusEl) {
-          statusEl.textContent = '● AUDIO ENGINE READY';
-          statusEl.style.color = '#10b981';
+    const resetStudioUI = () => {
+      if (waveform) waveform.classList.remove('is-playing');
+      if (statusEl) {
+        statusEl.textContent = '● AUDIO ENGINE READY';
+        statusEl.style.color = '#10b981';
+      }
+    };
+
+    // 1. Try backend high-fidelity synthesis first
+    try {
+      const res = await fetch('/api/turn', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          utterance: 'STUDIO_SAMPLE',
+          text: item.text,
+          voice: studioSelectedVoice,
+          rate: studioSelectedRate
+        })
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.audio_base64) {
+          playAudioResponse(data.audio_base64, data.reply, resetStudioUI);
+          return;
         }
-      }, 2500);
+      }
+    } catch {
+      // Backend unavailable; fallback to browser speech
+    }
+
+    // 2. Browser speech synthesis fallback
+    if (!('speechSynthesis' in window)) {
+      setTimeout(resetStudioUI, 2500);
       return;
     }
 
@@ -918,16 +1015,10 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (voice) utter.voice = voice;
-    utter.rate = 1.0;
+    utter.rate = parseFloat(studioSelectedSpeed) || 1.0;
 
-    utter.onend = () => {
-      if (waveform) waveform.classList.remove('is-playing');
-      if (statusEl) {
-        statusEl.textContent = '● AUDIO ENGINE READY';
-        statusEl.style.color = '#10b981';
-      }
-    };
-    utter.onerror = utter.onend;
+    utter.onend = resetStudioUI;
+    utter.onerror = resetStudioUI;
 
     window.speechSynthesis.speak(utter);
   };

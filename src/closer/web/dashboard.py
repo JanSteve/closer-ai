@@ -1476,9 +1476,13 @@ class DashboardHTTPHandler(http.server.BaseHTTPRequestHandler):
 
             utterance = data.get("utterance", "")
             voice = data.get("voice", "en-US-AriaNeural")
+            custom_text = data.get("text", "")
+            rate = data.get("rate")
 
-            if utterance == "PREVIEW_SAMPLE":
-                if "en-IN" in voice:
+            if utterance in ("PREVIEW_SAMPLE", "STUDIO_SAMPLE"):
+                if custom_text:
+                    reply = custom_text
+                elif "en-IN" in voice or "hi-IN" in voice:
                     reply = "Namaste! This is CLOSER AI client relationship concierge. How may I assist you with your premium residential inquiry today?"
                 else:
                     reply = "Hello, this is CLOSER AI luxury real estate concierge. How can I assist you with your estate search today?"
@@ -1486,7 +1490,7 @@ class DashboardHTTPHandler(http.server.BaseHTTPRequestHandler):
                 reply = self.conversation_engine.process_user_turn(utterance)
 
             try:
-                audio_bytes, _ = self.tts_engine.synthesize_sync(reply, voice=voice)
+                audio_bytes, _ = self.tts_engine.synthesize_sync(reply, voice=voice, rate=rate)
                 audio_b64 = base64.b64encode(audio_bytes).decode("utf-8")
             except Exception:
                 audio_b64 = ""

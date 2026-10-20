@@ -77,6 +77,40 @@ class TestVoicePipeline(unittest.TestCase):
         has_silence_speech = self.stt.detect_voice_activity(silence)
         self.assertFalse(has_silence_speech, "VAD must not flag pure silence as speech")
 
+    def test_advanced_phonetic_and_slang_normalization(self):
+        """Verifies expanded real estate, currency, temporal, and street phonetics."""
+        from src.closer.voice.tts import normalize_speech_text
+        text = "Looking for a 4BR/3.5BA on Sunset Blvd. at 11:00 AM w/ HOA and MLS approval."
+        clean = normalize_speech_text(text)
+        self.assertIn("4 bedroom, 3 and a half bath", clean)
+        self.assertIn("Sunset Boulevard", clean)
+        self.assertIn("11 A-M", clean)
+        self.assertIn("H-O-A", clean)
+        self.assertIn("M-L-S", clean)
+        self.assertIn("with", clean)
+
+    def test_human_grounding_micro_breaths(self):
+        """Verifies natural human breathing cadence insertion after discourse markers."""
+        from src.closer.voice.tts import normalize_speech_text
+        clean_us = normalize_speech_text("Gotcha, that makes complete sense.")
+        self.assertTrue(clean_us.startswith("Gotcha..."))
+
+        clean_in = normalize_speech_text("Namaste sir, how may I assist you?")
+        self.assertTrue(clean_in.startswith("Namaste sir..."))
+
+        clean_hg = normalize_speech_text("Haanji bilkul, we have 3 BHK ready.")
+        self.assertTrue(clean_hg.startswith("Haanji bilkul..."))
+
+    def test_expressive_indian_and_us_neural_voices(self):
+        """Verifies expressive neural voice synthesis for Indian and US personas."""
+        # Indian Expressive Voice
+        audio_in, _ = self.tts.synthesize_sync("Namaste sir... Welcome to Daniel and Associates.", voice=VOICES["neerja_expressive"])
+        self.assertTrue(audio_in.startswith(b"RIFF"))
+
+        # US Expressive Voice
+        audio_us, _ = self.tts.synthesize_sync("Gotcha... I would be glad to show you the Bel Air estate.", voice=VOICES["ava"])
+        self.assertTrue(audio_us.startswith(b"RIFF"))
+
 
 if __name__ == "__main__":
     unittest.main()

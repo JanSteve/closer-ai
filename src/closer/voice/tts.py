@@ -16,32 +16,43 @@ import tempfile
 from pathlib import Path
 from typing import Optional, Tuple, Dict, Any
 
+# Ensure SSL certificate verification succeeds on macOS / Linux across environments
+try:
+    import certifi
+    os.environ.setdefault("SSL_CERT_FILE", certifi.where())
+except ImportError:
+    pass
+
 from src.closer.config import settings
 
-# Supported high-fidelity neural voices with natural human timbre
+# Supported high-fidelity neural voices with natural human timbre and expressive prosody
 VOICES = {
     # Female Voices (Natural, human-like, consultative)
-    "sophia": "en-US-AriaNeural",                  # Primary Concierge persona
-    "aria": "en-US-AriaNeural",                    # Default Female: Warm, consultative executive assistant
-    "jenny": "en-US-JennyNeural",                  # Crisp, natural, friendly
+    "sophia": "en-US-AvaNeural",                   # Primary Concierge persona: Expressive, warm, conversational
+    "aria": "en-US-AriaNeural",                    # Classic Consultative executive assistant
     "ava": "en-US-AvaNeural",                      # Expressive, polished, highly natural
+    "jenny": "en-US-JennyNeural",                  # Crisp, natural, friendly
     "emma": "en-US-EmmaMultilingualNeural",        # International luxury concierge
     "michelle": "en-US-MichelleNeural",            # Professional, articulate
     
     # Male Voices (Confident, authoritative, luxury broker)
     "guy": "en-US-GuyNeural",                      # Default Male: Confident, elite luxury broker tone
+    "andrew": "en-US-AndrewMultilingualNeural",    # Warm, polished corporate advisor & closer
     "christopher": "en-US-ChristopherNeural",      # Seasoned, authoritative executive
     "brian": "en-US-BrianNeural",                  # Relaxed, natural, conversational
     "eric": "en-US-EricNeural",                    # Friendly, approachable, high-energy
-    "andrew": "en-US-AndrewNeural",                # Warm, polished corporate advisor
 
-    # India Market & Customer Care Voices (Polite, Patient, Consultative)
-    "neerja": "en-IN-NeerjaNeural",                # Female (India): Warm executive customer care consultant
-    "priya": "en-IN-NeerjaNeural",                 # Female (India): Senior customer support representative
-    "kavya": "en-IN-NeerjaNeural",                 # Female (India): Friendly relationship executive
-    "prabhat": "en-IN-PrabhatNeural",              # Male (India): Professional, authoritative corporate advisor
-    "aarav": "en-IN-PrabhatNeural",                # Male (India): Senior customer care executive
-    "rishi": "en-IN-PrabhatNeural",                # Male (India): Consultative customer support
+    # India Market & Customer Care Voices (Polite, Patient, Consultative, Vernacular)
+    "neerja_expressive": "en-IN-NeerjaExpressiveNeural", # Female (India): Expressive, hyper-natural customer relationship manager
+    "neerja": "en-IN-NeerjaExpressiveNeural",            # Female (India): Expressive default
+    "neerja_standard": "en-IN-NeerjaNeural",             # Female (India): Standard corporate customer care
+    "priya": "en-IN-NeerjaExpressiveNeural",             # Female (India): Senior customer support representative
+    "kavya": "en-IN-NeerjaExpressiveNeural",             # Female (India): Warm relationship executive
+    "prabhat": "en-IN-PrabhatNeural",                    # Male (India): Professional, authoritative corporate advisor
+    "aarav": "en-IN-PrabhatNeural",                      # Male (India): Senior customer care executive
+    "rishi": "en-IN-PrabhatNeural",                      # Male (India): Consultative customer support
+    "swara": "hi-IN-SwaraNeural",                        # Female (Hindi): Native vernacular customer support
+    "madhur": "hi-IN-MadhurNeural",                      # Male (Hindi): Native vernacular customer support
 
     # Global / Cross-Border High-Ticket Accents
     "sonia": "en-GB-SoniaNeural",                  # Female (UK): Prestigious Mayfair concierge
@@ -50,24 +61,26 @@ VOICES = {
 
 # Gender and Persona Aliases for seamless developer ergonomics
 VOICE_ALIASES = {
-    "sophia": "en-US-AriaNeural",
-    "female": "en-US-AriaNeural",
+    "sophia": "en-US-AvaNeural",
+    "female": "en-US-AvaNeural",
     "female_warm": "en-US-AriaNeural",
-    "female_crisp": "en-US-JennyNeural",
     "female_expressive": "en-US-AvaNeural",
+    "female_crisp": "en-US-JennyNeural",
     "female_luxury": "en-US-EmmaMultilingualNeural",
     "male": "en-US-GuyNeural",
     "male_confident": "en-US-GuyNeural",
     "male_authoritative": "en-US-ChristopherNeural",
-    "male_conversational": "en-US-BrianNeural",
-    "india_female": "en-IN-NeerjaNeural",
+    "male_conversational": "en-US-AndrewMultilingualNeural",
+    "india_female": "en-IN-NeerjaExpressiveNeural",
     "india_male": "en-IN-PrabhatNeural",
-    "priya": "en-IN-NeerjaNeural",
-    "neerja": "en-IN-NeerjaNeural",
+    "priya": "en-IN-NeerjaExpressiveNeural",
+    "neerja": "en-IN-NeerjaExpressiveNeural",
     "prabhat": "en-IN-PrabhatNeural",
     "aarav": "en-IN-PrabhatNeural",
-    "india_customer_care": "en-IN-NeerjaNeural",
+    "india_customer_care": "en-IN-NeerjaExpressiveNeural",
     "india_support_male": "en-IN-PrabhatNeural",
+    "hindi_female": "hi-IN-SwaraNeural",
+    "hindi_male": "hi-IN-MadhurNeural",
     "uk_female": "en-GB-SoniaNeural",
     "uk_male": "en-GB-RyanNeural",
 }
@@ -78,8 +91,10 @@ def normalize_speech_text(text: str) -> str:
     Normalizes conversational text for ultra-natural, fluent human speech:
     - Converts numbers & currency into natural spoken words ($6.85M -> 6 point 85 million dollars)
     - Expands Indian currency (₹1.65 Cr -> 1.65 crore rupees, ₹95L -> 95 lakh rupees)
-    - Expands acronyms (3 BHK -> 3 B-H-K, RERA -> Ray-ra)
-    - Softens punctuation and removes markdown formatting for seamless cadence
+    - Expands real estate floorplans (4BR/3.5BA -> 4 bedroom, 3 and a half bath, 3 BHK -> 3 B-H-K)
+    - Expands temporal abbreviations (11:00 AM -> 11 A-M, PST -> Pacific Time)
+    - Expands street and navigation abbreviations (Sunset Blvd -> Sunset Boulevard)
+    - Enhances acoustic human pauses (Gotcha..., Namaste sir...) for lifelike breathing cadence
     """
     if not text:
         return text
@@ -88,24 +103,83 @@ def normalize_speech_text(text: str) -> str:
     # Strip markdown symbols
     clean = re.sub(r'[*_`#]', '', text)
 
-    # US Currency
+    # 1. US & Global Currency Normalization
     clean = re.sub(r'\$(\d+(?:\.\d+)?)\s*(?:m\b|million\b)', r'\1 million dollars', clean, flags=re.IGNORECASE)
     clean = re.sub(r'\$(\d+(?:\.\d+)?)\s*(?:k\b|thousand\b)', r'\1 thousand dollars', clean, flags=re.IGNORECASE)
     clean = re.sub(r'\$(\d+(?:,\d{3})+)', lambda m: f"{int(m.group(1).replace(',', '')):,} dollars", clean)
+    clean = re.sub(r'\$(\d+)\b', r'\1 dollars', clean)
 
-    # Indian Currency (Lakhs and Crores)
+    # 2. Indian Currency Normalization (Lakhs, Crores, Rupees)
     clean = re.sub(r'(?:₹|rs\.?|inr)\s*(\d+(?:\.\d+)?)\s*(?:cr\b|crores?\b)', r'\1 crore rupees', clean, flags=re.IGNORECASE)
     clean = re.sub(r'(?:₹|rs\.?|inr)\s*(\d+(?:\.\d+)?)\s*(?:lakhs?\b|lacs?\b|l\b)', r'\1 lakh rupees', clean, flags=re.IGNORECASE)
+    clean = re.sub(r'(?:₹|rs\.?|inr)\s*(\d+(?:,\d+)*)', lambda m: f"{m.group(1).replace(',', '')} rupees", clean, flags=re.IGNORECASE)
 
-    # Real Estate & Support Phonetics
-    clean = re.sub(r'\b(\d)\s*bhk\b', r'\1 B-H-K', clean, flags=re.IGNORECASE)
+    # 3. Real Estate Floorplans, Measurements & Acronyms
+    # e.g., 4BR/3.5BA -> 4 bedroom, 3 and a half bath
+    clean = re.sub(
+        r'\b(\d+)\s*br\s*/\s*(\d+)\.5\s*ba\b',
+        r'\1 bedroom, \2 and a half bath',
+        clean,
+        flags=re.IGNORECASE
+    )
+    clean = re.sub(
+        r'\b(\d+)\s*br\s*/\s*(\d+)\s*ba\b',
+        r'\1 bedroom, \2 bath',
+        clean,
+        flags=re.IGNORECASE
+    )
+    clean = re.sub(r'\b(\d+(?:\.\d+)?)\s*bhk\b', r'\1 B-H-K', clean, flags=re.IGNORECASE)
+    clean = re.sub(r'\b(?:sq\.?\s*ft\.?|sqft|sq\s*feet)\b', 'square feet', clean, flags=re.IGNORECASE)
+    clean = re.sub(r'\bhoa\b', 'H-O-A', clean, flags=re.IGNORECASE)
+    clean = re.sub(r'\bmls\b', 'M-L-S', clean, flags=re.IGNORECASE)
+    clean = re.sub(r'\bpiti\b', 'P-I-T-I', clean, flags=re.IGNORECASE)
     clean = re.sub(r'\brera\b', 'R-E-R-A', clean, flags=re.IGNORECASE)
-    clean = re.sub(r'\bsms\b', 'S-M-S', clean, flags=re.IGNORECASE)
+    clean = re.sub(r'\b(?:vaastu|vastu)\b', 'Vaas-too', clean, flags=re.IGNORECASE)
+    clean = re.sub(r'\bapprox\.?\b', 'approximately', clean, flags=re.IGNORECASE)
+    clean = re.sub(r'(?:\s|^)w/(?:\s|$)', ' with ', clean, flags=re.IGNORECASE)
+    clean = re.sub(r'\best\.?\b', 'estimated', clean, flags=re.IGNORECASE)
+
+    # 4. Indian Banking & Telecom Names
+    clean = re.sub(r'\bsbi\b', 'S-B-I', clean, flags=re.IGNORECASE)
+    clean = re.sub(r'\bhdfc\b', 'H-D-F-C', clean, flags=re.IGNORECASE)
+    clean = re.sub(r'\bicici\b', 'I-C-I-C-I', clean, flags=re.IGNORECASE)
+    clean = re.sub(r'\bcidco\b', 'Sid-co', clean, flags=re.IGNORECASE)
+    clean = re.sub(r'\bbmrda\b', 'B-M-R-D-A', clean, flags=re.IGNORECASE)
+    clean = re.sub(r'\borr\b', 'Outer Ring Road', clean, flags=re.IGNORECASE)
     clean = re.sub(r'\bwhatsapp\b', 'Whats App', clean, flags=re.IGNORECASE)
-    clean = re.sub(r'#?CC-(\d+)', r'Ticket C-C \1', clean)
+    clean = re.sub(r'\bsms\b', 'S-M-S', clean, flags=re.IGNORECASE)
+    clean = re.sub(r'\botp\b', 'O-T-P', clean, flags=re.IGNORECASE)
+    clean = re.sub(r'\bkyc\b', 'K-Y-C', clean, flags=re.IGNORECASE)
+    clean = re.sub(r'(?:Ticket\s*)?#?CC-(\d+)', r'Ticket C-C \1', clean, flags=re.IGNORECASE)
+
+    # 5. Time & Scheduling Normalization
+    clean = re.sub(r'\b(\d{1,2}):00\s*(am|a\.m\.)\b', r'\1 A-M', clean, flags=re.IGNORECASE)
+    clean = re.sub(r'\b(\d{1,2}):00\s*(pm|p\.m\.)\b', r'\1 P-M', clean, flags=re.IGNORECASE)
+    clean = re.sub(r'\b(\d{1,2}):(\d{2})\s*(am|a\.m\.)\b', r'\1 \2 A-M', clean, flags=re.IGNORECASE)
+    clean = re.sub(r'\b(\d{1,2}):(\d{2})\s*(pm|p\.m\.)\b', r'\1 \2 P-M', clean, flags=re.IGNORECASE)
+    clean = re.sub(r'\b(\d{1,2})\s*(am|a\.m\.)\b', r'\1 A-M', clean, flags=re.IGNORECASE)
+    clean = re.sub(r'\b(\d{1,2})\s*(pm|p\.m\.)\b', r'\1 P-M', clean, flags=re.IGNORECASE)
+    clean = re.sub(r'\bpst\b', 'Pacific Time', clean, flags=re.IGNORECASE)
+    clean = re.sub(r'\best\b', 'Eastern Time', clean, flags=re.IGNORECASE)
+    clean = re.sub(r'\bist\b', 'Indian Standard Time', clean, flags=re.IGNORECASE)
+
+    # 6. Street and Thoroughfare Expansions
+    clean = re.sub(r'\b([A-Z][a-zA-Z]+)\s+Blvd\.?\b', r'\1 Boulevard', clean)
+    clean = re.sub(r'\b([A-Z][a-zA-Z]+)\s+Ave\.?\b', r'\1 Avenue', clean)
+    clean = re.sub(r'\b([A-Z][a-zA-Z]+)\s+St\.?\b', r'\1 Street', clean)
+    clean = re.sub(r'\b([A-Z][a-zA-Z]+)\s+Dr\.?\b', r'\1 Drive', clean)
+    clean = re.sub(r'\b([A-Z][a-zA-Z]+)\s+Rd\.?\b', r'\1 Road', clean)
+    clean = re.sub(r'\b([A-Z][a-zA-Z]+)\s+Ct\.?\b', r'\1 Court', clean)
+    clean = re.sub(r'\b([A-Z][a-zA-Z]+)\s+Pkwy\.?\b', r'\1 Parkway', clean)
+
+    # 7. Acoustic Breathing Pauses & Grounding Cadence Shaping
+    # Human grounding prefixes with micro-breaths
+    clean = re.sub(r'^(Gotcha|Understood|Certainly|Wonderful|I understand|Totally understand|Right|Fair enough)\b([,!.]?)\s*', r'\1... ', clean, flags=re.IGNORECASE)
+    clean = re.sub(r'^(Namaste\s+(?:sir|ma\'?am|ji)?)\b([,!.]?)\s*', r'\1... ', clean, flags=re.IGNORECASE)
+    clean = re.sub(r'^(Haanji\s+bilkul|Haanji|Bilkul|Definitely\s+(?:sir|ma\'?am)?)\b([,!.]?)\s*', r'\1... ', clean, flags=re.IGNORECASE)
 
     # Replace double dashes and technical syntax with natural speaking pauses
-    clean = re.sub(r'\s*--\s*', ', ', clean)
+    clean = re.sub(r'\s*--\s*', ' — ', clean)
     clean = re.sub(r'\s{2,}', ' ', clean)
     return clean.strip()
 
@@ -181,19 +255,27 @@ class EdgeTTSVoiceEngine:
         if not audio_bytes:
             try:
                 import edge_tts
-                communicate = edge_tts.Communicate(clean_text, target_voice, rate=target_rate)
-                raw_audio = bytearray()
-                async for chunk in communicate.stream():
-                    if chunk["type"] == "audio":
-                        raw_audio.extend(chunk["data"])
-                
-                if len(raw_audio) > 0:
-                    audio_bytes = bytes(raw_audio)
-                    # If output needs to be WAV and raw_audio is MP3, convert or write
-                    if output_path and output_path.endswith(".wav"):
-                        audio_bytes = self._ensure_wav_format(audio_bytes, target_sr)
+                voices_to_try = [target_voice]
+                if "Expressive" in target_voice:
+                    voices_to_try.append(target_voice.replace("Expressive", ""))
+                elif target_voice == "en-US-AvaNeural":
+                    voices_to_try.append("en-US-AriaNeural")
+
+                for v_attempt in voices_to_try:
+                    try:
+                        communicate = edge_tts.Communicate(clean_text, v_attempt, rate=target_rate)
+                        raw_audio = bytearray()
+                        async for chunk in communicate.stream():
+                            if chunk["type"] == "audio":
+                                raw_audio.extend(chunk["data"])
+                        if len(raw_audio) > 0:
+                            audio_bytes = bytes(raw_audio)
+                            if output_path and output_path.endswith(".wav"):
+                                audio_bytes = self._ensure_wav_format(audio_bytes, target_sr)
+                            break
+                    except Exception:
+                        continue
             except Exception:
-                # Fallback triggered immediately if offline or edge-tts fails
                 audio_bytes = None
 
         # 2. Resilient local fallback (guarantees 100% offline uptime and <100ms latency)

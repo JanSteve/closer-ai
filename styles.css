@@ -1439,6 +1439,67 @@ body.modal-open {
   box-shadow: 0 0 16px rgba(255, 255, 255, 0.25);
 }
 
+.studio-meta-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+}
+
+.studio-meta-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.studio-meta-label {
+  font-size: 11px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.cadence-pill {
+  padding: 4px 10px;
+  background: var(--pill-dark);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  color: #c8c8c8;
+  font-size: 11.5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cadence-pill.active {
+  background: #ffffff;
+  color: #000000;
+  font-weight: 600;
+}
+
+.telecom-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  background: var(--pill-dark);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 999px;
+  color: #c8c8c8;
+  font-size: 11.5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.telecom-toggle-btn.active {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: #38bdf8;
+  color: #38bdf8;
+}
+
 .scenario-grid {
   display: flex;
   flex-direction: column;

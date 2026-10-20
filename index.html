@@ -542,41 +542,82 @@
         <div class="soundboard-container reveal">
           <div class="soundboard-controls">
             <div class="control-group">
-              <label class="display-font">// SELECT NEURAL VOICE</label>
+              <label class="display-font">// SELECT NEURAL VOICE &amp; ACCENT</label>
               <div class="voice-pills">
                 <button class="voice-pill active" data-voice="en-US-AriaNeural" onclick="selectStudioVoice(this)">
-                  <span>Sophia (USA Female)</span>
+                  <span>Sophia (USA Luxury Concierge)</span>
                 </button>
                 <button class="voice-pill" data-voice="en-US-GuyNeural" onclick="selectStudioVoice(this)">
-                  <span>Guy (USA Male)</span>
+                  <span>Guy (USA Wall St Closer)</span>
                 </button>
                 <button class="voice-pill" data-voice="en-IN-NeerjaNeural" onclick="selectStudioVoice(this)">
-                  <span>Priya (India Female)</span>
+                  <span>Priya (India Relationship Manager)</span>
                 </button>
                 <button class="voice-pill" data-voice="en-IN-PrabhatNeural" onclick="selectStudioVoice(this)">
-                  <span>Prabhat (India Male)</span>
+                  <span>Prabhat (India Enterprise Care)</span>
+                </button>
+                <button class="voice-pill" data-voice="en-US-AvaNeural" onclick="selectStudioVoice(this)">
+                  <span>Ava (USA Expressive Closer)</span>
+                </button>
+                <button class="voice-pill" data-voice="en-US-AndrewMultilingualNeural" onclick="selectStudioVoice(this)">
+                  <span>Andrew (USA Wealth Advisor)</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Acoustic Cadence & Cellular Network Simulation -->
+            <div class="studio-meta-controls">
+              <div class="studio-meta-group">
+                <span class="studio-meta-label display-font">// CADENCE:</span>
+                <button class="cadence-pill" data-rate="-6%" data-speed="0.92" onclick="setStudioCadence(this, '-6%', '0.92')">0.92x (Luxury)</button>
+                <button class="cadence-pill active" data-rate="-3%" data-speed="1.0" onclick="setStudioCadence(this, '-3%', '1.0')">1.0x (Human)</button>
+                <button class="cadence-pill" data-rate="+4%" data-speed="1.08" onclick="setStudioCadence(this, '+4%', '1.08')">1.08x (Telecom)</button>
+              </div>
+              <div class="studio-meta-group">
+                <span class="studio-meta-label display-font">// NETWORK:</span>
+                <button class="telecom-toggle-btn active" id="btnAcousticStudio" onclick="setAcousticMode(false)">
+                  <i class="fa-solid fa-sparkles"></i> <span>Studio HD 48kHz</span>
+                </button>
+                <button class="telecom-toggle-btn" id="btnAcousticCellular" onclick="setAcousticMode(true)">
+                  <i class="fa-solid fa-phone"></i> <span>Cellular 8kHz IVR</span>
                 </button>
               </div>
             </div>
 
             <div class="control-group">
-              <label class="display-font">// SELECT OBJECTION / SCENARIO</label>
+              <label class="display-font">// SELECT OBJECTION &amp; CONVERSATIONAL SLANG SCENARIO</label>
               <div class="scenario-grid">
                 <button class="scenario-btn active" data-scenario="friction_busy" onclick="selectStudioScenario(this)">
-                  <span class="scen-title">"I'm in a meeting right now, call tomorrow"</span>
-                  <span class="scen-desc">Tests respectful schedule friction &amp; immediate callback window</span>
+                  <span class="scen-title">🇺🇸 "I'm in a meeting right now, call tomorrow"</span>
+                  <span class="scen-desc">Empathetic schedule friction handling, respects client time, offers 2:00 PM PST callback</span>
+                </button>
+                <button class="scenario-btn" data-scenario="just_browsing" onclick="selectStudioScenario(this)">
+                  <span class="scen-title">🇺🇸 "I'm just browsing online, don't have financing yet"</span>
+                  <span class="scen-desc">Validates early browsing, qualifies dream timeline &amp; offers private banking partner</span>
                 </button>
                 <button class="scenario-btn" data-scenario="luxury_cash" onclick="selectStudioScenario(this)">
-                  <span class="scen-title">"$8.5M Cash Buyer looking for Bel Air Estate"</span>
-                  <span class="scen-desc">Tests ultra-luxury cash qualification &amp; VIP private showing</span>
+                  <span class="scen-title">🇺🇸 "$8.5M Cash Buyer looking for Bel Air Estate"</span>
+                  <span class="scen-desc">Ultra-luxury turnkey qualification, proof-of-funds escrow &amp; off-market walkthrough</span>
+                </button>
+                <button class="scenario-btn" data-scenario="exclusive_listing" onclick="selectStudioScenario(this)">
+                  <span class="scen-title">🇺🇸 "I already have an agent, what pocket listings do you have?"</span>
+                  <span class="scen-desc">Respects buyer representation &amp; pivots to pre-MLS private off-market access</span>
+                </button>
+                <button class="scenario-btn" data-scenario="india_greeting" onclick="selectStudioScenario(this)">
+                  <span class="scen-title">🇮🇳 "Namaste, need assistance regarding residential inquiry"</span>
+                  <span class="scen-desc">Polite Indian customer care greeting with active listening and immediate discovery</span>
                 </button>
                 <button class="scenario-btn" data-scenario="india_bhk_rera" onclick="selectStudioScenario(this)">
-                  <span class="scen-title">"Looking for 3 BHK in Whitefield, is RERA approved?"</span>
-                  <span class="scen-desc">Tests ₹ Crores pricing, RERA clearance &amp; WhatsApp brochure</span>
+                  <span class="scen-title">🇮🇳 "Looking for 3 BHK in Whitefield, is RERA approved?"</span>
+                  <span class="scen-desc">Natural ₹1.65 Cr pricing, RERA clearance, SBI/HDFC approval &amp; WhatsApp floor plans</span>
                 </button>
                 <button class="scenario-btn" data-scenario="india_ticket" onclick="selectStudioScenario(this)">
-                  <span class="scen-title">"Possession is delayed, I want to log a complaint"</span>
-                  <span class="scen-desc">Tests empathetic grievance handling &amp; ticket logging (#CC-84291)</span>
+                  <span class="scen-title">🇮🇳 "Possession is delayed, I want to log an urgent complaint"</span>
+                  <span class="scen-desc">Empathetic grievance resolution, logs Ticket #CC-84291 &amp; WhatsApp manager follow-up</span>
+                </button>
+                <button class="scenario-btn" data-scenario="india_office_hours" onclick="selectStudioScenario(this)">
+                  <span class="scen-title">🇮🇳 "In office right now, call after 6 PM or message WhatsApp"</span>
+                  <span class="scen-desc">Indian corporate hours respect, schedules evening callback &amp; instant WhatsApp pack</span>
                 </button>
               </div>
             </div>
