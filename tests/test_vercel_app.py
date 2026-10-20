@@ -22,10 +22,14 @@ class TestVercelAppEntrypoint(unittest.TestCase):
         self.assertTrue(callable(app.app))
 
     def test_api_index_reexports_app(self):
-        """Verifies api/index.py re-exports app for Vercel serverless."""
+        """Verifies api/index.py, index.py, and main.py re-export app for Vercel serverless."""
         from api.index import app as vercel_app
+        import index
+        import main
         import app
         self.assertIs(vercel_app, app.app)
+        self.assertIs(index.app, app.app)
+        self.assertIs(main.app, app.app)
 
     def test_pyproject_vercel_entrypoint_matches(self):
         """Verifies pyproject.toml defines [tool.vercel] entrypoint = 'app.py:app'."""
