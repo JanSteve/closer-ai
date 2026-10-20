@@ -32,12 +32,12 @@ class TestVercelAppEntrypoint(unittest.TestCase):
         self.assertIs(main.app, app.app)
 
     def test_pyproject_vercel_entrypoint_matches(self):
-        """Verifies pyproject.toml defines [tool.vercel] entrypoint = 'app.py:app'."""
+        """Verifies pyproject.toml defines [tool.vercel] entrypoint = 'main:app'."""
         pyproject_file = ROOT_DIR / "pyproject.toml"
         self.assertTrue(pyproject_file.exists())
         content = pyproject_file.read_text(encoding="utf-8")
         self.assertIn("[tool.vercel]", content)
-        self.assertIn('entrypoint = "app.py:app"', content)
+        self.assertIn('entrypoint = "main:app"', content)
 
     def test_vercel_json_validity(self):
         """Verifies vercel.json exists and contains cleanUrls."""
@@ -48,7 +48,7 @@ class TestVercelAppEntrypoint(unittest.TestCase):
 
     def test_asgi_routing_responses(self):
         """Verifies ASGI app responds to HTTP GET requests for root, styles, and js."""
-        import app
+        import main
 
         async def run_asgi(path: str):
             messages = []
@@ -61,12 +61,17 @@ class TestVercelAppEntrypoint(unittest.TestCase):
 
             scope = {
                 "type": "http",
+                "http_version": "1.1",
                 "method": "GET",
                 "path": path,
+                "raw_path": path.encode("ascii"),
+                "query_string": b"",
                 "headers": [],
+                "client": ("127.0.0.1", 12345),
+                "server": ("127.0.0.1", 80),
             }
 
-            await app.app(scope, receive, send)
+            await main.app(scope, receive, send)
             return messages
 
         # Test root path

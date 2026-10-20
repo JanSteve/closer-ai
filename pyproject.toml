@@ -76,4 +76,4 @@ python_functions = ["test_*"]
 asyncio_mode = "auto"
 
 [tool.vercel]
-entrypoint = "app.py:app"
+entrypoint = "main:app"

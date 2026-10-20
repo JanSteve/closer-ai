@@ -1,8 +1,2 @@
-"""Vercel Serverless Entrypoint for CLOSER AI."""
-import sys
-from pathlib import Path
-
-ROOT_DIR = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(ROOT_DIR))
-
-from app import app
+"""CLOSER AI — api/index.py serverless entrypoint for Vercel deployment."""
+from main import app
