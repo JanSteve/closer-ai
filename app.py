@@ -15,7 +15,7 @@ sys.path.insert(0, str(ROOT_DIR))
 sys.path.insert(0, str(ROOT_DIR / "src"))
 
 try:
-    from fastapi import FastAPI, Response
+    from fastapi import FastAPI, Response, Request
     from fastapi.middleware.cors import CORSMiddleware
     from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 
@@ -90,6 +90,76 @@ try:
         except Exception:
             return JSONResponse(content=[])
 
+    try:
+        from src.closer.engine.dialogue import ConversationEngine
+        from src.closer.tts.engine import EdgeTTSEngine
+        _app_conversation_engine = ConversationEngine(market_mode="usa")
+        _app_tts_engine = EdgeTTSEngine()
+    except Exception:
+        _app_conversation_engine = None
+        _app_tts_engine = None
+
+    @app.post("/api/market_mode")
+    async def set_market_mode(request: Request):
+        global _app_conversation_engine
+        try:
+            data = await request.json()
+        except Exception:
+            data = {}
+        mode = data.get("mode", "usa").lower()
+        if _app_conversation_engine:
+            _app_conversation_engine.set_market_mode(mode)
+            greeting = _app_conversation_engine.get_initial_greeting()
+            dossier = _app_conversation_engine.export_dossier().model_dump()
+        else:
+            greeting = "Namaste! How may I assist you today?" if mode == "india" else "Hello, this is CLOSER AI luxury real estate concierge. How can I assist you today?"
+            dossier = {"market_mode": mode}
+        return JSONResponse(content={"success": True, "mode": mode, "greeting": greeting, "dossier": dossier})
+
+    @app.post("/api/reset")
+    async def reset_conversation():
+        global _app_conversation_engine
+        try:
+            from src.closer.engine.dialogue import ConversationEngine
+            _app_conversation_engine = ConversationEngine(market_mode="usa")
+            greeting = _app_conversation_engine.get_initial_greeting()
+            dossier = _app_conversation_engine.export_dossier().model_dump()
+        except Exception:
+            greeting = "Hello, this is CLOSER AI luxury real estate concierge. How can I assist you today?"
+            dossier = {"market_mode": "usa"}
+        return JSONResponse(content={"success": True, "greeting": greeting, "dossier": dossier})
+
+    @app.post("/api/turn")
+    async def process_turn(request: Request):
+        global _app_conversation_engine, _app_tts_engine
+        try:
+            data = await request.json()
+        except Exception:
+            data = {}
+        utterance = data.get("utterance", "")
+        voice = data.get("voice", "en-US-AriaNeural")
+
+        if utterance == "PREVIEW_SAMPLE":
+            if "en-IN" in voice:
+                reply = "Namaste! This is CLOSER AI client relationship concierge. How may I assist you with your premium residential inquiry today?"
+            else:
+                reply = "Hello, this is CLOSER AI luxury real estate concierge. How can I assist you with your estate search today?"
+        elif _app_conversation_engine:
+            reply = _app_conversation_engine.process_user_turn(utterance)
+        else:
+            reply = f"Thank you for your inquiry. CLOSER AI is processing: {utterance}"
+
+        audio_b64 = ""
+        if _app_tts_engine:
+            try:
+                audio_bytes, _ = _app_tts_engine.synthesize_sync(reply, voice=voice)
+                audio_b64 = base64.b64encode(audio_bytes).decode("utf-8")
+            except Exception:
+                audio_b64 = ""
+
+        dossier = _app_conversation_engine.export_dossier().model_dump() if _app_conversation_engine else {}
+        return JSONResponse(content={"reply": reply, "audio_base64": audio_b64, "dossier": dossier})
+
 except ImportError:
     # Minimal ASGI fallback if FastAPI is not installed locally
     async def app(scope, receive, send):
@@ -99,6 +169,20 @@ except ImportError:
                 index_path = ROOT_DIR / "index.html"
                 content = index_path.read_bytes() if index_path.exists() else b"CLOSER AI"
                 content_type = b"text/html; charset=utf-8"
+            elif path in ("/console", "/dashboard", "/admin"):
+                try:
+                    from src.closer.web.dashboard import HTML_TEMPLATE
+                    content = HTML_TEMPLATE.encode("utf-8")
+                except Exception:
+                    content = b"<h1>CLOSER AI Executive Console</h1>"
+                content_type = b"text/html; charset=utf-8"
+            elif path == "/api/leads":
+                try:
+                    from src.closer.web.dashboard import MOCK_LEADS
+                    content = json.dumps(MOCK_LEADS).encode("utf-8")
+                except Exception:
+                    content = b"[]"
+                content_type = b"application/json"
             elif path.endswith(".css"):
                 file_path = ROOT_DIR / path.lstrip("/")
                 content = file_path.read_bytes() if file_path.exists() else b""
@@ -107,6 +191,14 @@ except ImportError:
                 file_path = ROOT_DIR / path.lstrip("/")
                 content = file_path.read_bytes() if file_path.exists() else b""
                 content_type = b"application/javascript; charset=utf-8"
+            elif path.startswith("/assets/"):
+                file_path = ROOT_DIR / path.lstrip("/")
+                content = file_path.read_bytes() if file_path.exists() else b""
+                content_type = b"image/webp" if path.endswith(".webp") else b"application/octet-stream"
+            elif path.startswith("/fonts/"):
+                file_path = ROOT_DIR / path.lstrip("/")
+                content = file_path.read_bytes() if file_path.exists() else b""
+                content_type = b"font/woff2"
             else:
                 content = b"Not Found"
                 content_type = b"text/plain"
