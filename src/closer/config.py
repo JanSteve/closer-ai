@@ -80,6 +80,9 @@ class Settings:
     CRM_WEBHOOK_URL: Optional[str] = field(default_factory=lambda: os.getenv("CRM_WEBHOOK_URL"))
     WEBHOOK_SECRET: str = field(default_factory=lambda: os.getenv("WEBHOOK_SECRET", "closer_ai_dev_secret_2026"))
     
+    # APILayer Unified Suite / Public-APIs Integration
+    APILAYER_API_KEY: Optional[str] = field(default_factory=lambda: os.getenv("APILAYER_API_KEY"))
+    
     # Server Runtime
     HOST: str = field(default_factory=lambda: os.getenv("HOST", "0.0.0.0"))
     PORT: int = field(default_factory=lambda: int(os.getenv("PORT", "8000")))
@@ -101,7 +104,8 @@ class Settings:
             "TOUR_DURATION_MINUTES": self.TOUR_DURATION_MINUTES,
             "HAS_GROQ_KEY": bool(self.GROQ_API_KEY),
             "HAS_TWILIO_CONFIG": bool(self.TWILIO_ACCOUNT_SID and self.TWILIO_AUTH_TOKEN),
-            "HAS_FUB_CONFIG": bool(self.FOLLOW_UP_BOSS_API_KEY)
+            "HAS_FUB_CONFIG": bool(self.FOLLOW_UP_BOSS_API_KEY),
+            "HAS_APILAYER_KEY": bool(self.APILAYER_API_KEY)
         }
 
 settings = Settings()

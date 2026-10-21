@@ -38,13 +38,16 @@ try:
     from src.closer.voice.tts import EdgeTTSVoiceEngine
     from src.closer.llm.models import list_available_models, get_model_profile
     from src.closer.llm.router import OpenLLMRouter
+    from src.closer.integrations.apilayer import APILayerUnifiedClient
     _app_conversation_engine = ConversationEngine(market_mode="usa")
     _app_tts_engine = EdgeTTSVoiceEngine()
     _app_llm_router = _app_conversation_engine.llm_router
+    _app_apilayer_client = APILayerUnifiedClient()
 except Exception:
     _app_conversation_engine = None
     _app_tts_engine = None
     _app_llm_router = None
+    _app_apilayer_client = None
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -231,4 +234,102 @@ async def process_turn(request: Request):
         "llm_parameters": llm_info.get("parameter_scale"),
         "llm_latency_ms": llm_info.get("target_latency_ms") or 88,
         "llm_tier": llm_info.get("last_tier_used") or "reflex_edge"
+    })
+
+
+# -----------------------------------------------------------------------------
+# APILayer Unified Suite / Public-APIs Verification & Enrichment Endpoints
+# -----------------------------------------------------------------------------
+@app.get("/api/enrich/status")
+async def get_enrich_status():
+    global _app_apilayer_client
+    client = _app_apilayer_client or APILayerUnifiedClient()
+    is_live = client.is_configured()
+    return JSONResponse(content={
+        "configured": is_live,
+        "provider": "APILayer Unified Suite (Live API Key Connected)" if is_live else "CLOSER AI Intelligence Engine (High-Fidelity Simulation)",
+        "services": ["numverify", "mailboxlayer", "positionstack", "fixer", "currencylayer"]
+    })
+
+
+@app.post("/api/enrich/phone")
+async def enrich_phone(request: Request):
+    global _app_apilayer_client
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    phone = data.get("phone", "")
+    client = _app_apilayer_client or APILayerUnifiedClient()
+    result = client.verify_phone(phone)
+    return JSONResponse(content=result)
+
+
+@app.post("/api/enrich/email")
+async def enrich_email(request: Request):
+    global _app_apilayer_client
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    email = data.get("email", "")
+    client = _app_apilayer_client or APILayerUnifiedClient()
+    result = client.verify_email(email)
+    return JSONResponse(content=result)
+
+
+@app.post("/api/enrich/address")
+async def enrich_address(request: Request):
+    global _app_apilayer_client
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    address = data.get("address", "")
+    client = _app_apilayer_client or APILayerUnifiedClient()
+    result = client.geocode_property(address)
+    return JSONResponse(content=result)
+
+
+@app.post("/api/enrich/currency")
+async def enrich_currency(request: Request):
+    global _app_apilayer_client
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    amount = float(data.get("amount", 0))
+    from_curr = data.get("from_curr", "USD")
+    to_curr = data.get("to_curr", "INR")
+    client = _app_apilayer_client or APILayerUnifiedClient()
+    result = client.convert_currency(amount, from_curr=from_curr, to_curr=to_curr)
+    return JSONResponse(content=result)
+
+
+@app.post("/api/enrich/lead")
+async def enrich_lead(request: Request):
+    global _app_apilayer_client, _app_conversation_engine
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    dossier_data = data if data else (_app_conversation_engine.export_dossier().model_dump() if _app_conversation_engine else {})
+    client = _app_apilayer_client or APILayerUnifiedClient()
+    result = client.enrich_lead_dossier(dossier_data)
+    return JSONResponse(content=result)
+
+
+@app.post("/api/enrich/key")
+async def set_apilayer_key(request: Request):
+    global _app_apilayer_client
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    api_key = data.get("api_key", "").strip()
+    _app_apilayer_client = APILayerUnifiedClient(api_key=api_key)
+    return JSONResponse(content={
+        "success": True,
+        "configured": _app_apilayer_client.is_configured(),
+        "provider": "APILayer Unified Suite (Live API Key Connected)" if _app_apilayer_client.is_configured() else "CLOSER AI Intelligence Engine (High-Fidelity Simulation)"
     })

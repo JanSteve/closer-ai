@@ -254,6 +254,65 @@ class TestWebDashboardConsole(unittest.TestCase):
         self.assertTrue(post_resp["success"])
         self.assertEqual(post_resp["model"]["model_id"], "bloomz-176b")
 
+    def test_api_enrich_endpoints_and_ui_elements(self):
+        """Verifies APILayer Unified Suite web endpoints and console UI elements."""
+        # 1. UI Elements in HTML_TEMPLATE
+        self.assertIn("apilayer-card", HTML_TEMPLATE)
+        self.assertIn("Numverify: Carrier", HTML_TEMPLATE)
+        self.assertIn("Mailboxlayer: Deliverability", HTML_TEMPLATE)
+        self.assertIn("Positionstack: Geocoding", HTML_TEMPLATE)
+        self.assertIn("Fixer: Dual-Market FX", HTML_TEMPLATE)
+        self.assertIn("enrichCurrentDossier", HTML_TEMPLATE)
+
+        # 2. GET /api/enrich/status
+        handler = DashboardHTTPHandler.__new__(DashboardHTTPHandler)
+        handler.path = "/api/enrich/status"
+        handler.headers = {}
+        handler.wfile = io.BytesIO()
+        handler.send_response = MagicMock()
+        handler.send_header = MagicMock()
+        handler.end_headers = MagicMock()
+
+        handler.do_GET()
+        handler.send_response.assert_called_with(200)
+        status_resp = json.loads(handler.wfile.getvalue().decode("utf-8"))
+        self.assertIn("services", status_resp)
+        self.assertIn("numverify", status_resp["services"])
+
+        # 3. POST /api/enrich/phone
+        post_handler = DashboardHTTPHandler.__new__(DashboardHTTPHandler)
+        post_handler.path = "/api/enrich/phone"
+        body = json.dumps({"phone": "+1-310-555-0144"}).encode("utf-8")
+        post_handler.headers = {"Content-Length": str(len(body))}
+        post_handler.rfile = io.BytesIO(body)
+        post_handler.wfile = io.BytesIO()
+        post_handler.send_response = MagicMock()
+        post_handler.send_header = MagicMock()
+        post_handler.end_headers = MagicMock()
+
+        post_handler.do_POST()
+        post_handler.send_response.assert_called_with(200)
+        phone_resp = json.loads(post_handler.wfile.getvalue().decode("utf-8"))
+        self.assertTrue(phone_resp["valid"])
+        self.assertIn("Verizon", phone_resp["carrier"])
+
+        # 4. POST /api/enrich/currency
+        fx_handler = DashboardHTTPHandler.__new__(DashboardHTTPHandler)
+        fx_handler.path = "/api/enrich/currency"
+        fx_body = json.dumps({"amount": 6850000, "from_curr": "USD", "to_curr": "INR"}).encode("utf-8")
+        fx_handler.headers = {"Content-Length": str(len(fx_body))}
+        fx_handler.rfile = io.BytesIO(fx_body)
+        fx_handler.wfile = io.BytesIO()
+        fx_handler.send_response = MagicMock()
+        fx_handler.send_header = MagicMock()
+        fx_handler.end_headers = MagicMock()
+
+        fx_handler.do_POST()
+        fx_handler.send_response.assert_called_with(200)
+        fx_resp = json.loads(fx_handler.wfile.getvalue().decode("utf-8"))
+        self.assertEqual(fx_resp["to_currency"], "INR")
+        self.assertIn("Crores", fx_resp["real_estate_notation"])
+
 
 if __name__ == "__main__":
     unittest.main()
