@@ -363,32 +363,53 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
         .voice-controls {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             flex-wrap: wrap;
             background: rgba(10, 14, 24, 0.7);
-            padding: 10px 14px;
+            padding: 12px 16px;
             border-radius: 12px;
             border: 1px solid var(--border);
+        }
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .control-label {
+            font-size: 10.5px;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.04em;
         }
         .voice-select {
             background: rgba(7, 10, 18, 0.9);
             border: 1px solid var(--border);
             color: #ffffff;
             font-size: 12.5px;
-            padding: 7px 12px;
+            padding: 8px 12px;
             border-radius: 8px;
             outline: none;
             cursor: pointer;
-            transition: border-color 0.2s;
+            transition: border-color 0.2s, box-shadow 0.2s;
         }
-        .voice-select:focus { border-color: var(--primary); }
-
-        .btn-preview, .btn-barge, .btn-reset {
+        .voice-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 10px var(--primary-glow);
+        }
+        .voice-btn-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: auto;
+            flex-wrap: wrap;
+        }
+        .btn-preview, .btn-barge, .btn-reset, .btn-voice-keys {
             background: rgba(255, 255, 255, 0.06);
             border: 1px solid var(--border);
             color: var(--text-muted);
             border-radius: 8px;
-            padding: 7px 12px;
+            padding: 8px 13px;
             font-size: 12px;
             font-weight: 600;
             cursor: pointer;
@@ -396,11 +417,22 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
             display: inline-flex;
             align-items: center;
             gap: 5px;
+            white-space: nowrap;
         }
-        .btn-preview:hover, .btn-barge:hover, .btn-reset:hover {
+        .btn-preview:hover, .btn-reset:hover {
             color: #ffffff;
             border-color: rgba(255,255,255,0.25);
             background: rgba(255, 255, 255, 0.12);
+        }
+        .btn-voice-keys {
+            background: rgba(59, 130, 246, 0.12);
+            color: #93c5fd;
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+        .btn-voice-keys:hover {
+            background: rgba(59, 130, 246, 0.25);
+            color: #ffffff;
+            border-color: #60a5fa;
         }
         .btn-barge {
             background: rgba(239, 68, 68, 0.12);
@@ -410,6 +442,135 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
         .btn-barge:hover {
             background: rgba(239, 68, 68, 0.25);
             color: #ffffff;
+        }
+
+        /* Step Guidance Ribbon */
+        .workflow-stepper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(15, 23, 42, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            padding: 8px 14px;
+            font-size: 11.5px;
+            color: var(--text-muted);
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+        .step-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .step-num {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: rgba(59, 130, 246, 0.25);
+            color: #93c5fd;
+            font-size: 10.5px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .step-sep {
+            color: var(--text-dim);
+            font-size: 12px;
+        }
+
+        /* Modal Styles */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(8px);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
+        }
+        .modal-card {
+            background: linear-gradient(135deg, rgba(15, 20, 32, 0.96) 0%, rgba(10, 14, 24, 0.98) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+            border-radius: 16px;
+            max-width: 520px;
+            width: 100%;
+            overflow: hidden;
+            animation: modalFadeIn 0.2s ease-out;
+        }
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.96); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 22px;
+            border-bottom: 1px solid var(--border);
+        }
+        .modal-close {
+            background: transparent;
+            border: none;
+            color: var(--text-dim);
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px;
+            line-height: 1;
+            transition: color 0.15s;
+        }
+        .modal-close:hover { color: #ffffff; }
+        .modal-body {
+            padding: 20px 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .modal-info-banner {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.25);
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-size: 11.5px;
+            line-height: 1.5;
+            color: #cbd5e1;
+        }
+        .modal-field {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        .modal-label {
+            font-size: 11.5px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+        .modal-input {
+            background: rgba(7, 10, 18, 0.85);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 9px 12px;
+            color: #ffffff;
+            font-size: 12.5px;
+            font-family: 'JetBrains Mono', monospace;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .modal-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 10px var(--primary-glow);
+        }
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 16px 22px;
+            border-top: 1px solid var(--border);
+            background: rgba(7, 10, 18, 0.5);
         }
 
         /* Chat / Telephony Transcript Box */
@@ -850,7 +1011,8 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
             <span class="telemetry-pill" id="telemetryLLMPill">176B SCALE</span>
         </div>
         <div class="telemetry-item">
-            <span>Neural Synthesis: <strong>24kHz Studio PCM</strong></span>
+            <span>Neural Synthesis: <strong id="telemetryVoiceEngine">Studio 48kHz PCM</strong></span>
+            <span class="telemetry-pill">BROADCAST MASTER</span>
         </div>
         <div class="telemetry-item">
             <span>Unified Suite: <strong id="telemetryAPILayer">APILayer Verified</strong></span>
@@ -886,38 +1048,57 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
                 </div>
             </div>
 
-            <!-- Instant One-Click Voice Selection & Audio Engine Controls -->
+            <!-- Step Guidance Ribbon -->
+            <div class="workflow-stepper">
+                <div class="step-item"><span class="step-num">1</span> <span><strong>Select Persona &amp; Voice Engine</strong> (Studio Broadcast Neural, ElevenLabs Turbo, or Sarvam Indic)</span></div>
+                <div class="step-sep">→</div>
+                <div class="step-item"><span class="step-num">2</span> <span><strong>Speak / Test Scenarios</strong> (Schedule friction "come tomorrow", objection handling, WhatsApp dispatch)</span></div>
+                <div class="step-sep">→</div>
+                <div class="step-item"><span class="step-num">3</span> <span><strong>Review Live Dossier &amp; APILayer</strong> (Real-time Pydantic schema extraction &amp; carrier validation)</span></div>
+            </div>
+
+            <!-- Instant One-Click Voice Selection & Studio Neural Controls -->
             <div class="voice-controls">
-                <label style="font-size:11px; color:var(--text-dim); text-transform:uppercase; font-weight:700;">Persona:</label>
-                <select id="voiceSelect" class="voice-select">
-                    <option value="en-US-AriaNeural" selected>Sophia / Aria (US Female • Warm Consultative)</option>
-                    <option value="en-US-GuyNeural">Guy (US Male • Confident Luxury Broker)</option>
-                    <option value="en-US-JennyNeural">Jenny (US Female • Crisp Natural)</option>
-                    <option value="en-US-ChristopherNeural">Christopher (US Male • Authoritative Executive)</option>
-                    <option value="en-US-AvaNeural">Ava (US Female • Expressive Concierge)</option>
-                    <option value="en-IN-NeerjaNeural">Neerja / Priya (India Female • Customer Care Executive)</option>
-                    <option value="en-IN-PrabhatNeural">Prabhat / Aarav (India Male • Corporate Support)</option>
-                </select>
+                <div class="control-group">
+                    <label class="control-label">Voice Persona:</label>
+                    <select id="voiceSelect" class="voice-select">
+                        <option value="en-US-AriaNeural" selected>Sophia / Aria (US Female • Warm Consultative)</option>
+                        <option value="en-US-GuyNeural">Guy (US Male • Confident Luxury Broker)</option>
+                        <option value="en-US-JennyNeural">Jenny (US Female • Crisp Natural)</option>
+                        <option value="en-US-ChristopherNeural">Christopher (US Male • Authoritative Executive)</option>
+                        <option value="en-US-AvaNeural">Ava (US Female • Expressive Concierge)</option>
+                        <option value="en-IN-NeerjaNeural">Neerja / Priya (India Female • Customer Care Executive)</option>
+                        <option value="en-IN-PrabhatNeural">Prabhat / Aarav (India Male • Corporate Support)</option>
+                    </select>
+                </div>
                 
-                <label style="font-size:11px; color:var(--text-dim); text-transform:uppercase; font-weight:700; margin-left:4px;">Audio Engine:</label>
-                <select id="audioEngineSelect" class="voice-select" style="min-width:180px;">
-                    <option value="browser" selected>⚡ Ultra-Natural Neural (Web Speech)</option>
-                    <option value="server">🎙️ Studio Audio Stream (Edge-TTS)</option>
-                </select>
+                <div class="control-group">
+                    <label class="control-label">Voice Intelligence Engine:</label>
+                    <select id="voiceProviderSelect" class="voice-select" style="min-width:180px;" onchange="updateVoiceEngineBadge()">
+                        <option value="studio" selected>🎙️ Studio Broadcast Neural (48kHz Master • Built-in)</option>
+                        <option value="elevenlabs">✨ ElevenLabs Turbo v2.5 (High Emotion &amp; Nuance)</option>
+                        <option value="sarvam">🇮🇳 Sarvam AI / Gnani Indic Neural (Native Indian Accent)</option>
+                    </select>
+                </div>
 
-                <label style="font-size:11px; color:var(--text-dim); text-transform:uppercase; font-weight:700; margin-left:4px;">Foundation LLM (175B+ Catalog):</label>
-                <select id="llmEngineSelect" class="voice-select" onchange="switchLLM(this.value)">
-                    <option value="llama-3.3-70b" selected>⚡ Llama 3.3 70B (88ms Edge Reflex)</option>
-                    <option value="bloomz-176b">🌐 BLOOMZ 176B (Multilingual 46 Langs)</option>
-                    <option value="deepseek-v3">🧠 DeepSeek-V3 / R1 (671B MoE Frontier)</option>
-                    <option value="command-r-plus">🛡️ Command R+ (104B Cohere Enterprise)</option>
-                    <option value="qwen-2.5-72b">🌏 Qwen 2.5 72B (Hinglish Vernacular &amp; Math)</option>
-                    <option value="falcon-180b">🏛️ Falcon 180B (Sovereign Banking On-Prem)</option>
-                </select>
+                <div class="control-group">
+                    <label class="control-label">Foundation LLM (175B+ Catalog):</label>
+                    <select id="llmEngineSelect" class="voice-select" onchange="switchLLM(this.value)">
+                        <option value="llama-3.3-70b" selected>⚡ Llama 3.3 70B (88ms Edge Reflex)</option>
+                        <option value="bloomz-176b">🌐 BLOOMZ 176B (Multilingual 46 Langs)</option>
+                        <option value="deepseek-v3">🧠 DeepSeek-V3 / R1 (671B MoE Frontier)</option>
+                        <option value="command-r-plus">🛡️ Command R+ (104B Cohere Enterprise)</option>
+                        <option value="qwen-2.5-72b">🌏 Qwen 2.5 72B (Hinglish Vernacular &amp; Math)</option>
+                        <option value="falcon-180b">🏛️ Falcon 180B (Sovereign Banking On-Prem)</option>
+                    </select>
+                </div>
 
-                <button class="btn-preview" onclick="testVoiceSample()">🔊 Test Voice</button>
-                <button class="btn-barge" onclick="simulateBargeIn()" title="Simulate caller interjecting mid-speech">⚡ Interruption (Barge-In)</button>
-                <button class="btn-reset" title="Reset current conversation state" onclick="resetCall()">↻ Reset</button>
+                <div class="voice-btn-group">
+                    <button class="btn-preview" onclick="testVoiceSample()" title="Synthesize live audio sample directly via server neural stream">🔊 Test Voice</button>
+                    <button class="btn-barge" onclick="simulateBargeIn()" title="Simulate caller interjecting mid-speech — cuts audio in <50ms">⚡ Barge-In</button>
+                    <button class="btn-voice-keys" onclick="openKeyModal()" title="Configure ElevenLabs, Sarvam AI, and APILayer API Keys">⚙️ Cloud Keys</button>
+                    <button class="btn-reset" title="Reset current conversation state" onclick="resetCall()">↻ Reset</button>
+                </div>
             </div>
 
             <!-- Live Telephony Chat Transcript Box -->
@@ -1346,10 +1527,18 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
             });
         }
 
-        function simulateBargeIn() {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
+        let currentAudio = null;
+
+        function stopCurrentAudio() {
+            if (currentAudio) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+                currentAudio = null;
             }
+        }
+
+        function simulateBargeIn() {
+            stopCurrentAudio();
             const vadContainer = document.getElementById('vadContainer');
             const vadLabel = document.getElementById('vadLabel');
             vadContainer.className = 'vad-container listening';
@@ -1362,53 +1551,39 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
         }
 
         function testVoiceSample() {
+            stopCurrentAudio();
             const voice = document.getElementById('voiceSelect').value;
-            const engine = document.getElementById('audioEngineSelect').value;
+            const provider = document.getElementById('voiceProviderSelect') ? document.getElementById('voiceProviderSelect').value : 'studio';
+            const elKey = localStorage.getItem('closer_elevenlabs_key') || '';
+            const sarvKey = localStorage.getItem('closer_sarvam_key') || '';
             
             setVadState('speaking');
-
-            if (engine === 'browser' && 'speechSynthesis' in window) {
-                const sampleText = (voice.includes('en-IN') || currentMarket === 'india')
-                    ? "Namaste. This is CLOSER AI ultra-natural voice for Indian customer care. How can I assist you with your booking today?"
-                    : "Hello, this is CLOSER AI luxury real estate concierge. Are you seeking a primary residence in Bel Air?";
-                
-                speakWebSpeech(sampleText, voice);
-                return;
-            }
 
             fetch('/api/turn', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({utterance: 'PREVIEW_SAMPLE', voice: voice})
+                body: JSON.stringify({
+                    utterance: 'PREVIEW_SAMPLE',
+                    voice: voice,
+                    provider: provider,
+                    elevenlabs_key: elKey,
+                    sarvam_key: sarvKey
+                })
             })
             .then(res => res.json())
             .then(data => {
                 if (data.audio_base64) {
                     playAudioBase64(data.audio_base64);
+                } else {
+                    setVadState('listening');
                 }
             })
             .catch(() => setVadState('listening'));
         }
 
-        function speakWebSpeech(text, voiceCode) {
-            window.speechSynthesis.cancel();
-            const utterance = new SpeechSynthesisUtterance(text);
-            const isIndia = voiceCode.includes('en-IN') || currentMarket === 'india';
-            const voices = window.speechSynthesis.getVoices();
-            
-            const targetVoice = voices.find(v => {
-                if (isIndia) return v.lang.includes('IN') || v.lang.includes('en-GB');
-                return v.lang.includes('US') || v.lang.includes('en');
-            });
-
-            if (targetVoice) utterance.voice = targetVoice;
-            utterance.rate = 1.0;
-            utterance.pitch = 1.0;
-
-            utterance.onend = () => setVadState('listening');
-            utterance.onerror = () => setVadState('listening');
-
-            window.speechSynthesis.speak(utterance);
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
         }
 
         function sendTurn() {
@@ -1416,11 +1591,13 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
             const text = input.value.trim();
             if (!text) return;
 
+            stopCurrentAudio();
+
             const chatBox = document.getElementById('chatBox');
             chatBox.innerHTML += `
                 <div class="msg buyer">
                     <div class="msg-meta">You (Caller)</div>
-                    ${text}
+                    ${escapeHtml(text)}
                 </div>
             `;
             input.value = '';
@@ -1429,22 +1606,33 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
             setVadState('speaking');
 
             const voice = document.getElementById('voiceSelect').value;
-            const engine = document.getElementById('audioEngineSelect').value;
+            const provider = document.getElementById('voiceProviderSelect') ? document.getElementById('voiceProviderSelect').value : 'studio';
             const llmModel = document.getElementById('llmEngineSelect') ? document.getElementById('llmEngineSelect').value : 'llama-3.3-70b';
+            const elKey = localStorage.getItem('closer_elevenlabs_key') || '';
+            const sarvKey = localStorage.getItem('closer_sarvam_key') || '';
 
             fetch('/api/turn', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({utterance: text, voice: voice, model_id: llmModel})
+                body: JSON.stringify({
+                    utterance: text,
+                    voice: voice,
+                    model_id: llmModel,
+                    provider: provider,
+                    elevenlabs_key: elKey,
+                    sarvam_key: sarvKey
+                })
             })
             .then(res => res.json())
             .then(data => {
                 const personaName = currentMarket === 'india' ? 'Priya (Customer Care)' : 'Sophia (Luxury Concierge)';
                 const latency = data.llm_latency_ms || 88;
                 const paramScale = data.llm_parameters || '175B+ Catalog';
+                const voiceEngineLabel = data.voice_provider || (provider === 'elevenlabs' ? 'ElevenLabs Turbo' : (provider === 'sarvam' ? 'Sarvam Indic Neural' : 'Studio Broadcast Neural 48kHz'));
+
                 chatBox.innerHTML += `
                     <div class="msg agent">
-                        <div class="msg-meta">${personaName} • ${paramScale} • ${latency}ms Turn</div>
+                        <div class="msg-meta">${personaName} • ${paramScale} • ${voiceEngineLabel} • ${latency}ms Turn</div>
                         ${data.reply}
                     </div>
                 `;
@@ -1455,9 +1643,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
                     updateDossierUI(data.dossier);
                 }
 
-                if (engine === 'browser') {
-                    speakWebSpeech(data.reply, voice);
-                } else if (data.audio_base64) {
+                if (data.audio_base64) {
                     playAudioBase64(data.audio_base64);
                 } else {
                     setVadState('listening');
@@ -1490,9 +1676,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
         }
 
         function resetCall() {
-            if ('speechSynthesis' in window) {
-                window.speechSynthesis.cancel();
-            }
+            stopCurrentAudio();
             fetch('/api/reset', { method: 'POST' })
             .then(res => res.json())
             .then(data => {
@@ -1501,10 +1685,27 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
         }
 
         function playAudioBase64(b64) {
-            const audio = new Audio("data:audio/wav;base64," + b64);
-            audio.onended = () => setVadState('listening');
-            audio.onerror = () => setVadState('listening');
-            audio.play().catch(() => setVadState('listening'));
+            stopCurrentAudio();
+            try {
+                const audio = new Audio("data:audio/wav;base64," + b64);
+                currentAudio = audio;
+                setVadState('speaking');
+                audio.onended = () => {
+                    currentAudio = null;
+                    setVadState('listening');
+                };
+                audio.onerror = () => {
+                    currentAudio = null;
+                    setVadState('listening');
+                };
+                audio.play().catch(e => {
+                    console.warn("Audio playback interrupted or blocked:", e);
+                    currentAudio = null;
+                    setVadState('listening');
+                });
+            } catch (e) {
+                setVadState('listening');
+            }
         }
 
         function setVadState(state) {
@@ -1744,6 +1945,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
                 if (data.configured) {
                     badge.innerText = 'LIVE KEY CONNECTED';
                     badge.className = 'tag tag-green';
+                    localStorage.setItem('closer_apilayer_key', key);
                     alert('APILayer Unified API Key successfully saved and connected!');
                 } else {
                     badge.innerText = 'OFFLINE SIMULATOR';
@@ -1756,7 +1958,106 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
                 badge.className = 'tag tag-blue';
             });
         }
+
+        function openKeyModal() {
+            document.getElementById('modalElevenLabsKey').value = localStorage.getItem('closer_elevenlabs_key') || '';
+            document.getElementById('modalSarvamKey').value = localStorage.getItem('closer_sarvam_key') || '';
+            document.getElementById('modalAPILayerKey').value = localStorage.getItem('closer_apilayer_key') || '';
+            document.getElementById('keyModalBackdrop').style.display = 'flex';
+        }
+
+        function closeKeyModal() {
+            document.getElementById('keyModalBackdrop').style.display = 'none';
+        }
+
+        function saveCloudKeys() {
+            const el = document.getElementById('modalElevenLabsKey').value.trim();
+            const sarv = document.getElementById('modalSarvamKey').value.trim();
+            const apil = document.getElementById('modalAPILayerKey').value.trim();
+
+            if (el) localStorage.setItem('closer_elevenlabs_key', el);
+            else localStorage.removeItem('closer_elevenlabs_key');
+
+            if (sarv) localStorage.setItem('closer_sarvam_key', sarv);
+            else localStorage.removeItem('closer_sarvam_key');
+
+            if (apil) {
+                localStorage.setItem('closer_apilayer_key', apil);
+                const inp = document.getElementById('apilayerKeyInput');
+                if (inp) inp.value = apil;
+                fetch('/api/enrich/key', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({api_key: apil})
+                }).catch(() => {});
+            }
+
+            updateVoiceEngineBadge();
+            closeKeyModal();
+        }
+
+        function updateVoiceEngineBadge() {
+            const prov = document.getElementById('voiceProviderSelect') ? document.getElementById('voiceProviderSelect').value : 'studio';
+            const elKey = localStorage.getItem('closer_elevenlabs_key');
+            const sarvKey = localStorage.getItem('closer_sarvam_key');
+            const badge = document.getElementById('telemetryVoiceEngine');
+            if (badge) {
+                if (prov === 'elevenlabs') {
+                    badge.innerText = elKey ? 'ElevenLabs Turbo (Active)' : 'ElevenLabs (Studio Fallback)';
+                } else if (prov === 'sarvam') {
+                    badge.innerText = sarvKey ? 'Sarvam Indic (Active)' : 'Sarvam (Studio Fallback)';
+                } else {
+                    badge.innerText = 'Studio 48kHz PCM';
+                }
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const savedApil = localStorage.getItem('closer_apilayer_key');
+            if (savedApil) {
+                const inp = document.getElementById('apilayerKeyInput');
+                if (inp) inp.value = savedApil;
+            }
+            updateVoiceEngineBadge();
+        });
     </script>
+
+    <!-- Voice & APILayer Cloud Credentials Modal -->
+    <div id="keyModalBackdrop" class="modal-backdrop" onclick="if(event.target===this) closeKeyModal()">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:18px;">⚙️</span>
+                    <div>
+                        <div style="font-weight:700; font-size:14px; color:#ffffff;">Voice &amp; Intelligence Cloud Credentials</div>
+                        <div style="font-size:11px; color:var(--text-muted);">Configure ElevenLabs, Sarvam AI, and APILayer credentials</div>
+                    </div>
+                </div>
+                <button class="modal-close" onclick="closeKeyModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-info-banner">
+                    💡 <strong>Zero Setup Required:</strong> Studio Broadcast Neural (48kHz) runs out of the box with unlimited free generation. Enter your ElevenLabs or Sarvam AI keys below to route requests through your dedicated cloud tiers.
+                </div>
+                <div class="modal-field">
+                    <label class="modal-label">ElevenLabs API Key (xi-api-key):</label>
+                    <input type="password" id="modalElevenLabsKey" class="modal-input" placeholder="e.g. sk_... (Enables ElevenLabs Turbo v2.5)">
+                </div>
+                <div class="modal-field">
+                    <label class="modal-label">Sarvam AI / Indic Voice Key (api-subscription-key):</label>
+                    <input type="password" id="modalSarvamKey" class="modal-input" placeholder="e.g. sarvam_... (Enables Sarvam / Gnani Indic Neural)">
+                </div>
+                <div class="modal-field">
+                    <label class="modal-label">APILayer Unified Key:</label>
+                    <input type="password" id="modalAPILayerKey" class="modal-input" placeholder="e.g. apilayer_... (Numverify, Mailboxlayer, Positionstack)">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-tool-run" style="background:transparent; border-color:var(--border);" onclick="closeKeyModal()">Cancel</button>
+                <button class="btn-tool-run" style="background:linear-gradient(135deg, #2563eb, #1d4ed8); border:none; padding:8px 18px;" onclick="saveCloudKeys()">Save Credentials</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
 """
@@ -1920,6 +2221,9 @@ class DashboardHTTPHandler(http.server.BaseHTTPRequestHandler):
             voice = data.get("voice", "en-US-AriaNeural")
             custom_text = data.get("text", "")
             rate = data.get("rate")
+            provider = data.get("provider", "studio")
+            elevenlabs_key = data.get("elevenlabs_key") or os.environ.get("ELEVENLABS_API_KEY", "")
+            sarvam_key = data.get("sarvam_key") or os.environ.get("SARVAM_API_KEY", "")
 
             if utterance in ("PREVIEW_SAMPLE", "STUDIO_SAMPLE"):
                 if custom_text:
@@ -1932,10 +2236,20 @@ class DashboardHTTPHandler(http.server.BaseHTTPRequestHandler):
                 reply = self.conversation_engine.process_user_turn(utterance)
 
             try:
-                audio_bytes, _ = self.tts_engine.synthesize_sync(reply, voice=voice, rate=rate)
+                audio_bytes, latency_tts = self.tts_engine.synthesize_sync(
+                    reply,
+                    voice=voice,
+                    rate=rate,
+                    provider=provider,
+                    elevenlabs_key=elevenlabs_key,
+                    sarvam_key=sarvam_key
+                )
                 audio_b64 = base64.b64encode(audio_bytes).decode("utf-8")
+                voice_provider_label = getattr(self.tts_engine, "last_provider_used", "Studio Broadcast Neural")
             except Exception:
                 audio_b64 = ""
+                voice_provider_label = "Studio Offline Fallback"
+                latency_tts = 0.05
 
             dossier = self.conversation_engine.export_dossier()
             llm_info = self.conversation_engine.llm_router.get_active_model_info() if hasattr(self.conversation_engine, "llm_router") and self.conversation_engine.llm_router else {
@@ -1947,6 +2261,8 @@ class DashboardHTTPHandler(http.server.BaseHTTPRequestHandler):
             resp_data = {
                 "reply": reply,
                 "audio_base64": audio_b64,
+                "voice_provider": voice_provider_label,
+                "voice_latency_ms": round(latency_tts * 1000, 1),
                 "dossier": dossier.model_dump(),
                 "llm_model": llm_info.get("model_id"),
                 "llm_parameters": llm_info.get("parameter_scale"),

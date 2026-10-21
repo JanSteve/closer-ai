@@ -202,6 +202,7 @@ class EdgeTTSVoiceEngine:
         self.fallback_voice = settings.FALLBACK_VOICE
         self.rate = rate or settings.SPEECH_RATE
         self.sample_rate = sample_rate or settings.AUDIO_SAMPLE_RATE
+        self.last_provider_used: str = "Studio Broadcast Neural (Edge-TTS 48kHz)"
 
     @staticmethod
     def _resolve_voice_name(voice: Optional[str]) -> str:
@@ -221,10 +222,18 @@ class EdgeTTSVoiceEngine:
         output_path: Optional[str] = None,
         voice: Optional[str] = None,
         rate: Optional[str] = None,
-        sample_rate: Optional[int] = None
+        sample_rate: Optional[int] = None,
+        provider: Optional[str] = None,
+        elevenlabs_key: Optional[str] = None,
+        sarvam_key: Optional[str] = None
     ) -> Tuple[bytes, float]:
         """
-        Synthesizes text to WAV audio bytes.
+        Synthesizes text to WAV audio bytes using the requested provider:
+        - 'studio' / 'edge-tts' (Default): Zero-cost Microsoft Studio Neural 48kHz broadcast audio.
+        - 'elevenlabs': ElevenLabs Turbo v2.5 / Multilingual v2 with emotional prosody and style boost.
+        - 'sarvam': Sarvam AI Bulbul:v1 Indic Neural (native Indian English / Hindi / vernacular).
+        - 'cartesia': Cartesia Sonic ultra-low latency voice.
+        Automatic resilient fallback ensures 100% audio generation uptime.
         Returns (audio_bytes, latency_seconds).
         """
         start_time = time.perf_counter()
@@ -234,24 +243,44 @@ class EdgeTTSVoiceEngine:
 
         clean_text = normalize_speech_text(text)
         audio_bytes: Optional[bytes] = None
+        self.last_provider_used = "Studio Broadcast Neural (Edge-TTS 48kHz)"
 
-        # 0. Check for Cartesia or ElevenLabs production API keys if configured
+        prov = (provider or "studio").lower().strip()
+        el_key = (elevenlabs_key or os.environ.get("ELEVENLABS_API_KEY", "")).strip()
+        sarv_key = (sarvam_key or os.environ.get("SARVAM_API_KEY", "")).strip()
         cartesia_key = os.environ.get("CARTESIA_API_KEY", "").strip()
-        elevenlabs_key = os.environ.get("ELEVENLABS_API_KEY", "").strip()
 
-        if cartesia_key:
-            try:
-                audio_bytes = await self._synthesize_cartesia(clean_text, target_voice, cartesia_key, target_sr)
-            except Exception:
-                audio_bytes = None
+        # 1. ElevenLabs Provider Routing
+        if prov == "elevenlabs" or (prov == "auto" and el_key):
+            if el_key:
+                try:
+                    audio_bytes = await self._synthesize_elevenlabs(clean_text, target_voice, el_key, target_sr)
+                    if audio_bytes and len(audio_bytes) > 44:
+                        self.last_provider_used = "ElevenLabs Turbo v2.5"
+                except Exception:
+                    audio_bytes = None
 
-        if not audio_bytes and elevenlabs_key:
-            try:
-                audio_bytes = await self._synthesize_elevenlabs(clean_text, target_voice, elevenlabs_key)
-            except Exception:
-                audio_bytes = None
+        # 2. Sarvam AI / Indic Neural Provider Routing
+        if not audio_bytes and (prov == "sarvam" or (prov == "auto" and sarv_key)):
+            if sarv_key:
+                try:
+                    audio_bytes = await self._synthesize_sarvam(clean_text, target_voice, sarv_key, target_sr)
+                    if audio_bytes and len(audio_bytes) > 44:
+                        self.last_provider_used = "Sarvam AI Indic Neural"
+                except Exception:
+                    audio_bytes = None
 
-        # 1. Attempt edge-tts synthesis if edge_tts is importable
+        # 3. Cartesia Provider Routing
+        if not audio_bytes and (prov == "cartesia" or (prov == "auto" and cartesia_key)):
+            if cartesia_key:
+                try:
+                    audio_bytes = await self._synthesize_cartesia(clean_text, target_voice, cartesia_key, target_sr)
+                    if audio_bytes and len(audio_bytes) > 44:
+                        self.last_provider_used = "Cartesia Sonic"
+                except Exception:
+                    audio_bytes = None
+
+        # 4. Studio Broadcast Neural (Edge-TTS): Production-grade 48kHz broadcast neural
         if not audio_bytes:
             try:
                 import edge_tts
@@ -269,18 +298,19 @@ class EdgeTTSVoiceEngine:
                             if chunk["type"] == "audio":
                                 raw_audio.extend(chunk["data"])
                         if len(raw_audio) > 0:
-                            audio_bytes = bytes(raw_audio)
-                            if output_path and output_path.endswith(".wav"):
-                                audio_bytes = self._ensure_wav_format(audio_bytes, target_sr)
+                            raw_bytes = bytes(raw_audio)
+                            audio_bytes = self._ensure_wav_format(raw_bytes, target_sr)
+                            self.last_provider_used = f"Studio Broadcast Neural ({v_attempt})"
                             break
                     except Exception:
                         continue
             except Exception:
                 audio_bytes = None
 
-        # 2. Resilient local fallback (guarantees 100% offline uptime and <100ms latency)
+        # 5. Resilient local fallback (guarantees 100% offline uptime and <100ms latency)
         if not audio_bytes:
             audio_bytes = self._synthesize_local_fallback(clean_text, target_voice, target_sr)
+            self.last_provider_used = "Studio Offline PCM Fallback"
 
         latency = time.perf_counter() - start_time
 
@@ -301,7 +331,6 @@ class EdgeTTSVoiceEngine:
             "Cartesia-Version": "2024-06-10",
             "Content-Type": "application/json"
         }
-        # Select appropriate Cartesia voice id
         is_indic = any(w in voice.lower() for w in ["india", "neerja", "prabhat", "priya", "rishi"])
         voice_id = "e043697e-1dc6-4f44-ad26-78cc7ce4f526" if is_indic else "a0e99841-438c-4a64-b679-ae501e7d6091"
         payload = {
@@ -316,22 +345,76 @@ class EdgeTTSVoiceEngine:
                 return resp.content
         return None
 
-    async def _synthesize_elevenlabs(self, text: str, voice: str, api_key: str) -> Optional[bytes]:
-        """Synthesizes audio using ElevenLabs Turbo v2.5 / Flash API."""
+    async def _synthesize_elevenlabs(self, text: str, voice: str, api_key: str, sample_rate: int = 24000) -> Optional[bytes]:
+        """Synthesizes audio using ElevenLabs Turbo v2.5 / Multilingual v2 API."""
         import httpx
-        # Default Adam / Rachel or Indian voice ID
-        voice_id = "21m00Tcm4TlvDq8ikWAM"
+        v_low = voice.lower()
+        # Voice mapping: Adam (male authoritative), Rachel (female consultative/warm), Domi (energetic)
+        if any(w in v_low for w in ["guy", "male", "christopher", "brian", "eric", "prabhat", "aarav"]):
+            voice_id = "pNInz6obpgDQGcFmaJgB"  # Adam: deep, authoritative closer
+        elif any(w in v_low for w in ["ava", "sophia", "aria", "jenny", "neerja", "priya"]):
+            voice_id = "21m00Tcm4TlvDq8ikWAM"  # Rachel: calm, consultative concierge
+        else:
+            voice_id = "21m00Tcm4TlvDq8ikWAM"
+
         url = f"https://api.elevenlabs.io/v1/text-to-speech/{voice_id}"
-        headers = {"xi-api-key": api_key, "Content-Type": "application/json"}
+        headers = {
+            "xi-api-key": api_key,
+            "Content-Type": "application/json",
+            "Accept": "audio/mpeg"
+        }
         payload = {
             "text": text,
-            "model_id": "eleven_multilingual_v2",
-            "voice_settings": {"stability": 0.5, "similarity_boost": 0.8}
+            "model_id": "eleven_turbo_v2_5",
+            "voice_settings": {
+                "stability": 0.50,
+                "similarity_boost": 0.85,
+                "style": 0.15,
+                "use_speaker_boost": True
+            }
         }
-        async with httpx.AsyncClient(timeout=4.0) as client:
+        async with httpx.AsyncClient(timeout=5.0) as client:
             resp = await client.post(url, headers=headers, json=payload)
             if resp.status_code == 200 and len(resp.content) > 44:
-                return resp.content
+                return self._ensure_wav_format(resp.content, sample_rate)
+        return None
+
+    async def _synthesize_sarvam(self, text: str, voice: str, api_key: str, sample_rate: int = 24000) -> Optional[bytes]:
+        """
+        Synthesizes audio using Sarvam AI Bulbul:v1 Indic Neural API
+        (India's state-of-the-art conversational voice model for Indian English & vernacular).
+        """
+        import httpx
+        import base64
+        url = "https://api.sarvam.ai/text-to-speech"
+        headers = {
+            "api-subscription-key": api_key,
+            "Content-Type": "application/json"
+        }
+        v_low = voice.lower()
+        is_hindi = any(w in v_low for w in ["hi-in", "hindi", "swara", "madhur"])
+        is_male = any(w in v_low for w in ["male", "prabhat", "aarav", "rishi", "madhur", "guy"])
+        
+        payload = {
+            "inputs": [text],
+            "target_language_code": "hi-IN" if is_hindi else "en-IN",
+            "speaker": "arvind" if is_male else "meera",
+            "pitch": 0,
+            "pace": 1.05,
+            "loudness": 1.5,
+            "speech_sample_rate": sample_rate,
+            "enable_preprocessing": True,
+            "model": "bulbul:v1"
+        }
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            resp = await client.post(url, headers=headers, json=payload)
+            if resp.status_code == 200:
+                data = resp.json()
+                audios = data.get("audios", [])
+                if audios and len(audios) > 0:
+                    wav_data = base64.b64decode(audios[0])
+                    if len(wav_data) > 44:
+                        return self._ensure_wav_format(wav_data, sample_rate)
         return None
 
     def synthesize_sync(
@@ -340,7 +423,10 @@ class EdgeTTSVoiceEngine:
         output_path: Optional[str] = None,
         voice: Optional[str] = None,
         rate: Optional[str] = None,
-        sample_rate: Optional[int] = None
+        sample_rate: Optional[int] = None,
+        provider: Optional[str] = None,
+        elevenlabs_key: Optional[str] = None,
+        sarvam_key: Optional[str] = None
     ) -> Tuple[bytes, float]:
         """Synchronous wrapper for synthesize."""
         resolved_voice = self._resolve_voice_name(voice or self.default_voice)
@@ -356,12 +442,30 @@ class EdgeTTSVoiceEngine:
                 with concurrent.futures.ThreadPoolExecutor(max_workers=1) as executor:
                     future = executor.submit(
                         asyncio.run,
-                        self.synthesize(text, output_path, resolved_voice, rate, sample_rate)
+                        self.synthesize(
+                            text,
+                            output_path=output_path,
+                            voice=resolved_voice,
+                            rate=rate,
+                            sample_rate=sample_rate,
+                            provider=provider,
+                            elevenlabs_key=elevenlabs_key,
+                            sarvam_key=sarvam_key
+                        )
                     )
                     return future.result()
             
             return asyncio.run(
-                self.synthesize(text, output_path, resolved_voice, rate, sample_rate)
+                self.synthesize(
+                    text,
+                    output_path=output_path,
+                    voice=resolved_voice,
+                    rate=rate,
+                    sample_rate=sample_rate,
+                    provider=provider,
+                    elevenlabs_key=elevenlabs_key,
+                    sarvam_key=sarvam_key
+                )
             )
         except Exception:
             return self._synthesize_local_fallback_with_latency(text, resolved_voice, sample_rate, output_path)

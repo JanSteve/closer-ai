@@ -313,6 +313,49 @@ class TestWebDashboardConsole(unittest.TestCase):
         self.assertEqual(fx_resp["to_currency"], "INR")
         self.assertIn("Crores", fx_resp["real_estate_notation"])
 
+    def test_voice_intelligence_engine_selection_and_modal_elements(self):
+        """
+        Verifies that robotic browser Web Speech is completely eradicated,
+        Studio Broadcast Neural, ElevenLabs, and Sarvam AI Indic engines are selectable,
+        and credentials modal is present.
+        """
+        # 1. Robotic browser engine must be completely absent
+        self.assertNotIn("audioEngineSelect", HTML_TEMPLATE)
+        self.assertNotIn("speakWebSpeech", HTML_TEMPLATE)
+
+        # 2. Studio / ElevenLabs / Sarvam voice architecture elements present
+        self.assertIn("voiceProviderSelect", HTML_TEMPLATE)
+        self.assertIn("Studio Broadcast Neural", HTML_TEMPLATE)
+        self.assertIn("ElevenLabs Turbo v2.5", HTML_TEMPLATE)
+        self.assertIn("Sarvam AI / Gnani Indic Neural", HTML_TEMPLATE)
+        self.assertIn("workflow-stepper", HTML_TEMPLATE)
+        self.assertIn("keyModalBackdrop", HTML_TEMPLATE)
+        self.assertIn("modalElevenLabsKey", HTML_TEMPLATE)
+        self.assertIn("modalSarvamKey", HTML_TEMPLATE)
+
+        # 3. Test POST /api/turn returns voice_provider metadata
+        for prov in ("studio", "elevenlabs", "sarvam"):
+            handler = DashboardHTTPHandler.__new__(DashboardHTTPHandler)
+            handler.path = "/api/turn"
+            payload = json.dumps({
+                "utterance": "PREVIEW_SAMPLE",
+                "voice": "en-US-AvaNeural",
+                "provider": prov
+            }).encode("utf-8")
+            handler.headers = {"Content-Length": str(len(payload))}
+            handler.rfile = io.BytesIO(payload)
+            handler.wfile = io.BytesIO()
+            handler.send_response = MagicMock()
+            handler.send_header = MagicMock()
+            handler.end_headers = MagicMock()
+
+            handler.do_POST()
+            handler.send_response.assert_called_with(200)
+            resp = json.loads(handler.wfile.getvalue().decode("utf-8"))
+            self.assertIn("audio_base64", resp)
+            self.assertIn("voice_provider", resp)
+            self.assertGreater(len(resp["audio_base64"]), 100)
+
 
 if __name__ == "__main__":
     unittest.main()
