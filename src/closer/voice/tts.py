@@ -487,7 +487,10 @@ class EdgeTTSVoiceEngine:
                 wav_data = f.read()
             return wav_data
         except Exception:
-            # Fallback to generating clean WAV header
+            # If ffmpeg conversion fails, preserve the genuine neural speech bytes (MP3)
+            # Browsers natively play MP3 data without needing conversion.
+            if audio_data and len(audio_data) > 100:
+                return audio_data
             return self._generate_pcm_wav(target_sr, duration_sec=1.5)
         finally:
             for p in (in_name, out_name):

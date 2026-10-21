@@ -1552,6 +1552,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 
         function testVoiceSample() {
             stopCurrentAudio();
+            getAudioContext();
             const voice = document.getElementById('voiceSelect').value;
             const provider = document.getElementById('voiceProviderSelect') ? document.getElementById('voiceProviderSelect').value : 'studio';
             const elKey = localStorage.getItem('closer_elevenlabs_key') || '';
@@ -1592,6 +1593,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
             if (!text) return;
 
             stopCurrentAudio();
+            getAudioContext();
 
             const chatBox = document.getElementById('chatBox');
             chatBox.innerHTML += `
@@ -1684,26 +1686,128 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
             });
         }
 
+        let audioCtx = null;
+        let activeAudioSource = null;
+
+        function getAudioContext() {
+            try {
+                if (!audioCtx) {
+                    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                    if (AudioContextClass) {
+                        audioCtx = new AudioContextClass();
+                    }
+                }
+                if (audioCtx && audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+            } catch (e) {
+                console.warn("AudioContext init warning:", e);
+            }
+            return audioCtx;
+        }
+
+        function stopCurrentAudio() {
+            if (activeAudioSource) {
+                try { activeAudioSource.stop(); } catch(e) {}
+                activeAudioSource = null;
+            }
+            if (currentAudio) {
+                try {
+                    currentAudio.pause();
+                    currentAudio.currentTime = 0;
+                } catch(e) {}
+                currentAudio = null;
+            }
+        }
+
         function playAudioBase64(b64) {
             stopCurrentAudio();
+            if (!b64 || b64.length < 50) {
+                console.warn("No audio data received in playAudioBase64");
+                setVadState('listening');
+                return;
+            }
+
+            setVadState('speaking');
+
+            // 1. Try modern Web Audio API decodeAudioData (handles MP3 & WAV in-memory without MIME mismatch or data-URI limits)
             try {
-                const audio = new Audio("data:audio/wav;base64," + b64);
+                const ctx = getAudioContext();
+                if (ctx) {
+                    const binaryStr = atob(b64);
+                    const len = binaryStr.length;
+                    const bytes = new Uint8Array(len);
+                    for (let i = 0; i < len; i++) {
+                        bytes[i] = binaryStr.charCodeAt(i);
+                    }
+
+                    ctx.decodeAudioData(bytes.buffer.slice(0), (buffer) => {
+                        stopCurrentAudio();
+                        const source = ctx.createBufferSource();
+                        source.buffer = buffer;
+                        source.connect(ctx.destination);
+                        activeAudioSource = source;
+                        setVadState('speaking');
+
+                        source.onended = () => {
+                            if (activeAudioSource === source) {
+                                activeAudioSource = null;
+                                setVadState('listening');
+                            }
+                        };
+
+                        source.start(0);
+                    }, (decodeErr) => {
+                        console.warn("WebAudio decode failed, falling back to Blob audio element:", decodeErr);
+                        playWithAudioElement(b64);
+                    });
+                    return;
+                }
+            } catch (ctxErr) {
+                console.warn("WebAudio context failed:", ctxErr);
+            }
+
+            // 2. Fallback to HTML5 Audio element with Blob URL
+            playWithAudioElement(b64);
+        }
+
+        function playWithAudioElement(b64) {
+            try {
+                const isWav = b64.startsWith('UklGR');
+                const mimeType = isWav ? 'audio/wav' : 'audio/mpeg';
+                const binaryStr = atob(b64);
+                const bytes = new Uint8Array(binaryStr.length);
+                for (let i = 0; i < binaryStr.length; i++) {
+                    bytes[i] = binaryStr.charCodeAt(i);
+                }
+                const blob = new Blob([bytes], { type: mimeType });
+                const blobUrl = URL.createObjectURL(blob);
+                const audio = new Audio(blobUrl);
                 currentAudio = audio;
                 setVadState('speaking');
+
                 audio.onended = () => {
+                    URL.revokeObjectURL(blobUrl);
                     currentAudio = null;
                     setVadState('listening');
                 };
-                audio.onerror = () => {
+                audio.onerror = (e) => {
+                    console.error("Audio element error:", e);
+                    URL.revokeObjectURL(blobUrl);
                     currentAudio = null;
                     setVadState('listening');
                 };
-                audio.play().catch(e => {
-                    console.warn("Audio playback interrupted or blocked:", e);
-                    currentAudio = null;
-                    setVadState('listening');
-                });
+
+                const p = audio.play();
+                if (p !== undefined) {
+                    p.catch(err => {
+                        console.warn("Browser autoplay blocked:", err);
+                        currentAudio = null;
+                        setVadState('listening');
+                    });
+                }
             } catch (e) {
+                console.error("playWithAudioElement exception:", e);
                 setVadState('listening');
             }
         }
