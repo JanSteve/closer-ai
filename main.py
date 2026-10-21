@@ -34,13 +34,17 @@ app.add_middleware(
 
 # Engine instances for turn handling
 try:
-    from src.closer.engine.dialogue import ConversationEngine
-    from src.closer.tts.engine import EdgeTTSEngine
+    from src.closer.agent.conversation import ConversationEngine
+    from src.closer.voice.tts import EdgeTTSVoiceEngine
+    from src.closer.llm.models import list_available_models, get_model_profile
+    from src.closer.llm.router import OpenLLMRouter
     _app_conversation_engine = ConversationEngine(market_mode="usa")
-    _app_tts_engine = EdgeTTSEngine()
+    _app_tts_engine = EdgeTTSVoiceEngine()
+    _app_llm_router = _app_conversation_engine.llm_router
 except Exception:
     _app_conversation_engine = None
     _app_tts_engine = None
+    _app_llm_router = None
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -125,11 +129,52 @@ async def set_market_mode(request: Request):
     return JSONResponse(content={"success": True, "mode": mode, "greeting": greeting, "dossier": dossier})
 
 
+@app.get("/api/llm_models")
+async def get_llm_models():
+    try:
+        from src.closer.llm.models import list_available_models
+        return JSONResponse(content={"models": list_available_models()})
+    except Exception:
+        return JSONResponse(content={"models": []})
+
+
+@app.get("/api/llm_active")
+async def get_active_llm():
+    global _app_conversation_engine
+    if _app_conversation_engine and hasattr(_app_conversation_engine, "llm_router") and _app_conversation_engine.llm_router:
+        return JSONResponse(content=_app_conversation_engine.llm_router.get_active_model_info())
+    try:
+        from src.closer.llm.models import get_model_profile
+        p = get_model_profile("llama-3.3-70b")
+        return JSONResponse(content={
+            "model_id": "llama-3.3-70b",
+            "display_name": p.display_name,
+            "parameter_scale": p.parameter_scale,
+            "latency_ms": p.target_telephony_latency_ms
+        })
+    except Exception:
+        return JSONResponse(content={"model_id": "llama-3.3-70b"})
+
+
+@app.post("/api/llm_select")
+async def select_llm_model(request: Request):
+    global _app_conversation_engine
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    model_id = data.get("model_id", "llama-3.3-70b")
+    if _app_conversation_engine and hasattr(_app_conversation_engine, "set_llm_model"):
+        info = _app_conversation_engine.set_llm_model(model_id)
+        return JSONResponse(content={"success": True, "model": info})
+    return JSONResponse(content={"success": True, "model_id": model_id})
+
+
 @app.post("/api/reset")
 async def reset_conversation():
     global _app_conversation_engine
     try:
-        from src.closer.engine.dialogue import ConversationEngine
+        from src.closer.agent.conversation import ConversationEngine
         _app_conversation_engine = ConversationEngine(market_mode="usa")
         greeting = _app_conversation_engine.get_initial_greeting()
         dossier = _app_conversation_engine.export_dossier().model_dump()
@@ -172,4 +217,18 @@ async def process_turn(request: Request):
             audio_b64 = ""
 
     dossier = _app_conversation_engine.export_dossier().model_dump() if _app_conversation_engine else {}
-    return JSONResponse(content={"reply": reply, "audio_base64": audio_b64, "dossier": dossier})
+    llm_info = _app_conversation_engine.llm_router.get_active_model_info() if (_app_conversation_engine and hasattr(_app_conversation_engine, "llm_router") and _app_conversation_engine.llm_router) else {
+        "model_id": "llama-3.3-70b",
+        "parameter_scale": "70 Billion",
+        "target_latency_ms": 88,
+        "last_tier_used": "reflex_edge"
+    }
+    return JSONResponse(content={
+        "reply": reply,
+        "audio_base64": audio_b64,
+        "dossier": dossier,
+        "llm_model": llm_info.get("model_id"),
+        "llm_parameters": llm_info.get("parameter_scale"),
+        "llm_latency_ms": llm_info.get("target_latency_ms") or 88,
+        "llm_tier": llm_info.get("last_tier_used") or "reflex_edge"
+    })

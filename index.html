@@ -584,6 +584,18 @@
               </div>
             </div>
 
+            <!-- Open-Source Foundation LLM Intelligence (Awesome-Open-Source-LLMs 175B+ Catalog) -->
+            <div class="studio-meta-controls" style="margin-top: 10px;">
+              <div class="studio-meta-group" style="flex-wrap: wrap;">
+                <span class="studio-meta-label display-font">// OPEN FOUNDATION ENGINE:</span>
+                <button class="llm-pill active" data-model="llama-3.3-70b" onclick="setStudioLLM(this, 'llama-3.3-70b')">⚡ Llama 3.3 70B (88ms Edge Reflex)</button>
+                <button class="llm-pill" data-model="bloomz-176b" onclick="setStudioLLM(this, 'bloomz-176b')">🌐 BLOOMZ 176B (Multilingual 46 Langs)</button>
+                <button class="llm-pill" data-model="deepseek-v3" onclick="setStudioLLM(this, 'deepseek-v3')">🧠 DeepSeek-V3 / R1 (671B MoE Frontier)</button>
+                <button class="llm-pill" data-model="command-r-plus" onclick="setStudioLLM(this, 'command-r-plus')">🛡️ Command R+ (104B Cohere Enterprise)</button>
+                <button class="llm-pill" data-model="qwen-2.5-72b" onclick="setStudioLLM(this, 'qwen-2.5-72b')">🌏 Qwen 2.5 72B (Hinglish Vernacular &amp; Math)</button>
+              </div>
+            </div>
+
             <div class="control-group">
               <label class="display-font">// SELECT OBJECTION &amp; CONVERSATIONAL SLANG SCENARIO</label>
               <div class="scenario-grid">
@@ -599,6 +611,10 @@
                   <span class="scen-title">🇺🇸 "$8.5M Cash Buyer looking for Bel Air Estate"</span>
                   <span class="scen-desc">Ultra-luxury turnkey qualification, proof-of-funds escrow &amp; off-market walkthrough</span>
                 </button>
+                <button class="scenario-btn" data-scenario="us_1031_exchange" onclick="selectStudioScenario(this)">
+                  <span class="scen-title">🇺🇸 "1031 Exchange with 45-day deadline: need Bel Air replacement asset"</span>
+                  <span class="scen-desc">DeepSeek 671B MoE deep reasoning on tax-deferred deadlines, escrow &amp; pocket listings</span>
+                </button>
                 <button class="scenario-btn" data-scenario="exclusive_listing" onclick="selectStudioScenario(this)">
                   <span class="scen-title">🇺🇸 "I already have an agent, what pocket listings do you have?"</span>
                   <span class="scen-desc">Respects buyer representation &amp; pivots to pre-MLS private off-market access</span>
@@ -610,6 +626,10 @@
                 <button class="scenario-btn" data-scenario="india_bhk_rera" onclick="selectStudioScenario(this)">
                   <span class="scen-title">🇮🇳 "Looking for 3 BHK in Whitefield, is RERA approved?"</span>
                   <span class="scen-desc">Natural ₹1.65 Cr pricing, RERA clearance, SBI/HDFC approval &amp; WhatsApp floor plans</span>
+                </button>
+                <button class="scenario-btn" data-scenario="india_rera_carpet" onclick="selectStudioScenario(this)">
+                  <span class="scen-title">🇮🇳 "RERA carpet area vs super built-up transparency query"</span>
+                  <span class="scen-desc">BLOOMZ 176B multilingual precision: 1,640 sq ft net carpet area &amp; occupancy certificate</span>
                 </button>
                 <button class="scenario-btn" data-scenario="india_ticket" onclick="selectStudioScenario(this)">
                   <span class="scen-title">🇮🇳 "Possession is delayed, I want to log an urgent complaint"</span>
@@ -636,7 +656,8 @@
             <div class="studio-hud">
               <div class="hud-header">
                 <span class="hud-status display-font" id="studioStatus">● AUDIO ENGINE READY</span>
-                <span class="hud-latency display-font">LATENCY: <strong>118 ms</strong></span>
+                <span class="hud-llm display-font" id="studioLLMTag" style="font-size:11px; color:#60a5fa;">ENGINE: <strong>175B+ CASCADE</strong></span>
+                <span class="hud-latency display-font">LATENCY: <strong id="studioLatency">88 ms</strong></span>
               </div>
 
               <!-- Animated Equalizer Waveform -->

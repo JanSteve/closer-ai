@@ -19,6 +19,7 @@ from src.closer.agent.prompt import (
     INDIA_FRICTION_PLAYBOOK
 )
 from src.closer.agent.schemas import InboundLead, BuyerDossier, ObjectionRecord
+from src.closer.llm.router import OpenLLMRouter
 
 logger = logging.getLogger(__name__)
 
@@ -52,6 +53,19 @@ class ConversationEngine:
         self.objections_log: List[ObjectionRecord] = []
         self.turn_count = 0
         self.is_completed = False
+        self.llm_router = OpenLLMRouter()
+        self.dossier.active_llm_model = self.llm_router.active_model_id
+        self.dossier.llm_parameter_scale = self.llm_router.active_profile.parameter_scale
+
+    def set_llm_model(self, model_id_or_alias: str) -> Dict[str, Any]:
+        """Dynamically switches the active open-source foundation model (e.g., bloomz-176b, llama-3.3-70b)."""
+        if self.llm_router:
+            self.llm_router.set_active_model(model_id_or_alias)
+            info = self.llm_router.get_active_model_info()
+            self.dossier.active_llm_model = self.llm_router.active_model_id
+            self.dossier.llm_parameter_scale = self.llm_router.active_profile.parameter_scale
+            return info
+        return {}
 
     def set_market_mode(self, mode: str) -> None:
         """Dynamically switches between 'usa' and 'india' market modes."""

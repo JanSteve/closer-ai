@@ -172,6 +172,12 @@ class BuyerDossier(_PydanticBaseModel):
     follow_up_note: Optional[str] = None
     preferred_channel: Optional[str] = None  # phone, sms, whatsapp, email
     
+    # Open-Source Foundation LLM Telemetry (175B+ Catalog)
+    active_llm_model: Optional[str] = "llama-3.3-70b"
+    llm_parameter_scale: Optional[str] = "70 Billion"
+    llm_latency_ms: Optional[int] = None
+    llm_tier: Optional[str] = "reflex_edge"
+    
     # Call Metrics
     call_duration_seconds: int = 0
     total_turns: int = 0

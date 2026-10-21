@@ -221,6 +221,39 @@ class TestWebDashboardConsole(unittest.TestCase):
         self.assertIn("btn-copy-json", HTML_TEMPLATE)
         self.assertIn("leadSearchInput", HTML_TEMPLATE)
 
+    def test_api_llm_models_and_selection_endpoints(self):
+        """Verifies GET /api/llm_models and POST /api/llm_select endpoints."""
+        handler = DashboardHTTPHandler.__new__(DashboardHTTPHandler)
+        handler.path = "/api/llm_models"
+        handler.headers = {}
+        handler.wfile = io.BytesIO()
+        handler.send_response = MagicMock()
+        handler.send_header = MagicMock()
+        handler.end_headers = MagicMock()
+
+        handler.do_GET()
+        handler.send_response.assert_called_with(200)
+        resp = json.loads(handler.wfile.getvalue().decode("utf-8"))
+        self.assertIn("models", resp)
+        self.assertTrue(any(m["id"] == "bloomz-176b" for m in resp["models"]))
+
+        # Test POST /api/llm_select
+        post_handler = DashboardHTTPHandler.__new__(DashboardHTTPHandler)
+        post_handler.path = "/api/llm_select"
+        body = json.dumps({"model_id": "bloomz-176b"}).encode("utf-8")
+        post_handler.headers = {"Content-Length": str(len(body))}
+        post_handler.rfile = io.BytesIO(body)
+        post_handler.wfile = io.BytesIO()
+        post_handler.send_response = MagicMock()
+        post_handler.send_header = MagicMock()
+        post_handler.end_headers = MagicMock()
+
+        post_handler.do_POST()
+        post_handler.send_response.assert_called_with(200)
+        post_resp = json.loads(post_handler.wfile.getvalue().decode("utf-8"))
+        self.assertTrue(post_resp["success"])
+        self.assertEqual(post_resp["model"]["model_id"], "bloomz-176b")
+
 
 if __name__ == "__main__":
     unittest.main()

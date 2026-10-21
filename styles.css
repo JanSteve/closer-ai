@@ -1480,6 +1480,32 @@ body.modal-open {
   font-weight: 600;
 }
 
+.llm-pill {
+  padding: 4px 10px;
+  background: var(--pill-dark);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 999px;
+  color: #c8c8c8;
+  font-size: 11.5px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.llm-pill:hover {
+  background: #323234;
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.llm-pill.active {
+  background: #2563eb;
+  border-color: #60a5fa;
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 0 14px rgba(37, 99, 235, 0.45);
+}
+
 .telecom-toggle-btn {
   display: inline-flex;
   align-items: center;

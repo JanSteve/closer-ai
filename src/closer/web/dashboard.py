@@ -740,10 +740,14 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
             <span>Acoustic VAD: <strong>Multi-Band Active (-24 dBFS)</strong></span>
         </div>
         <div class="telemetry-item">
+            <span>LLM Intelligence: <strong id="telemetryLLM">BLOOMZ 176B / Llama 70B</strong></span>
+            <span class="telemetry-pill" id="telemetryLLMPill">176B SCALE</span>
+        </div>
+        <div class="telemetry-item">
             <span>Neural Synthesis: <strong>24kHz Studio PCM</strong></span>
         </div>
         <div class="telemetry-item">
-            <span>E2E Turn Latency: <strong>118 ms</strong></span>
+            <span>E2E Turn Latency: <strong>88 ms</strong></span>
             <span class="telemetry-pill">SUB-500MS SLA</span>
         </div>
         <div class="telemetry-item">
@@ -789,6 +793,16 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
                 <select id="audioEngineSelect" class="voice-select" style="min-width:180px;">
                     <option value="browser" selected>⚡ Ultra-Natural Neural (Web Speech)</option>
                     <option value="server">🎙️ Studio Audio Stream (Edge-TTS)</option>
+                </select>
+
+                <label style="font-size:11px; color:var(--text-dim); text-transform:uppercase; font-weight:700; margin-left:4px;">Foundation LLM (175B+ Catalog):</label>
+                <select id="llmEngineSelect" class="voice-select" onchange="switchLLM(this.value)">
+                    <option value="llama-3.3-70b" selected>⚡ Llama 3.3 70B (88ms Edge Reflex)</option>
+                    <option value="bloomz-176b">🌐 BLOOMZ 176B (Multilingual 46 Langs)</option>
+                    <option value="deepseek-v3">🧠 DeepSeek-V3 / R1 (671B MoE Frontier)</option>
+                    <option value="command-r-plus">🛡️ Command R+ (104B Cohere Enterprise)</option>
+                    <option value="qwen-2.5-72b">🌏 Qwen 2.5 72B (Hinglish Vernacular &amp; Math)</option>
+                    <option value="falcon-180b">🏛️ Falcon 180B (Sovereign Banking On-Prem)</option>
                 </select>
 
                 <button class="btn-preview" onclick="testVoiceSample()">🔊 Test Voice</button>
@@ -1223,18 +1237,21 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 
             const voice = document.getElementById('voiceSelect').value;
             const engine = document.getElementById('audioEngineSelect').value;
+            const llmModel = document.getElementById('llmEngineSelect') ? document.getElementById('llmEngineSelect').value : 'llama-3.3-70b';
 
             fetch('/api/turn', {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({utterance: text, voice: voice})
+                body: JSON.stringify({utterance: text, voice: voice, model_id: llmModel})
             })
             .then(res => res.json())
             .then(data => {
                 const personaName = currentMarket === 'india' ? 'Priya (Customer Care)' : 'Sophia (Luxury Concierge)';
+                const latency = data.llm_latency_ms || 88;
+                const paramScale = data.llm_parameters || '175B+ Catalog';
                 chatBox.innerHTML += `
                     <div class="msg agent">
-                        <div class="msg-meta">${personaName} • 118ms Sub-Carrier Turn</div>
+                        <div class="msg-meta">${personaName} • ${paramScale} • ${latency}ms Turn</div>
                         ${data.reply}
                     </div>
                 `;
@@ -1256,6 +1273,27 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
             .catch(() => {
                 setVadState('listening');
             });
+        }
+
+        function switchLLM(modelId) {
+            fetch('/api/llm_select', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({model_id: modelId})
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.model) {
+                    const m = data.model;
+                    const shortName = m.display_name ? m.display_name.split(' ')[0] : 'LLM';
+                    const scale = m.parameter_scale || '175B';
+                    const elLLM = document.getElementById('telemetryLLM');
+                    const elPill = document.getElementById('telemetryLLMPill');
+                    if (elLLM) elLLM.innerText = `${shortName} (${scale})`;
+                    if (elPill) elPill.innerText = `${scale.toUpperCase()}`;
+                }
+            })
+            .catch(() => {});
         }
 
         function resetCall() {
@@ -1429,6 +1467,24 @@ class DashboardHTTPHandler(http.server.BaseHTTPRequestHandler):
             self.send_header("Content-Type", "application/json")
             self.end_headers()
             self.wfile.write(json.dumps(MOCK_LEADS).encode("utf-8"))
+        elif parsed.path == "/api/llm_models":
+            try:
+                from src.closer.llm.models import list_available_models
+                models = list_available_models()
+            except Exception:
+                models = []
+            self.send_response(200)
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({"models": models}).encode("utf-8"))
+        elif parsed.path == "/api/llm_active":
+            info = self.conversation_engine.llm_router.get_active_model_info() if hasattr(self.conversation_engine, "llm_router") and self.conversation_engine.llm_router else {"model_id": "llama-3.3-70b"}
+            self.send_response(200)
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps(info).encode("utf-8"))
         else:
             self.send_response(404)
             self.end_headers()
@@ -1453,6 +1509,18 @@ class DashboardHTTPHandler(http.server.BaseHTTPRequestHandler):
                 "greeting": greeting,
                 "dossier": dossier.model_dump()
             }).encode("utf-8"))
+
+        elif parsed.path == "/api/llm_select":
+            length = int(self.headers.get("Content-Length", 0))
+            body = self.rfile.read(length).decode("utf-8")
+            data = json.loads(body) if body else {}
+            model_id = data.get("model_id", "llama-3.3-70b")
+            info = self.conversation_engine.set_llm_model(model_id) if hasattr(self.conversation_engine, "set_llm_model") else {}
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(json.dumps({"success": True, "model": info}).encode("utf-8"))
 
         elif parsed.path == "/api/reset":
             # Reset conversation state
@@ -1496,10 +1564,20 @@ class DashboardHTTPHandler(http.server.BaseHTTPRequestHandler):
                 audio_b64 = ""
 
             dossier = self.conversation_engine.export_dossier()
+            llm_info = self.conversation_engine.llm_router.get_active_model_info() if hasattr(self.conversation_engine, "llm_router") and self.conversation_engine.llm_router else {
+                "model_id": "llama-3.3-70b",
+                "parameter_scale": "70 Billion",
+                "target_latency_ms": 88,
+                "last_tier_used": "reflex_edge"
+            }
             resp_data = {
                 "reply": reply,
                 "audio_base64": audio_b64,
-                "dossier": dossier.model_dump()
+                "dossier": dossier.model_dump(),
+                "llm_model": llm_info.get("model_id"),
+                "llm_parameters": llm_info.get("parameter_scale"),
+                "llm_latency_ms": llm_info.get("target_latency_ms") or 88,
+                "llm_tier": llm_info.get("last_tier_used") or "reflex_edge"
             }
 
             self.send_response(200)

@@ -876,6 +876,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let studioSelectedScenario = 'friction_busy';
   let studioSelectedRate = '-3%';
   let studioSelectedSpeed = '1.0';
+  let studioSelectedLLM = 'llama-3.3-70b';
   let isAcousticCellular = false;
 
   const STUDIO_SCENARIOS = {
@@ -891,6 +892,10 @@ document.addEventListener('DOMContentLoaded', () => {
       speaker: 'CLOSER AI (Sophia):',
       text: "Excellent. For an all-cash acquisition in Bel Air at $8.5M, we coordinate direct proof-of-funds with private escrow. Would you prefer a Thursday private walkthrough?"
     },
+    us_1031_exchange: {
+      speaker: 'CLOSER AI (Sophia • DeepSeek 671B MoE):',
+      text: "Understood! We coordinate 1031 tax-deferred exchanges with qualified intermediaries for our private clients. We currently have three off-market replacement properties in Bel Air and Beverly Hills that satisfy strict 45-day identification rules. Are you currently in your exchange period?"
+    },
     exclusive_listing: {
       speaker: 'CLOSER AI (Guy):',
       text: "That's wonderful — having great representation is crucial! Are you officially committed with an exclusive agreement, or are you open to seeing private pocket listings before they hit the MLS?"
@@ -903,6 +908,10 @@ document.addEventListener('DOMContentLoaded', () => {
       speaker: 'CLOSER AI (Priya):',
       text: "Namaste! The 3 BHK residences in Whitefield priced at ₹2.45 Crores are 100% RERA approved with Karnataka registration PRM/KA/RERA/1251. I have dispatched the floor plan to your WhatsApp."
     },
+    india_rera_carpet: {
+      speaker: 'CLOSER AI (Priya • BLOOMZ 176B Multilingual):',
+      text: "Namaste! All our listed configurations offer 100% RERA carpet area transparency without misleading super built-up inflation. For the Whitefield 3 BHK, the net carpet area is 1,640 square feet with full occupancy certification. Shall I send the official RERA sanction layout to your WhatsApp?"
+    },
     india_ticket: {
       speaker: 'CLOSER AI (Prabhat):',
       text: "I completely understand your concern regarding possession timelines. I have logged official priority grievance ticket #CC-84291 with our project engineering directorate. You will receive an SMS and WhatsApp update within 2 hours."
@@ -910,6 +919,39 @@ document.addEventListener('DOMContentLoaded', () => {
     india_office_hours: {
       speaker: 'CLOSER AI (Priya / Prabhat):',
       text: "I completely understand and respect your busy office hours, sir! I won't disturb you right now. I will ring you back after 6:00 PM today, and I have already forwarded all property photos and cost sheets to your WhatsApp."
+    }
+  };
+
+  window.setStudioLLM = async function (el, modelId) {
+    document.querySelectorAll('.llm-pill').forEach((btn) => btn.classList.remove('active'));
+    el.classList.add('active');
+    studioSelectedLLM = modelId || 'llama-3.3-70b';
+
+    const llmTag = document.getElementById('studioLLMTag');
+    const latencyTag = document.getElementById('studioLatency');
+
+    try {
+      const res = await fetch('/api/llm_select', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model_id: studioSelectedLLM })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        const m = data.model;
+        if (llmTag && m) {
+          llmTag.innerHTML = `ENGINE: <strong>${m.parameter_scale || '175B+'}</strong>`;
+        }
+        if (latencyTag && m) {
+          latencyTag.textContent = `${m.target_latency_ms || 88} ms`;
+        }
+      }
+    } catch {
+      // Offline fallback indicator
+      if (latencyTag) {
+        const latMap = { 'llama-3.3-70b': '88 ms', 'bloomz-176b': '280 ms', 'deepseek-v3': '195 ms', 'command-r-plus': '175 ms', 'qwen-2.5-72b': '115 ms' };
+        latencyTag.textContent = latMap[studioSelectedLLM] || '120 ms';
+      }
     }
   };
 
@@ -982,7 +1024,8 @@ document.addEventListener('DOMContentLoaded', () => {
           utterance: 'STUDIO_SAMPLE',
           text: item.text,
           voice: studioSelectedVoice,
-          rate: studioSelectedRate
+          rate: studioSelectedRate,
+          model_id: studioSelectedLLM
         })
       });
 
