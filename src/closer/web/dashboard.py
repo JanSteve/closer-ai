@@ -997,6 +997,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
         </div>
 
         <div class="header-links">
+            <a href="/presentation" target="_blank" class="nav-out-link" style="background:rgba(0,229,255,0.12); color:#00e5ff; border:1px solid rgba(0,229,255,0.3); font-weight:700; border-radius:999px; padding:6px 14px; text-decoration:none; display:inline-flex; align-items:center; gap:6px;">📊 Pitch Deck (PPT)</a>
             <a href="/" class="nav-out-link" style="background:#ffffff; color:#000000; font-weight:700; border-radius:999px; padding:6px 14px; text-decoration:none; display:inline-flex; align-items:center; gap:6px;">← Back to Website</a>
             <span style="font-size:12px; color:var(--text-dim);">Founder: <strong style="color:#ffffff;">R Jan Steve Daniel</strong></span>
             <a href="https://github.com/JanSteve/closer-ai" target="_blank" style="color:#60a5fa; text-decoration:none; font-size:13px; font-weight:600;">GitHub ↗</a>
@@ -2211,6 +2212,18 @@ class DashboardHTTPHandler(http.server.BaseHTTPRequestHandler):
             self.send_header("Content-Type", "text/html; charset=utf-8")
             self.end_headers()
             self.wfile.write(HTML_TEMPLATE.encode("utf-8"))
+        elif parsed.path in ("/presentation", "/deck", "/pitch", "/slides", "/presentation.html"):
+            root = Path(__file__).resolve().parent.parent.parent.parent
+            deck_path = root / "presentation.html"
+            if deck_path.exists():
+                self.send_response(200)
+                self.send_header("Access-Control-Allow-Origin", "*")
+                self.send_header("Content-Type", "text/html; charset=utf-8")
+                self.end_headers()
+                self.wfile.write(deck_path.read_bytes())
+            else:
+                self.send_response(404)
+                self.end_headers()
         elif parsed.path in ("/styles.css", "/main.js", "/assets/logo.webp", "/fonts/GeistPixel-Circle.woff2") or parsed.path.startswith(("/assets/", "/fonts/")):
             root = Path(__file__).resolve().parent.parent.parent.parent
             rel_path = parsed.path.lstrip("/")

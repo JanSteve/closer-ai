@@ -72,6 +72,18 @@ async def serve_console():
         return HTMLResponse(content="<h1>CLOSER AI Executive Console</h1>", status_code=200)
 
 
+@app.get("/presentation", response_class=HTMLResponse)
+@app.get("/presentation.html", response_class=HTMLResponse)
+@app.get("/deck", response_class=HTMLResponse)
+@app.get("/pitch", response_class=HTMLResponse)
+@app.get("/slides", response_class=HTMLResponse)
+async def serve_presentation():
+    deck_file = ROOT_DIR / "presentation.html"
+    if deck_file.exists():
+        return HTMLResponse(content=deck_file.read_text(encoding="utf-8"), status_code=200)
+    return HTMLResponse(content="<h1>CLOSER AI Presentation Deck</h1>", status_code=200)
+
+
 @app.get("/styles.css")
 async def serve_css():
     css_file = ROOT_DIR / "styles.css"

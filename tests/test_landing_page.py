@@ -363,6 +363,36 @@ class TestLandingPage(unittest.TestCase):
         self.assertIn("setRoiCurrency", js)
         self.assertIn("updateRoiCalc", js)
 
+    def test_presentation_deck_structure_and_routes(self):
+        """Verifies presentation.html pitch deck exists, contains all 12 slides, speaker notes, and server routes."""
+        deck_file = ROOT_DIR / "presentation.html"
+        self.assertTrue(deck_file.exists(), "presentation.html must exist in project root")
+        self.assertGreater(deck_file.stat().st_size, 5000, "presentation.html must be a rich deck > 5KB")
+
+        content = deck_file.read_text(encoding="utf-8")
+        self.assertIn("CLOSER AI", content)
+        self.assertIn("R Jan Steve Daniel", content)
+        self.assertIn("Sub-120ms", content)
+        self.assertIn("Dual-Market", content)
+        self.assertIn("APILayer", content)
+        self.assertIn("data-slide=\"12\"", content)
+        self.assertIn("@media print", content)
+        self.assertIn("Presenter Speaking Notes", content)
+
+        # Test Dashboard HTTP Handler serves presentation
+        handler = DashboardHTTPHandler.__new__(DashboardHTTPHandler)
+        handler.path = "/presentation"
+        handler.headers = {}
+        handler.wfile = io.BytesIO()
+        handler.send_response = MagicMock()
+        handler.send_header = MagicMock()
+        handler.end_headers = MagicMock()
+
+        handler.do_GET()
+        handler.send_response.assert_called_with(200)
+        handler.send_header.assert_called_with("Content-Type", "text/html; charset=utf-8")
+        self.assertIn(b"CLOSER AI", handler.wfile.getvalue())
+
 
 if __name__ == "__main__":
     unittest.main()

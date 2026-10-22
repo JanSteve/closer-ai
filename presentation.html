@@ -1,0 +1,1706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>CLOSER AI — Executive Pitch & Presentation Deck</title>
+  <meta name="description" content="Autonomous Dual-Market AI Voice Telephony & Lead Closing Infrastructure. Executive Presentation Deck by R Jan Steve Daniel." />
+  <link rel="icon" type="image/webp" href="assets/logo.webp" />
+
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Font Awesome 6.5.2 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <style>
+    /* ==========================================================================
+       CLOSER AI LUXURY PRESENTATION DECK THEME
+       ========================================================================== */
+    :root {
+      --bg: #06080e;
+      --bg-card: #0d121f;
+      --bg-card-hover: #131a2b;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-glow: rgba(0, 229, 255, 0.35);
+      --cyan: #00e5ff;
+      --cyan-dim: rgba(0, 229, 255, 0.12);
+      --gold: #fbbf24;
+      --gold-dim: rgba(251, 191, 36, 0.12);
+      --emerald: #10b981;
+      --emerald-dim: rgba(16, 185, 129, 0.12);
+      --text: #ffffff;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      user-select: none;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Ambient background gradient glow */
+    .ambient-glow {
+      position: fixed;
+      inset: 0;
+      background: 
+        radial-gradient(circle at 15% 20%, rgba(0, 229, 255, 0.07) 0%, transparent 45%),
+        radial-gradient(circle at 85% 80%, rgba(251, 191, 36, 0.05) 0%, transparent 40%),
+        radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.8) 0%, var(--bg) 90%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Presentation Header & Controls Bar */
+    .deck-header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 64px;
+      padding: 0 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(6, 8, 14, 0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-subtle);
+      z-index: 100;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-logo-img {
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      object-fit: contain;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 3px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 0 16px rgba(0, 229, 255, 0.2);
+    }
+
+    .brand-title {
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #ffffff 40%, #cbd5e1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .brand-badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: var(--cyan-dim);
+      color: var(--cyan);
+      border: 1px solid rgba(0, 229, 255, 0.25);
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    .controls-center {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .nav-btn {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border-subtle);
+      color: var(--text);
+      padding: 7px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .nav-btn:hover {
+      background: rgba(255, 255, 255, 0.12);
+      border-color: rgba(255, 255, 255, 0.2);
+      transform: translateY(-1px);
+    }
+
+    .slide-counter {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-muted);
+      padding: 0 8px;
+      min-width: 75px;
+      text-align: center;
+    }
+
+    .slide-counter .current-num {
+      color: var(--cyan);
+      font-weight: 700;
+    }
+
+    .controls-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .action-btn {
+      background: transparent;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      padding: 7px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .action-btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: #ffffff;
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+
+    .action-btn.primary {
+      background: linear-gradient(135deg, #00e5ff 0%, #0099ff 100%);
+      color: #050b14;
+      border: none;
+      box-shadow: 0 0 16px rgba(0, 229, 255, 0.3);
+      font-weight: 700;
+    }
+
+    .action-btn.primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 0 24px rgba(0, 229, 255, 0.5);
+    }
+
+    /* Progress bar */
+    .deck-progress-bar {
+      position: fixed;
+      top: 64px;
+      left: 0;
+      height: 3px;
+      background: linear-gradient(90deg, #00e5ff, #38bdf8, #fbbf24);
+      width: 0%;
+      z-index: 101;
+      transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Slide Deck Container (16:9 Widescreen Target) */
+    .deck-container {
+      position: relative;
+      width: 100vw;
+      height: calc(100vh - 64px);
+      margin-top: 64px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+
+    .slide {
+      position: absolute;
+      width: min(1360px, 94vw);
+      height: min(765px, 86vh);
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 20px;
+      padding: clamp(28px, 4.5vh, 48px) clamp(32px, 4.5vw, 64px);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05);
+      opacity: 0;
+      transform: scale(0.96) translateY(20px);
+      pointer-events: none;
+      transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      overflow-y: auto;
+    }
+
+    .slide.active {
+      opacity: 1;
+      transform: scale(1) translateY(0);
+      pointer-events: auto;
+    }
+
+    /* Slide Header */
+    .slide-eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--cyan);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .slide-eyebrow i {
+      font-size: 13px;
+    }
+
+    .slide-title {
+      font-size: clamp(26px, 3.2vw, 42px);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      color: #ffffff;
+      margin-bottom: 8px;
+    }
+
+    .slide-subtitle {
+      font-size: clamp(14px, 1.4vw, 17px);
+      color: var(--text-muted);
+      font-weight: 400;
+      line-height: 1.5;
+      max-width: 900px;
+    }
+
+    /* Slide Content Layouts */
+    .slide-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      margin: 20px 0;
+    }
+
+    /* 3-Column Feature Grid */
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    /* 2-Column Split Grid */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+    }
+
+    /* 4-Column Pipeline Grid */
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+    }
+
+    /* Standard Deck Card */
+    .deck-card {
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: clamp(16px, 2.2vh, 24px);
+      transition: all 0.25s ease;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .deck-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+
+    .deck-card:hover {
+      background: rgba(255, 255, 255, 0.045);
+      border-color: rgba(255, 255, 255, 0.18);
+      transform: translateY(-2px);
+    }
+
+    .deck-card:hover::before {
+      opacity: 1;
+    }
+
+    .card-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      margin-bottom: 14px;
+      color: var(--cyan);
+    }
+
+    .card-icon.gold {
+      color: var(--gold);
+      background: var(--gold-dim);
+      border-color: rgba(251, 191, 36, 0.25);
+    }
+
+    .card-icon.emerald {
+      color: var(--emerald);
+      background: var(--emerald-dim);
+      border-color: rgba(16, 185, 129, 0.25);
+    }
+
+    .card-title {
+      font-size: 17px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 8px;
+      letter-spacing: -0.01em;
+    }
+
+    .card-desc {
+      font-size: 13.5px;
+      color: var(--text-muted);
+      line-height: 1.55;
+      font-weight: 400;
+      flex: 1;
+    }
+
+    .card-tag {
+      margin-top: 14px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--cyan);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Big Stat Callouts */
+    .stat-badge {
+      font-family: var(--font-mono);
+      font-size: clamp(28px, 3.6vw, 48px);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1;
+      margin-bottom: 6px;
+      background: linear-gradient(135deg, #ffffff 30%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .stat-badge.cyan {
+      background: linear-gradient(135deg, #00e5ff 0%, #38bdf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .stat-badge.gold {
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .stat-badge.emerald {
+      background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Slide Footer */
+    .slide-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 16px;
+      border-top: 1px solid var(--border-subtle);
+      font-size: 12px;
+      color: var(--text-dim);
+      font-weight: 500;
+    }
+
+    .slide-footer-meta {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .slide-footer-meta span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Slide 1 Hero Specifics */
+    .hero-slide {
+      text-align: center;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .hero-emblem-wrap {
+      width: 110px;
+      height: 110px;
+      margin: 0 auto 24px;
+      border-radius: 26px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(0, 229, 255, 0.3);
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 50px rgba(0, 229, 255, 0.25), inset 0 0 20px rgba(0, 229, 255, 0.1);
+      animation: emblemFloat 4s ease-in-out infinite alternate;
+    }
+
+    @keyframes emblemFloat {
+      0% { transform: translateY(0px); box-shadow: 0 0 40px rgba(0, 229, 255, 0.2); }
+      100% { transform: translateY(-6px); box-shadow: 0 0 65px rgba(0, 229, 255, 0.35); }
+    }
+
+    .hero-emblem-img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .hero-h1 {
+      font-size: clamp(38px, 5.2vw, 68px);
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 1.08;
+      margin-bottom: 16px;
+      background: linear-gradient(180deg, #ffffff 40%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-h1 span.cyan-glow {
+      background: linear-gradient(135deg, #00e5ff 0%, #38bdf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-tagline {
+      font-size: clamp(16px, 1.8vw, 22px);
+      color: #cbd5e1;
+      max-width: 820px;
+      line-height: 1.5;
+      margin: 0 auto 32px;
+      font-weight: 400;
+    }
+
+    .hero-pills {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .hero-pill {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-subtle);
+      border-radius: 999px;
+      padding: 8px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #e2e8f0;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .hero-pill i {
+      color: var(--cyan);
+    }
+
+    /* Comparison Table for ROI Slide */
+    .compare-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border-subtle);
+      background: rgba(255, 255, 255, 0.02);
+      font-size: 13.5px;
+    }
+
+    .compare-table th {
+      background: rgba(255, 255, 255, 0.04);
+      padding: 14px 20px;
+      text-align: left;
+      font-weight: 700;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .compare-table td {
+      padding: 13px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: #e2e8f0;
+    }
+
+    .compare-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .compare-table td.highlight-closer {
+      color: var(--cyan);
+      font-weight: 700;
+      background: rgba(0, 229, 255, 0.04);
+    }
+
+    .compare-table td.dim-legacy {
+      color: #64748b;
+    }
+
+    /* Keynote Presenter Notes Drawer */
+    .notes-drawer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(10, 14, 23, 0.96);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid var(--cyan-dim);
+      padding: 18px 36px;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 90;
+      max-height: 220px;
+      overflow-y: auto;
+    }
+
+    .notes-drawer.open {
+      transform: translateY(0);
+    }
+
+    .notes-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .notes-title {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--cyan);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .notes-content {
+      font-size: 14px;
+      line-height: 1.6;
+      color: #cbd5e1;
+    }
+
+    /* Slide Grid Overview Modal */
+    .overview-modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(6, 8, 14, 0.94);
+      backdrop-filter: blur(24px);
+      z-index: 200;
+      padding: 40px;
+      display: none;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .overview-modal.open {
+      display: flex;
+    }
+
+    .overview-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .overview-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: #ffffff;
+    }
+
+    .overview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 20px;
+    }
+
+    .overview-thumb {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 155px;
+    }
+
+    .overview-thumb:hover, .overview-thumb.active {
+      border-color: var(--cyan);
+      box-shadow: 0 0 20px rgba(0, 229, 255, 0.25);
+      transform: translateY(-2px);
+    }
+
+    .overview-thumb-num {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--cyan);
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .overview-thumb-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #ffffff;
+      line-height: 1.35;
+    }
+
+    /* Keyboard Shortcuts Modal */
+    .keyboard-help {
+      font-size: 11px;
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .key-badge {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+      padding: 2px 5px;
+      color: #cbd5e1;
+    }
+
+    /* ==========================================================================
+       PRINT STYLES FOR PDF / PPT EXPORT (16:9 Landscape)
+       ========================================================================== */
+    @media print {
+      @page {
+        size: 16in 9in;
+        margin: 0;
+      }
+
+      body {
+        overflow: visible !important;
+        background: #06080e !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      .deck-header,
+      .deck-progress-bar,
+      .ambient-glow,
+      .notes-drawer,
+      .overview-modal {
+        display: none !important;
+      }
+
+      .deck-container {
+        display: block !important;
+        width: 100% !important;
+        height: auto !important;
+        margin: 0 !important;
+        overflow: visible !important;
+      }
+
+      .slide {
+        position: relative !important;
+        page-break-after: always !important;
+        break-after: page !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        opacity: 1 !important;
+        transform: none !important;
+        border-radius: 0 !important;
+        border: none !important;
+        padding: 50px 70px !important;
+        margin: 0 !important;
+        background: #06080e !important;
+        box-shadow: none !important;
+        display: flex !important;
+      }
+    }
+
+    /* Responsive Mobile Tweaks */
+    @media (max-width: 840px) {
+      .deck-header {
+        padding: 0 16px;
+      }
+      .brand-badge, .keyboard-help, .action-btn span {
+        display: none;
+      }
+      .grid-3, .grid-4, .grid-2 {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .slide {
+        padding: 20px;
+        height: calc(100vh - 84px);
+        border-radius: 14px;
+      }
+      .slide-title {
+        font-size: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient Glow -->
+  <div class="ambient-glow"></div>
+
+  <!-- Header Bar & Controls -->
+  <header class="deck-header">
+    <div class="brand-group">
+      <img src="assets/logo.webp" alt="CLOSER AI" class="brand-logo-img" />
+      <span class="brand-title">CLOSER AI</span>
+      <span class="brand-badge">Pitch Deck v2.0</span>
+    </div>
+
+    <!-- Center Navigation Controls -->
+    <div class="controls-center">
+      <button class="nav-btn" onclick="prevSlide()" id="btnPrev" title="Previous Slide (Left Arrow)">
+        <i class="fa-solid fa-arrow-left"></i>
+      </button>
+
+      <div class="slide-counter">
+        <span class="current-num" id="currentSlideNum">01</span> / <span id="totalSlidesNum">12</span>
+      </div>
+
+      <button class="nav-btn" onclick="nextSlide()" id="btnNext" title="Next Slide (Right Arrow / Space)">
+        <i class="fa-solid fa-arrow-right"></i>
+      </button>
+    </div>
+
+    <!-- Right Action Items -->
+    <div class="controls-right">
+      <div class="keyboard-help">
+        <span><span class="key-badge">←</span> <span class="key-badge">→</span> Navigate</span>
+        <span><span class="key-badge">F</span> Fullscreen</span>
+        <span><span class="key-badge">O</span> Overview</span>
+        <span><span class="key-badge">N</span> Notes</span>
+      </div>
+
+      <button class="action-btn" onclick="toggleOverview()" title="View All Slides (O)">
+        <i class="fa-solid fa-grip"></i> <span>Overview</span>
+      </button>
+
+      <button class="action-btn" onclick="toggleNotes()" title="Toggle Presenter Notes (N)">
+        <i class="fa-solid fa-note-sticky"></i> <span>Notes</span>
+      </button>
+
+      <button class="action-btn" onclick="exportPdf()" title="Print or Save as 16:9 PDF Presentation">
+        <i class="fa-solid fa-file-pdf"></i> <span>Save PDF</span>
+      </button>
+
+      <button class="action-btn" onclick="toggleFullscreen()" title="Fullscreen Mode (F)">
+        <i class="fa-solid fa-expand"></i>
+      </button>
+
+      <a href="/console" target="_blank" class="action-btn primary" title="Open Interactive Web Console">
+        <i class="fa-solid fa-headset"></i> <span>Live Demo</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Progress Bar -->
+  <div class="deck-progress-bar" id="deckProgressBar"></div>
+
+  <!-- Main Slide Deck Container -->
+  <main class="deck-container" id="deckContainer">
+
+    <!-- ====================================================================
+         SLIDE 01: TITLE & EXECUTIVE INTRODUCTION
+         ==================================================================== -->
+    <section class="slide hero-slide active" data-slide="1" data-notes="Welcome executives and partners. CLOSER AI is the world's first dual-market autonomous AI voice agent built specifically for high-velocity lead qualification and enterprise deal closing. Mention founder R Jan Steve Daniel and highlight our sub-120ms latency.">
+      <div class="hero-emblem-wrap">
+        <img src="assets/closer-logo-transparent.webp" alt="CLOSER AI Logo" class="hero-emblem-img" />
+      </div>
+
+      <div class="slide-eyebrow">
+        <i class="fa-solid fa-bolt"></i> Autonomous Voice Telephony &amp; Closing Infrastructure
+      </div>
+
+      <h1 class="hero-h1">
+        CLOSER <span class="cyan-glow">AI</span>
+      </h1>
+
+      <p class="hero-tagline">
+        The Dual-Market Conversational Voice Infrastructure that turns cold inquiries into pre-qualified, closed appointments at sub-120ms neural latency.
+      </p>
+
+      <div class="hero-pills">
+        <div class="hero-pill"><i class="fa-solid fa-flag-usa"></i> USA: Luxury Real Estate &amp; Wealth ISA</div>
+        <div class="hero-pill"><i class="fa-solid fa-earth-asia"></i> India: Customer Care &amp; Enterprise Sales</div>
+        <div class="hero-pill"><i class="fa-solid fa-clock"></i> Sub-120ms Real-Time Telephony</div>
+        <div class="hero-pill"><i class="fa-solid fa-shield-halved"></i> Deterministic BANT Dossiers</div>
+      </div>
+
+      <div class="slide-footer" style="width: 100%; margin-top: 24px;">
+        <div class="slide-footer-meta">
+          <span><i class="fa-solid fa-user-tie"></i> Founder &amp; Architect: R Jan Steve Daniel</span>
+          <span><i class="fa-solid fa-code-branch"></i> Version: 2.0 Enterprise Release</span>
+        </div>
+        <div>Confidential Client Presentation &bull; 2026</div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         SLIDE 02: THE PROBLEM / MARKET CRISIS
+         ==================================================================== -->
+    <section class="slide" data-slide="2" data-notes="Every enterprise suffers from the speed-to-lead crisis. If a high-value lead isn't contacted in 5 minutes, odds of qualifying drop by nearly 400%. Human ISAs cost $5k-$8k/mo, suffer 60% turnover, and miss evening/weekend calls.">
+      <div>
+        <div class="slide-eyebrow"><i class="fa-solid fa-triangle-exclamation"></i> The Revenue Bottleneck</div>
+        <h2 class="slide-title">Why High-Value Deals Are Lost Every Day</h2>
+        <p class="slide-subtitle">Traditional sales teams and human call centers are losing up to 74% of qualified buyers due to latency, burnout, and script fatigue.</p>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-3">
+          <div class="deck-card">
+            <div class="card-icon"><i class="fa-solid fa-hourglass-end"></i></div>
+            <div class="stat-badge cyan">391%</div>
+            <div class="card-title">The 5-Minute Lead Cliff</div>
+            <p class="card-desc">
+              Odds of qualifying a lead drop by 391% if not called within 5 minutes. 78% of enterprise customers buy from the company that calls them back first.
+            </p>
+            <div class="card-tag"><i class="fa-solid fa-chart-line"></i> Speed to lead is the #1 deal killer</div>
+          </div>
+
+          <div class="deck-card">
+            <div class="card-icon gold"><i class="fa-solid fa-money-bill-transfer"></i></div>
+            <div class="stat-badge gold">$7,500<span style="font-size:20px; font-weight:600;">/mo</span></div>
+            <div class="card-title">Human ISA Burnout &amp; Cost</div>
+            <p class="card-desc">
+              Hiring human reps costs $60k-$90k annually with benefits, suffering 60%+ annual turnover, call reluctance, and zero coverage outside 9-to-5 business hours.
+            </p>
+            <div class="card-tag" style="color:var(--gold);"><i class="fa-solid fa-user-slash"></i> High churn &amp; variable quality</div>
+          </div>
+
+          <div class="deck-card">
+            <div class="card-icon emerald"><i class="fa-solid fa-comments"></i></div>
+            <div class="stat-badge emerald">68%</div>
+            <div class="card-title">Script Drift &amp; Dialect Friction</div>
+            <p class="card-desc">
+              Human reps deviate from compliance, miss BANT qualification criteria, and fail to adapt their accent or cadence to regional client psychology.
+            </p>
+            <div class="card-tag" style="color:var(--emerald);"><i class="fa-solid fa-database"></i> Dirty CRM data &amp; lost deals</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <div>CLOSER AI Executive Deck</div>
+        <div>Slide 02 &bull; The Enterprise Challenge</div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         SLIDE 03: THE SOLUTION / INTRODUCING CLOSER AI
+         ==================================================================== -->
+    <section class="slide" data-slide="3" data-notes="CLOSER AI bridges the gap completely. It answers immediately within 2 seconds of lead arrival, engages with studio-grade natural human voice, handles objections dynamically, and pushes a structured BANT dossier straight into CRM.">
+      <div>
+        <div class="slide-eyebrow"><i class="fa-solid fa-circle-check"></i> The Autonomous Breakthrough</div>
+        <h2 class="slide-title">Introducing CLOSER AI</h2>
+        <p class="slide-subtitle">An autonomous, human-sounding AI voice agent engineered to qualify leads, resolve objections, and book calendar showings 24/7/365.</p>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="deck-card" style="justify-content: center;">
+            <div class="card-icon"><i class="fa-solid fa-waveform-lines"></i></div>
+            <div class="stat-badge cyan">&lt; 120ms</div>
+            <div class="card-title">Sub-Human Neural Latency</div>
+            <p class="card-desc" style="font-size: 15px;">
+              Human conversational pauses range between 200ms and 300ms. CLOSER AI operates at <strong>sub-120ms</strong>, eliminating unnatural robotic pauses and creating an effortless, organic dialogue.
+            </p>
+            <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+              <span class="hero-pill" style="font-size: 11px;"><i class="fa-solid fa-microphone"></i> Studio WAV 48kHz</span>
+              <span class="hero-pill" style="font-size: 11px;"><i class="fa-solid fa-wind"></i> Micro-breath cadence</span>
+            </div>
+          </div>
+
+          <div class="deck-card" style="justify-content: center;">
+            <div class="card-icon emerald"><i class="fa-solid fa-diagram-project"></i></div>
+            <div class="stat-badge emerald">100%</div>
+            <div class="card-title">Deterministic Closing Execution</div>
+            <p class="card-desc" style="font-size: 15px;">
+              Unlike unpredictable chatbots, CLOSER AI runs on a strict BANT schema (Budget, Authority, Need, Timeline) and script deviation engine that never hallucinates and locks appointments into your calendar.
+            </p>
+            <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+              <span class="hero-pill" style="font-size: 11px;"><i class="fa-solid fa-calendar-check"></i> Zero-collision booking</span>
+              <span class="hero-pill" style="font-size: 11px;"><i class="fa-solid fa-shield"></i> Pydantic v2 validation</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <div>CLOSER AI Executive Deck</div>
+        <div>Slide 03 &bull; Solution Architecture</div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         SLIDE 04: DUAL-MARKET REGIONAL SPECIALIZATION
+         ==================================================================== -->
+    <section class="slide" data-slide="4" data-notes="We engineered CLOSER AI for two massive global economies: The United States high-end luxury real estate sector, and the booming Indian enterprise customer care & property market. Notice how each market has customized vocabulary and accent cadence.">
+      <div>
+        <div class="slide-eyebrow"><i class="fa-solid fa-globe"></i> Global Reach, Hyper-Local Intelligence</div>
+        <h2 class="slide-title">Dual-Market Neural Specialization</h2>
+        <p class="slide-subtitle">Engineered with cultural nuance, localized financial vocabulary, and regional phonetics for both the USA and India.</p>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-2">
+          <!-- USA Pillar -->
+          <div class="deck-card" style="border-left: 3px solid #38bdf8;">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div class="card-icon"><i class="fa-solid fa-flag-usa"></i></div>
+              <span class="brand-badge">USA Market</span>
+            </div>
+            <div class="card-title" style="font-size:20px;">🇺🇸 Luxury Real Estate &amp; Wealth ISA</div>
+            <p class="card-desc">
+              Tailored for high-net-worth buyers in Bel Air, Beverly Hills, Aspen, Manhattan, and Miami.
+            </p>
+            <div style="margin: 16px 0; background:rgba(0,0,0,0.25); padding:14px; border-radius:10px; border:1px solid var(--border-subtle);">
+              <div style="font-size:12px; color:var(--text-muted); margin-bottom:6px;"><strong>Neural Personas:</strong> GuyNeural (Authoritative) &amp; AriaNeural (Warm)</div>
+              <div style="font-size:12px; color:var(--text-muted); margin-bottom:6px;"><strong>Domain Fluency:</strong> 1031 Exchange, Escrow, Pre-Approval, Jumbo Loans, Architectural Estate Viewings.</div>
+              <div style="font-size:12px; color:var(--cyan); font-weight:600;">Result: Ultra-luxury clients feel they are speaking to a premier concierge.</div>
+            </div>
+          </div>
+
+          <!-- India Pillar -->
+          <div class="deck-card" style="border-left: 3px solid var(--gold);">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+              <div class="card-icon gold"><i class="fa-solid fa-earth-asia"></i></div>
+              <span class="brand-badge" style="background:var(--gold-dim); color:var(--gold); border-color:rgba(251,191,36,0.3);">India Market</span>
+            </div>
+            <div class="card-title" style="font-size:20px;">🇮🇳 Enterprise Customer Care &amp; Property</div>
+            <p class="card-desc">
+              Customized for high-density customer support, telecom resolution, and RERA property launches.
+            </p>
+            <div style="margin: 16px 0; background:rgba(0,0,0,0.25); padding:14px; border-radius:10px; border:1px solid var(--border-subtle);">
+              <div style="font-size:12px; color:var(--text-muted); margin-bottom:6px;"><strong>Neural Personas:</strong> NeerjaNeural (Empathetic) &amp; PradeepNeural (Consultative)</div>
+              <div style="font-size:12px; color:var(--text-muted); margin-bottom:6px;"><strong>Domain Fluency:</strong> RERA compliance, ₹ Lakhs &amp; Crores currency, Bangalore, Mumbai, Gurgaon, Hyderabad corridors.</div>
+              <div style="font-size:12px; color:var(--gold); font-weight:600;">Result: Empathetic Indian English / Hinglish natural conversational flow.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <div>CLOSER AI Executive Deck</div>
+        <div>Slide 04 &bull; Dual-Market Strategy</div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         SLIDE 05: THE 4-STAGE TELEPHONY PIPELINE
+         ==================================================================== -->
+    <section class="slide" data-slide="5" data-notes="Here is the core technical architecture. Stage 1 captures audio with real-time VAD for immediate barge-in. Stage 2 runs our 175B parameter open-source LLM reasoning engine. Stage 3 enriches the caller using APILayer. Stage 4 synthesizes studio 48kHz audio.">
+      <div>
+        <div class="slide-eyebrow"><i class="fa-solid fa-network-wired"></i> Engineered for Reliability</div>
+        <h2 class="slide-title">The 4-Stage Autonomous Pipeline</h2>
+        <p class="slide-subtitle">A bulletproof real-time telephonic pipeline engineered to achieve zero hallucination and sub-120ms latency.</p>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-4">
+          <div class="deck-card">
+            <div class="card-icon"><i class="fa-solid fa-ear-listen"></i></div>
+            <div class="card-tag">Stage 01</div>
+            <div class="card-title" style="margin-top:6px;">VAD &amp; Barge-In</div>
+            <p class="card-desc">
+              Dual-band energy threshold detection detects human interruption within 40ms, immediately silencing output for natural human overlap.
+            </p>
+          </div>
+
+          <div class="deck-card">
+            <div class="card-icon emerald"><i class="fa-solid fa-brain"></i></div>
+            <div class="card-tag" style="color:var(--emerald);">Stage 02</div>
+            <div class="card-title" style="margin-top:6px;">175B Reasoning</div>
+            <p class="card-desc">
+              High-throughput LLM reasoning trained on thousands of luxury sales conversations, extracting BANT intent and qualifying criteria.
+            </p>
+          </div>
+
+          <div class="deck-card">
+            <div class="card-icon gold"><i class="fa-solid fa-database"></i></div>
+            <div class="card-tag" style="color:var(--gold);">Stage 03</div>
+            <div class="card-title" style="margin-top:6px;">APILayer 360°</div>
+            <p class="card-desc">
+              Real-time carrier lookup, geocoding for luxury corridors, dual-currency math (INR/USD), and corporate email fraud checks.
+            </p>
+          </div>
+
+          <div class="deck-card">
+            <div class="card-icon" style="color:#a855f7; background:rgba(168,85,247,0.12); border-color:rgba(168,85,247,0.3);"><i class="fa-solid fa-volume-high"></i></div>
+            <div class="card-tag" style="color:#a855f7;">Stage 04</div>
+            <div class="card-title" style="margin-top:6px;">Neural Synthesis</div>
+            <p class="card-desc">
+              Studio-grade 48kHz WAV audio with SSML phonetic tuning, micro-breath pauses, and dialect cadence for uncanny human realism.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <div>CLOSER AI Executive Deck</div>
+        <div>Slide 05 &bull; Technical Telephony Pipeline</div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         SLIDE 06: SCRIPT DEVIATION & OBJECTION HANDLING
+         ==================================================================== -->
+    <section class="slide" data-slide="6" data-notes="Real prospects don't follow scripts. When a buyer says 'I am in a meeting', other bots fail or repeat themselves. CLOSER AI immediately recognizes the social context, responds with courteous brevity, and locks a future time window.">
+      <div>
+        <div class="slide-eyebrow"><i class="fa-solid fa-route"></i> Conversational Emotional Intelligence</div>
+        <h2 class="slide-title">Dynamic Script Deviation Engine</h2>
+        <p class="slide-subtitle">Real buyers push back, interrupt, and express friction. CLOSER AI adapts gracefully without losing the appointment.</p>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-3">
+          <div class="deck-card">
+            <div class="card-icon"><i class="fa-solid fa-business-time"></i></div>
+            <div class="card-title">"I'm in a meeting right now"</div>
+            <div style="font-size:12px; color:var(--cyan); margin-bottom:8px; font-weight:600;">Handling: Frictionless Callback</div>
+            <p class="card-desc">
+              Immediately respects executive time: <em>"Understood, I will not take another second. Should I call you back in 30 minutes, or would tomorrow morning be better?"</em>
+            </p>
+          </div>
+
+          <div class="deck-card">
+            <div class="card-icon gold"><i class="fa-brands fa-whatsapp"></i></div>
+            <div class="card-title">"Send me details on WhatsApp first"</div>
+            <div style="font-size:12px; color:var(--gold); margin-bottom:8px; font-weight:600;">Handling: Omnichannel Bridge</div>
+            <p class="card-desc">
+              Dispatches property brochure instantly via WhatsApp API, while securing confirmation: <em>"Sent right to your WhatsApp! Shall I reserve your 4 PM walkthrough while you review it?"</em>
+            </p>
+          </div>
+
+          <div class="deck-card">
+            <div class="card-icon emerald"><i class="fa-solid fa-calendar-xmark"></i></div>
+            <div class="card-title">"Today is not good, call tomorrow"</div>
+            <div style="font-size:12px; color:var(--emerald); margin-bottom:8px; font-weight:600;">Handling: Slot Negotiation</div>
+            <p class="card-desc">
+              Locks preferred hour: <em>"Completely understand. Let's make tomorrow effortless. Do you prefer 11:30 AM or 3:00 PM for a quick 5-minute debrief?"</em>
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <div>CLOSER AI Executive Deck</div>
+        <div>Slide 06 &bull; Adaptive Objection Handling</div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         SLIDE 07: APILAYER 360-DEGREE ENRICHMENT
+         ==================================================================== -->
+    <section class="slide" data-slide="7" data-notes="We integrated the APILayer Unified Suite into the core web console. During the live conversation, CLOSER AI automatically verifies the caller's carrier, resolves their address via spatial geocoding, converts INR to USD, and checks their corporate email.">
+      <div>
+        <div class="slide-eyebrow"><i class="fa-solid fa-shield-cat"></i> Live Intelligence Enrichment</div>
+        <h2 class="slide-title">APILayer Unified 360° Lead Dossier</h2>
+        <p class="slide-subtitle">Before the sales manager even picks up the CRM record, CLOSER AI has enriched the buyer with full verified intelligence.</p>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-2">
+          <div class="deck-card">
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+              <div class="card-icon" style="margin-bottom:0;"><i class="fa-solid fa-tower-cell"></i></div>
+              <div>
+                <div class="card-title" style="margin-bottom:2px;">Carrier &amp; Line Intelligence</div>
+                <div style="font-size:12px; color:var(--text-muted);">NumVerify &amp; Telecom API</div>
+              </div>
+            </div>
+            <p class="card-desc">
+              Detects wireless vs landline vs VoIP. Identifies carrier network (Verizon, AT&amp;T, Reliance Jio, Bharti Airtel) to prevent robocall fraud and ensure SMS deliverability.
+            </p>
+          </div>
+
+          <div class="deck-card">
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+              <div class="card-icon gold" style="margin-bottom:0;"><i class="fa-solid fa-location-dot"></i></div>
+              <div>
+                <div class="card-title" style="margin-bottom:2px;">Spatial Corridor Geocoding</div>
+                <div style="font-size:12px; color:var(--text-muted);">PositionStack Real-Time Engine</div>
+              </div>
+            </div>
+            <p class="card-desc">
+              Instantly resolves property addresses, neighborhoods, and school district metrics across Los Angeles (Bel Air, Beverly Hills) and India (Indiranagar, Whitefield, Bandra).
+            </p>
+          </div>
+
+          <div class="deck-card">
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+              <div class="card-icon emerald" style="margin-bottom:0;"><i class="fa-solid fa-coins"></i></div>
+              <div>
+                <div class="card-title" style="margin-bottom:2px;">Live Dual-Currency Conversion</div>
+                <div style="font-size:12px; color:var(--text-muted);">Fixer.io Exchange Engine</div>
+              </div>
+            </div>
+            <p class="card-desc">
+              Calculates live conversions between USD Millions ($M) and Indian Crores (₹ Cr), ensuring cross-border NRI investors receive crystal-clear portfolio numbers.
+            </p>
+          </div>
+
+          <div class="deck-card">
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
+              <div class="card-icon" style="margin-bottom:0; color:#ec4899; background:rgba(236,72,153,0.12); border-color:rgba(236,72,153,0.3);"><i class="fa-solid fa-envelope-circle-check"></i></div>
+              <div>
+                <div class="card-title" style="margin-bottom:2px;">Corporate Email Verification</div>
+                <div style="font-size:12px; color:var(--text-muted);">MailboxLayer MX Inspector</div>
+              </div>
+            </div>
+            <p class="card-desc">
+              Validates corporate domain authority, MX record reachability, and filters out burner/disposable email addresses to protect your sales pipeline.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <div>CLOSER AI Executive Deck</div>
+        <div>Slide 07 &bull; APILayer Integration</div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         SLIDE 08: FINANCIAL ROI (HUMAN VS CLOSER AI)
+         ==================================================================== -->
+    <section class="slide" data-slide="8" data-notes="This is the most powerful slide for CFOs and sales leaders. A 3-person human ISA team costs $18,000/month and can only handle ~6,000 calls. CLOSER AI handles 100,000+ simultaneous calls for a fraction of the cost, slashing cost-per-lead by 93%.">
+      <div>
+        <div class="slide-eyebrow"><i class="fa-solid fa-calculator"></i> The Unit Economics</div>
+        <h2 class="slide-title">Financial ROI: Human ISA vs. CLOSER AI</h2>
+        <p class="slide-subtitle">Slashing customer acquisition cost (CAC) while scaling outbound and inbound capacity exponentially.</p>
+      </div>
+
+      <div class="slide-body">
+        <table class="compare-table">
+          <thead>
+            <tr>
+              <th>Performance Metric</th>
+              <th>Human ISA Team (3 Reps)</th>
+              <th>CLOSER AI Voice Infrastructure</th>
+              <th>Enterprise Advantage</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Monthly Cost</strong></td>
+              <td class="dim-legacy">$18,000 / month</td>
+              <td class="highlight-closer">$990 / month</td>
+              <td><span class="brand-badge" style="background:var(--emerald-dim); color:var(--emerald);">94% Cost Reduction</span></td>
+            </tr>
+            <tr>
+              <td><strong>Call Capacity</strong></td>
+              <td class="dim-legacy">~6,000 calls / mo (Fatigue cap)</td>
+              <td class="highlight-closer">100,000+ simultaneous calls</td>
+              <td><strong>Infinite elasticity</strong></td>
+            </tr>
+            <tr>
+              <td><strong>Speed to Inbound Lead</strong></td>
+              <td class="dim-legacy">15 to 45 minutes</td>
+              <td class="highlight-closer">&lt; 3 seconds</td>
+              <td><strong>391% higher qualification</strong></td>
+            </tr>
+            <tr>
+              <td><strong>Operating Hours</strong></td>
+              <td class="dim-legacy">9:00 AM – 5:00 PM (Business days)</td>
+              <td class="highlight-closer">24/7/365 (Nights &amp; Holidays)</td>
+              <td><strong>Zero missed after-hours leads</strong></td>
+            </tr>
+            <tr>
+              <td><strong>Script &amp; Compliance Drift</strong></td>
+              <td class="dim-legacy">High (35% deviation rate)</td>
+              <td class="highlight-closer">0% (100% deterministic guardrails)</td>
+              <td><strong>100% RERA &amp; TCPA Compliant</strong></td>
+            </tr>
+            <tr>
+              <td><strong>Cost Per Qualified Showing</strong></td>
+              <td class="dim-legacy">$45.00</td>
+              <td class="highlight-closer">$3.20</td>
+              <td><strong>14x ROI Multiplier</strong></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="slide-footer">
+        <div>CLOSER AI Executive Deck</div>
+        <div>Slide 08 &bull; Financial ROI Matrix</div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         SLIDE 09: ENTERPRISE SECURITY & COMPLIANCE
+         ==================================================================== -->
+    <section class="slide" data-slide="9" data-notes="Security and legal compliance are table stakes for enterprise adoption. CLOSER AI includes automated National Do-Not-Call registry scrubbing, mandatory call recording announcements, SOC-2 data practices, and Zero Data Retention for sensitive private wealth offices.">
+      <div>
+        <div class="slide-eyebrow"><i class="fa-solid fa-lock"></i> Bank-Grade Trust &amp; Governance</div>
+        <h2 class="slide-title">Enterprise Security &amp; Compliance</h2>
+        <p class="slide-subtitle">Built from day one to comply with strict global telecommunications and financial privacy frameworks.</p>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-3">
+          <div class="deck-card">
+            <div class="card-icon emerald"><i class="fa-solid fa-stamp"></i></div>
+            <div class="card-title">100% RERA &amp; TCPA Compliant</div>
+            <p class="card-desc">
+              Automatic scrubbing against National Do-Not-Call (DNC) registries, automated caller disclosures, and compliant telephonic opt-outs in both US and Indian jurisdictions.
+            </p>
+            <div class="card-tag" style="color:var(--emerald);"><i class="fa-solid fa-check"></i> Zero legal exposure</div>
+          </div>
+
+          <div class="deck-card">
+            <div class="card-icon"><i class="fa-solid fa-shield-virus"></i></div>
+            <div class="card-title">SOC-2 Type II &amp; HIPAA Ready</div>
+            <p class="card-desc">
+              End-to-end encrypted SIP/TLS trunking, AES-256 data at rest, and role-based access control (RBAC) ensuring corporate client privacy across all conversation logs.
+            </p>
+            <div class="card-tag"><i class="fa-solid fa-lock"></i> Bank-grade encryption</div>
+          </div>
+
+          <div class="deck-card">
+            <div class="card-icon gold"><i class="fa-solid fa-eye-slash"></i></div>
+            <div class="card-title">Zero Data Retention (ZDR)</div>
+            <p class="card-desc">
+              For private family offices and sovereign clients, CLOSER AI operates in ephemeral mode: voice audio and transcripts are deleted immediately after CRM sync.
+            </p>
+            <div class="card-tag" style="color:var(--gold);"><i class="fa-solid fa-user-secret"></i> Ultra-HNI privacy option</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <div>CLOSER AI Executive Deck</div>
+        <div>Slide 09 &bull; Governance &amp; Compliance</div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         SLIDE 10: CRM & TELEPHONY INTEGRATIONS
+         ==================================================================== -->
+    <section class="slide" data-slide="10" data-notes="CLOSER AI connects seamlessly into the client's existing workflow. No need to replace their CRM or phone numbers. We integrate with Salesforce, HubSpot, Follow Up Boss, Zoho, Twilio, and Vonage.">
+      <div>
+        <div class="slide-eyebrow"><i class="fa-solid fa-cubes"></i> Seamless Ecosystem</div>
+        <h2 class="slide-title">Plug &amp; Play Enterprise Integrations</h2>
+        <p class="slide-subtitle">CLOSER AI integrates directly with your existing phone carriers, CRMs, and calendar systems in under 24 hours.</p>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-3">
+          <div class="deck-card">
+            <div class="card-icon"><i class="fa-solid fa-address-book"></i></div>
+            <div class="card-title">CRM Bi-Directional Sync</div>
+            <p class="card-desc">
+              Pushes live BANT qualification scores, call audio recordings, and structured summary notes directly into Salesforce, HubSpot, Follow Up Boss, and Zoho CRM.
+            </p>
+          </div>
+
+          <div class="deck-card">
+            <div class="card-icon emerald"><i class="fa-solid fa-phone-volume"></i></div>
+            <div class="card-title">Telephony Infrastructure</div>
+            <p class="card-desc">
+              Compatible with Twilio, Vonage, Telnyx, Plivo, and AWS Chime SIP trunks. Use your existing local caller ID numbers or provision thousands in seconds.
+            </p>
+          </div>
+
+          <div class="deck-card">
+            <div class="card-icon gold"><i class="fa-solid fa-calendar-days"></i></div>
+            <div class="card-title">Instant Calendar Booking</div>
+            <p class="card-desc">
+              Locks appointments on Google Calendar, Microsoft Outlook 365, or Calendly with automatic collision avoidance and buyer reminder SMS dispatch.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <div>CLOSER AI Executive Deck</div>
+        <div>Slide 10 &bull; Ecosystem Architecture</div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         SLIDE 11: 48-HOUR ONBOARDING & PILOT ROADMAP
+         ==================================================================== -->
+    <section class="slide" data-slide="11" data-notes="Show how frictionless it is to get started. We deploy a live pilot in 48 hours without disrupting existing sales reps. On day 3, CLOSER AI begins qualifying live leads.">
+      <div>
+        <div class="slide-eyebrow"><i class="fa-solid fa-rocket"></i> Fast Time-To-Value</div>
+        <h2 class="slide-title">48-Hour Pilot Deployment Roadmap</h2>
+        <p class="slide-subtitle">From kickoff to autonomous live calls in two business days with zero engineering overhead for your team.</p>
+      </div>
+
+      <div class="slide-body">
+        <div class="grid-3">
+          <div class="deck-card">
+            <div class="card-icon"><i class="fa-solid fa-file-arrow-up"></i></div>
+            <div class="card-tag">Day 01</div>
+            <div class="card-title" style="margin-top:6px;">Knowledge Ingestion</div>
+            <p class="card-desc">
+              We ingest your property listings, inventory catalogs, pricing matrices, objection handling scripts, and brand voice guidelines.
+            </p>
+          </div>
+
+          <div class="deck-card">
+            <div class="card-icon gold"><i class="fa-solid fa-sliders"></i></div>
+            <div class="card-tag" style="color:var(--gold);">Day 02</div>
+            <div class="card-title" style="margin-top:6px;">Dialect &amp; CRM Setup</div>
+            <p class="card-desc">
+              We configure the regional persona (US vs India), connect webhooks to your CRM, and run 50+ automated synthetic test calls to verify precision.
+            </p>
+          </div>
+
+          <div class="deck-card">
+            <div class="card-icon emerald"><i class="fa-solid fa-circle-play"></i></div>
+            <div class="card-tag" style="color:var(--emerald);">Day 03</div>
+            <div class="card-title" style="margin-top:6px;">Live Pilot Launch</div>
+            <p class="card-desc">
+              Route a percentage of inbound leads or initiate outbound follow-up batches. Review live conversation telemetry on the executive dashboard.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="slide-footer">
+        <div>CLOSER AI Executive Deck</div>
+        <div>Slide 11 &bull; Deployment Roadmap</div>
+      </div>
+    </section>
+
+    <!-- ====================================================================
+         SLIDE 12: EXECUTIVE SUMMARY & CALL TO ACTION
+         ==================================================================== -->
+    <section class="slide hero-slide" data-slide="12" data-notes="Final closing slide. Invite the client to experience the live web console right now, test the voice sample, and schedule their 48-hour pilot. Thank them for their time.">
+      <div class="slide-eyebrow">
+        <i class="fa-solid fa-handshake"></i> The Next Generation of Telephony
+      </div>
+
+      <h2 class="hero-h1" style="font-size:clamp(32px, 4.2vw, 56px);">
+        Never Lose Another <span class="cyan-glow">High-Value Lead.</span>
+      </h2>
+
+      <p class="hero-tagline" style="margin-bottom: 24px;">
+        Join premier real estate brokerages and global enterprises running CLOSER AI to qualify leads 24/7, reduce CAC by 94%, and close deals faster.
+      </p>
+
+      <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid var(--border-subtle); border-radius: 16px; padding: 24px 36px; max-width: 680px; margin: 0 auto 28px;">
+        <div style="font-size: 18px; font-weight: 700; color: #ffffff; margin-bottom: 8px;">
+          Ready to Experience CLOSER AI in Action?
+        </div>
+        <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 18px;">
+          Launch our live interactive web console now to test real-time voice latency, objection handling, and APILayer 360° lead enrichment.
+        </p>
+
+        <div style="display: flex; justify-content: center; gap: 14px; flex-wrap: wrap;">
+          <a href="/console" target="_blank" class="action-btn primary" style="padding: 10px 24px; font-size: 14px;">
+            <i class="fa-solid fa-play"></i> Launch Live Voice Console
+          </a>
+          <a href="/" target="_blank" class="action-btn" style="padding: 10px 20px; font-size: 14px;">
+            <i class="fa-solid fa-globe"></i> Visit Official Website
+          </a>
+        </div>
+      </div>
+
+      <div class="slide-footer" style="width: 100%;">
+        <div class="slide-footer-meta">
+          <span><i class="fa-solid fa-envelope"></i> Contact: R Jan Steve Daniel</span>
+          <span><i class="fa-solid fa-briefcase"></i> CLOSER AI Executive Solutions</span>
+        </div>
+        <div>&copy; 2026 CLOSER AI. All Rights Reserved.</div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ====================================================================
+       PRESENTER NOTES DRAWER
+       ==================================================================== -->
+  <aside class="notes-drawer" id="notesDrawer">
+    <div class="notes-header">
+      <div class="notes-title"><i class="fa-solid fa-user-secret"></i> Presenter Speaking Notes</div>
+      <button class="nav-btn" style="padding:2px 8px; font-size:11px;" onclick="toggleNotes()">Close [N]</button>
+    </div>
+    <div class="notes-content" id="notesContent">
+      Welcome to CLOSER AI.
+    </div>
+  </aside>
+
+  <!-- ====================================================================
+       SLIDE OVERVIEW GRID MODAL
+       ==================================================================== -->
+  <div class="overview-modal" id="overviewModal">
+    <div class="overview-header">
+      <div class="overview-title">Slide Overview (<span id="overviewTotal">12</span> Slides)</div>
+      <button class="action-btn" onclick="toggleOverview()"><i class="fa-solid fa-xmark"></i> Close [O]</button>
+    </div>
+    <div class="overview-grid" id="overviewGrid">
+      <!-- Populated dynamically via JS -->
+    </div>
+  </div>
+
+  <!-- ====================================================================
+       INTERACTIVE SLIDE ENGINE JAVASCRIPT
+       ==================================================================== -->
+  <script>
+    (function () {
+      const slides = Array.from(document.querySelectorAll('.slide'));
+      const totalSlides = slides.length;
+      let currentIndex = 0;
+
+      const currentNumEl = document.getElementById('currentSlideNum');
+      const totalNumEl = document.getElementById('totalSlidesNum');
+      const progressBar = document.getElementById('deckProgressBar');
+      const notesDrawer = document.getElementById('notesDrawer');
+      const notesContent = document.getElementById('notesContent');
+      const overviewModal = document.getElementById('overviewModal');
+      const overviewGrid = document.getElementById('overviewGrid');
+
+      totalNumEl.textContent = String(totalSlides).padStart(2, '0');
+      document.getElementById('overviewTotal').textContent = totalSlides;
+
+      // Build Overview Thumbnails
+      slides.forEach((slide, idx) => {
+        const thumb = document.createElement('div');
+        thumb.className = `overview-thumb ${idx === 0 ? 'active' : ''}`;
+        thumb.dataset.index = idx;
+        const titleEl = slide.querySelector('.slide-title, .hero-h1');
+        const title = titleEl ? titleEl.textContent.trim().replace(/\s+/g, ' ') : `Slide ${idx + 1}`;
+        
+        thumb.innerHTML = `
+          <div>
+            <div class="overview-thumb-num">SLIDE ${String(idx + 1).padStart(2, '0')}</div>
+            <div class="overview-thumb-title">${title}</div>
+          </div>
+          <div style="font-size:11px; color:var(--text-dim);"><i class="fa-solid fa-eye"></i> Jump to slide</div>
+        `;
+        thumb.addEventListener('click', () => {
+          goToSlide(idx);
+          toggleOverview(false);
+        });
+        overviewGrid.appendChild(thumb);
+      });
+
+      function updateSlideState() {
+        slides.forEach((slide, idx) => {
+          slide.classList.toggle('active', idx === currentIndex);
+        });
+
+        // Update Counter
+        currentNumEl.textContent = String(currentIndex + 1).padStart(2, '0');
+
+        // Update Progress Bar
+        const progressPct = ((currentIndex + 1) / totalSlides) * 100;
+        progressBar.style.width = `${progressPct}%`;
+
+        // Update Presenter Notes
+        const activeSlide = slides[currentIndex];
+        const notes = activeSlide.getAttribute('data-notes') || 'No speaker notes for this slide.';
+        notesContent.textContent = notes;
+
+        // Update Overview highlights
+        document.querySelectorAll('.overview-thumb').forEach((thumb, idx) => {
+          thumb.classList.toggle('active', idx === currentIndex);
+        });
+      }
+
+      function nextSlide() {
+        if (currentIndex < totalSlides - 1) {
+          currentIndex++;
+          updateSlideState();
+        }
+      }
+
+      function prevSlide() {
+        if (currentIndex > 0) {
+          currentIndex--;
+          updateSlideState();
+        }
+      }
+
+      function goToSlide(index) {
+        if (index >= 0 && index < totalSlides) {
+          currentIndex = index;
+          updateSlideState();
+        }
+      }
+
+      function toggleNotes(force) {
+        if (typeof force === 'boolean') {
+          notesDrawer.classList.toggle('open', force);
+        } else {
+          notesDrawer.classList.toggle('open');
+        }
+      }
+
+      function toggleOverview(force) {
+        if (typeof force === 'boolean') {
+          overviewModal.classList.toggle('open', force);
+        } else {
+          overviewModal.classList.toggle('open');
+        }
+      }
+
+      function toggleFullscreen() {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+          document.exitFullscreen().catch(() => {});
+        }
+      }
+
+      function exportPdf() {
+        window.print();
+      }
+
+      // Keyboard Controls
+      window.addEventListener('keydown', (e) => {
+        // Prevent key capture if typing in an input
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+        switch (e.key) {
+          case 'ArrowRight':
+          case ' ':
+          case 'PageDown':
+          case 'j':
+          case 'J':
+            e.preventDefault();
+            nextSlide();
+            break;
+          case 'ArrowLeft':
+          case 'PageUp':
+          case 'k':
+          case 'K':
+            e.preventDefault();
+            prevSlide();
+            break;
+          case 'Home':
+            e.preventDefault();
+            goToSlide(0);
+            break;
+          case 'End':
+            e.preventDefault();
+            goToSlide(totalSlides - 1);
+            break;
+          case 'f':
+          case 'F':
+            e.preventDefault();
+            toggleFullscreen();
+            break;
+          case 'o':
+          case 'O':
+            e.preventDefault();
+            toggleOverview();
+            break;
+          case 'n':
+          case 'N':
+            e.preventDefault();
+            toggleNotes();
+            break;
+          case 'p':
+          case 'P':
+            e.preventDefault();
+            exportPdf();
+            break;
+          case 'Escape':
+            toggleOverview(false);
+            toggleNotes(false);
+            break;
+        }
+      });
+
+      // Touch Swipe Gesture for Tablets / Mobile
+      let touchStartX = 0;
+      let touchEndX = 0;
+
+      window.addEventListener('touchstart', (e) => {
+        touchStartX = e.changedTouches[0].screenX;
+      }, { passive: true });
+
+      window.addEventListener('touchend', (e) => {
+        touchEndX = e.changedTouches[0].screenX;
+        const diff = touchEndX - touchStartX;
+        if (Math.abs(diff) > 50) {
+          if (diff < 0) {
+            nextSlide(); // Swiped Left -> Next
+          } else {
+            prevSlide(); // Swiped Right -> Prev
+          }
+        }
+      }, { passive: true });
+
+      // Expose to window for button clicks
+      window.nextSlide = nextSlide;
+      window.prevSlide = prevSlide;
+      window.goToSlide = goToSlide;
+      window.toggleNotes = toggleNotes;
+      window.toggleOverview = toggleOverview;
+      window.toggleFullscreen = toggleFullscreen;
+      window.exportPdf = exportPdf;
+
+      // Initial Call
+      updateSlideState();
+    })();
+  </script>
+</body>
+</html>
