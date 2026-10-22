@@ -13,6 +13,10 @@ from src.closer.web.dashboard import DashboardHTTPHandler, HTML_TEMPLATE, MOCK_L
 class TestWebDashboardConsole(unittest.TestCase):
     """Test suite for Web Console HTTP handlers and API endpoints."""
 
+    def setUp(self):
+        from src.closer.agent.conversation import ConversationEngine
+        DashboardHTTPHandler.conversation_engine = ConversationEngine(market_mode="usa")
+
     def test_html_template_luxury_elements(self):
         """Verifies HTML template contains Apple/Stripe luxury styling, VAD, and voice dropdown."""
         self.assertIn("CLOSER AI", HTML_TEMPLATE)
@@ -355,6 +359,101 @@ class TestWebDashboardConsole(unittest.TestCase):
             self.assertIn("audio_base64", resp)
             self.assertIn("voice_provider", resp)
             self.assertGreater(len(resp["audio_base64"]), 100)
+
+    def test_tri_language_and_marketing_soundboard_elements(self):
+        """Verifies Tri-Language switcher, VoiceStudio controls, and marketing hooks in HTML."""
+        self.assertIn("btnMarketHindi", HTML_TEMPLATE)
+        self.assertIn("btnMarketUSA", HTML_TEMPLATE)
+        self.assertIn("btnMarketIndia", HTML_TEMPLATE)
+        self.assertIn("hi-IN-SwaraNeural", HTML_TEMPLATE)
+        self.assertIn("hi-IN-MadhurNeural", HTML_TEMPLATE)
+        self.assertIn("hindiChips", HTML_TEMPLATE)
+        self.assertIn("voiceRateSlider", HTML_TEMPLATE)
+        self.assertIn("voicePitchSlider", HTML_TEMPLATE)
+        self.assertIn("btnDownloadAudio", HTML_TEMPLATE)
+        self.assertIn("playMarketingHook", HTML_TEMPLATE)
+        self.assertIn("downloadLastAudio", HTML_TEMPLATE)
+
+    def test_post_market_mode_hindi(self):
+        """Verifies POST /api/market_mode switches into Hindi customer care and returns Hindi greeting."""
+        handler = DashboardHTTPHandler.__new__(DashboardHTTPHandler)
+        handler.path = "/api/market_mode"
+        payload = json.dumps({"mode": "hindi"}).encode("utf-8")
+        handler.headers = {"Content-Length": str(len(payload))}
+        handler.rfile = io.BytesIO(payload)
+        handler.wfile = io.BytesIO()
+        handler.send_response = MagicMock()
+        handler.send_header = MagicMock()
+        handler.end_headers = MagicMock()
+
+        handler.do_POST()
+
+        handler.send_response.assert_called_with(200)
+        resp = json.loads(handler.wfile.getvalue().decode("utf-8"))
+        self.assertTrue(resp["success"])
+        self.assertIn("नमस्ते", resp["greeting"])
+        self.assertIn(resp["dossier"]["market_region"], ("INDIA", "INDIA_HINDI"))
+
+    def test_post_turn_preview_hindi_voice(self):
+        """Verifies POST /api/turn preview sample with Hindi Swara neural voice."""
+        handler = DashboardHTTPHandler.__new__(DashboardHTTPHandler)
+        handler.path = "/api/turn"
+        payload = json.dumps({
+            "utterance": "PREVIEW_SAMPLE",
+            "voice": "hi-IN-SwaraNeural",
+            "rate": "+5%",
+            "pitch": "+2Hz"
+        }).encode("utf-8")
+        handler.headers = {"Content-Length": str(len(payload))}
+        handler.rfile = io.BytesIO(payload)
+        handler.wfile = io.BytesIO()
+        handler.send_response = MagicMock()
+        handler.send_header = MagicMock()
+        handler.end_headers = MagicMock()
+
+        handler.do_POST()
+
+        handler.send_response.assert_called_with(200)
+        resp = json.loads(handler.wfile.getvalue().decode("utf-8"))
+        self.assertIn("नमस्ते", resp["reply"])
+        self.assertIn("audio_base64", resp)
+        self.assertGreater(len(resp["audio_base64"]), 100)
+
+    def test_post_turn_hindi_site_visit(self):
+        """Verifies POST /api/turn handles Hindi customer care turn and extracts booking."""
+        # Set market mode to hindi first
+        market_handler = DashboardHTTPHandler.__new__(DashboardHTTPHandler)
+        market_handler.path = "/api/market_mode"
+        m_payload = json.dumps({"mode": "hindi"}).encode("utf-8")
+        market_handler.headers = {"Content-Length": str(len(m_payload))}
+        market_handler.rfile = io.BytesIO(m_payload)
+        market_handler.wfile = io.BytesIO()
+        market_handler.send_response = MagicMock()
+        market_handler.send_header = MagicMock()
+        market_handler.end_headers = MagicMock()
+        market_handler.do_POST()
+
+        turn_handler = DashboardHTTPHandler.__new__(DashboardHTTPHandler)
+        turn_handler.path = "/api/turn"
+        payload = json.dumps({
+            "utterance": "मुझे प्रेस्टीज में 3 बीएचके फ्लैट देखना है और इस शनिवार दोपहर 2 बजे साइट विज़िट बुक करनी है।",
+            "voice": "hi-IN-SwaraNeural"
+        }).encode("utf-8")
+        turn_handler.headers = {"Content-Length": str(len(payload))}
+        turn_handler.rfile = io.BytesIO(payload)
+        turn_handler.wfile = io.BytesIO()
+        turn_handler.send_response = MagicMock()
+        turn_handler.send_header = MagicMock()
+        turn_handler.end_headers = MagicMock()
+
+        turn_handler.do_POST()
+
+        turn_handler.send_response.assert_called_with(200)
+        resp = json.loads(turn_handler.wfile.getvalue().decode("utf-8"))
+        self.assertIn("reply", resp)
+        self.assertIn("dossier", resp)
+        self.assertIn("audio_base64", resp)
+        self.assertGreater(len(resp["audio_base64"]), 100)
 
 
 if __name__ == "__main__":

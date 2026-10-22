@@ -139,7 +139,12 @@ async def set_market_mode(request: Request):
         greeting = _app_conversation_engine.get_initial_greeting()
         dossier = _app_conversation_engine.export_dossier().model_dump()
     else:
-        greeting = "Namaste! How may I assist you today?" if mode == "india" else "Hello, this is CLOSER AI luxury real estate concierge. How can I assist you today?"
+        if mode == "hindi":
+            greeting = "नमस्ते जी! क्लोज़र एआई कस्टमर सपोर्ट में आपका स्वागत है। मैं आपकी प्रॉपर्टी सर्च और साइट विज़िट में किस प्रकार सहायता कर सकती हूँ?"
+        elif mode == "india":
+            greeting = "Namaste! How may I assist you with your luxury property or service inquiry today?"
+        else:
+            greeting = "Hello, this is CLOSER AI luxury real estate concierge. How can I assist you today?"
         dossier = {"market_mode": mode}
     return JSONResponse(content={"success": True, "mode": mode, "greeting": greeting, "dossier": dossier})
 
@@ -210,11 +215,14 @@ async def process_turn(request: Request):
     voice = data.get("voice", "en-US-AriaNeural")
     custom_text = data.get("text", "")
     rate = data.get("rate")
+    pitch = data.get("pitch")
 
     if utterance in ("PREVIEW_SAMPLE", "STUDIO_SAMPLE"):
         if custom_text:
             reply = custom_text
-        elif "en-IN" in voice or "hi-IN" in voice:
+        elif "hi-in" in voice.lower() or "swara" in voice.lower() or "madhur" in voice.lower():
+            reply = "नमस्ते! क्लोज़र एआई कस्टमर सपोर्ट में आपका स्वागत है। मैं आपकी प्रॉपर्टी सर्च और साइट विज़िट में किस प्रकार सहायता कर सकती हूँ?"
+        elif "en-in" in voice.lower() or "neerja" in voice.lower() or "prabhat" in voice.lower():
             reply = "Namaste! This is CLOSER AI client relationship concierge. How may I assist you with your premium residential inquiry today?"
         else:
             reply = "Hello, this is CLOSER AI luxury real estate concierge. How can I assist you with your estate search today?"
@@ -226,7 +234,7 @@ async def process_turn(request: Request):
     audio_b64 = ""
     if _app_tts_engine:
         try:
-            audio_bytes, _ = _app_tts_engine.synthesize_sync(reply, voice=voice, rate=rate)
+            audio_bytes, _ = _app_tts_engine.synthesize_sync(reply, voice=voice, rate=rate, pitch=pitch)
             audio_b64 = base64.b64encode(audio_bytes).decode("utf-8")
         except Exception:
             audio_b64 = ""

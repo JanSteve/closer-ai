@@ -101,6 +101,18 @@ class TestVoicePipeline(unittest.TestCase):
         clean_hg = normalize_speech_text("Haanji bilkul, we have 3 BHK ready.")
         self.assertTrue(clean_hg.startswith("Haanji bilkul..."))
 
+    def test_hindi_vernacular_speech_normalization(self):
+        """Verifies natural human breathing cadence and courtesy markers for native Hindi speech."""
+        from src.closer.voice.tts import normalize_speech_text
+        clean_namaste = normalize_speech_text("नमस्ते जी, आपकी क्या सहायता करूँ?")
+        self.assertTrue(clean_namaste.startswith("नमस्ते जी... "))
+
+        clean_bilkul = normalize_speech_text("जी बिल्कुल, साइट विज़िट बुक हो गई है।")
+        self.assertTrue(clean_bilkul.startswith("जी बिल्कुल... "))
+
+        clean_mafi = normalize_speech_text("माफ़ी चाहते हैं, इस शनिवार स्लॉट उपलब्ध नहीं है।")
+        self.assertTrue(clean_mafi.startswith("माफ़ी चाहते हैं... "))
+
     def test_expressive_indian_and_us_neural_voices(self):
         """Verifies expressive neural voice synthesis for Indian and US personas."""
         # Indian Expressive Voice
@@ -110,6 +122,27 @@ class TestVoicePipeline(unittest.TestCase):
         # US Expressive Voice
         audio_us, _ = self.tts.synthesize_sync("Gotcha... I would be glad to show you the Bel Air estate.", voice=VOICES["ava"])
         self.assertTrue(audio_us.startswith(b"RIFF"))
+
+    def test_hindi_neural_voices_and_pitch_control(self):
+        """Verifies native Hindi voice synthesis (Swara & Madhur) and dynamic pitch/rate tuning."""
+        # Swara (Hindi Female)
+        audio_swara, _ = self.tts.synthesize_sync(
+            "नमस्ते जी... क्लोज़र एआई में आपका स्वागत है।",
+            voice=VOICES["swara"],
+            pitch="+2Hz",
+            rate="+5%"
+        )
+        self.assertTrue(audio_swara.startswith(b"RIFF"))
+        self.assertGreater(len(audio_swara), 1000)
+
+        # Madhur (Hindi Male)
+        audio_madhur, _ = self.tts.synthesize_sync(
+            "जी बिल्कुल... आपकी साइट विज़िट शेड्यूल हो गई है।",
+            voice=VOICES["madhur"],
+            pitch="-2Hz"
+        )
+        self.assertTrue(audio_madhur.startswith(b"RIFF"))
+        self.assertGreater(len(audio_madhur), 1000)
 
 
 if __name__ == "__main__":

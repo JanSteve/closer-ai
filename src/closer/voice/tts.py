@@ -178,6 +178,12 @@ def normalize_speech_text(text: str) -> str:
     clean = re.sub(r'^(Namaste\s+(?:sir|ma\'?am|ji)?)\b([,!.]?)\s*', r'\1... ', clean, flags=re.IGNORECASE)
     clean = re.sub(r'^(Haanji\s+bilkul|Haanji|Bilkul|Definitely\s+(?:sir|ma\'?am)?)\b([,!.]?)\s*', r'\1... ', clean, flags=re.IGNORECASE)
 
+    # 8. Native Hindi Courtesy Markers & Micro-Breathing Pauses
+    clean = re.sub(r'^(नमस्ते|नमस्कार|प्रणाम)(?:\s*जी)?(?:[,!.।?]|\s+|$)\s*', r'\1 जी... ', clean)
+    clean = re.sub(r'^(जी\s+हाँ\s+बिल्कुल|जी\s+हाँ|जी\s+बिल्कुल|हाँ\s+जी|बिल्कुल)(?:[,!.।?]|\s+|$)\s*', r'\1... ', clean)
+    clean = re.sub(r'^(माफ़ी\s+चाहते\s+हैं|माफ़ी\s+चाहती\s+हूँ|क्षमा\s+करें)(?:[,!.।?]|\s+|$)\s*', r'\1... ', clean)
+    clean = re.sub(r'^(बहुत\s+बढ़िया|शानदार|ज़रूर)(?:[,!.।?]|\s+|$)\s*', r'\1... ', clean)
+
     # Replace double dashes and technical syntax with natural speaking pauses
     clean = re.sub(r'\s*--\s*', ' — ', clean)
     clean = re.sub(r'\s{2,}', ' ', clean)
@@ -222,6 +228,7 @@ class EdgeTTSVoiceEngine:
         output_path: Optional[str] = None,
         voice: Optional[str] = None,
         rate: Optional[str] = None,
+        pitch: Optional[str] = None,
         sample_rate: Optional[int] = None,
         provider: Optional[str] = None,
         elevenlabs_key: Optional[str] = None,
@@ -229,7 +236,7 @@ class EdgeTTSVoiceEngine:
     ) -> Tuple[bytes, float]:
         """
         Synthesizes text to WAV audio bytes using the requested provider:
-        - 'studio' / 'edge-tts' (Default): Zero-cost Microsoft Studio Neural 48kHz broadcast audio.
+        - 'studio' / 'edge-tts' / 'voicestudio' (Default): Zero-cost Studio Broadcast Neural 48kHz master audio.
         - 'elevenlabs': ElevenLabs Turbo v2.5 / Multilingual v2 with emotional prosody and style boost.
         - 'sarvam': Sarvam AI Bulbul:v1 Indic Neural (native Indian English / Hindi / vernacular).
         - 'cartesia': Cartesia Sonic ultra-low latency voice.
@@ -239,6 +246,7 @@ class EdgeTTSVoiceEngine:
         start_time = time.perf_counter()
         target_voice = self._resolve_voice_name(voice or self.default_voice)
         target_rate = rate or self.rate
+        target_pitch = pitch or "+0Hz"
         target_sr = sample_rate or self.sample_rate
 
         clean_text = normalize_speech_text(text)
@@ -292,7 +300,7 @@ class EdgeTTSVoiceEngine:
 
                 for v_attempt in voices_to_try:
                     try:
-                        communicate = edge_tts.Communicate(clean_text, v_attempt, rate=target_rate)
+                        communicate = edge_tts.Communicate(clean_text, v_attempt, rate=target_rate, pitch=target_pitch)
                         raw_audio = bytearray()
                         async for chunk in communicate.stream():
                             if chunk["type"] == "audio":
@@ -423,6 +431,7 @@ class EdgeTTSVoiceEngine:
         output_path: Optional[str] = None,
         voice: Optional[str] = None,
         rate: Optional[str] = None,
+        pitch: Optional[str] = None,
         sample_rate: Optional[int] = None,
         provider: Optional[str] = None,
         elevenlabs_key: Optional[str] = None,
@@ -447,6 +456,7 @@ class EdgeTTSVoiceEngine:
                             output_path=output_path,
                             voice=resolved_voice,
                             rate=rate,
+                            pitch=pitch,
                             sample_rate=sample_rate,
                             provider=provider,
                             elevenlabs_key=elevenlabs_key,
@@ -461,6 +471,7 @@ class EdgeTTSVoiceEngine:
                     output_path=output_path,
                     voice=resolved_voice,
                     rate=rate,
+                    pitch=pitch,
                     sample_rate=sample_rate,
                     provider=provider,
                     elevenlabs_key=elevenlabs_key,

@@ -190,3 +190,67 @@ INDIA_FRICTION_PLAYBOOK = {
         "handled_tag": "Acknowledged early-stage inquiry; politely guided toward end-use vs investment."
     }
 }
+
+
+# ==============================================================================
+# HINDI (हिन्दी) MARKET: NATIVE CUSTOMER CARE & REAL ESTATE CLOSING PLAYBOOKS
+# ==============================================================================
+
+HINDI_CUSTOMER_CARE_SYSTEM_PROMPT = f"""You are Swati (स्वाति), Senior Customer Relationship Executive at {settings.BROKERAGE_NAME} India.
+
+# YOUR CORE MISSION:
+You are speaking in polite, professional, and natural conversational Hindi (हिन्दी) on a live telephonic call with an Indian customer.
+Your goal is to handle customer inquiries, resolve service issues with utmost respect ("आप", "जी"), qualify property requirements (BHK, ₹ लाख / ₹ करोड़ बजट), and book VIP weekend site visits or send WhatsApp documentation.
+
+# CONVERSATIONAL RULES IN HINDI:
+1. POLITE HONORIFICS: Always address the caller respectfully ("नमस्ते जी", "जी बिल्कुल", "आपका बहुत धन्यवाद", "असुविधा के लिए माफ़ी चाहते हैं").
+2. CRISP & CONVERSATIONAL: 1 to 2 spoken sentences per turn. Never monologue.
+3. RERA & TRANSPARENCY: Confirm all projects are 100% RERA-approved with clear bank loan approvals.
+4. WHATSAPP PRIMARY CHANNEL: Offer to dispatch complete PDF brochures, video walkthroughs, and pricing to WhatsApp.
+"""
+
+HINDI_QUERY_PLAYBOOK = {
+    "rera_inquiry": {
+        "pattern": r"(रेरा|rera|अप्रूव्ड|approved|लीगल|legal|सरकारी\s*मंजूरी|कागजात)",
+        "response": "जी बिल्कुल! हमारे सभी प्रोजेक्ट्स 100% रेरा (RERA) रजिस्टर्ड हैं और एसबीआई व एचडीएफसी बैंक से पूरी तरह अप्रूव्ड हैं। क्या मैं रेरा सर्टिफिकेट और सैंक्शन लेटर आपको वॉट्सऐप पर भेज दूँ?",
+        "handled_tag": "Confirmed 100% RERA compliance and bank approvals in Hindi."
+    },
+    "pricing_bhk_inquiry": {
+        "pattern": r"(कीमत|प्राइस|price|रेट|rate|लाख|करोड़|बजट|budget|2\s*bhk|3\s*bhk|4\s*bhk|फ्लैट|मकान|sqft|स्क्वायर\s*फीट)",
+        "response": "हमारे लक्ज़री 2 बीएचके फ्लैट्स ₹95 लाख से शुरू होते हैं और 3 बीएचके फ्लैट्स ₹1.65 करोड़ से उपलब्ध हैं। आपके और आपके परिवार के लिए कौन सा फ्लैट सबसे बेहतर रहेगा?",
+        "handled_tag": "Provided transparent Indian pricing matrix in Lakhs/Crores in Hindi."
+    },
+    "customer_complaint_support": {
+        "pattern": r"(शिकायत|complaint|समस्या|problem|दिक्कत|परेशानी|रिफंड|refund|लेट|delay|टिकट|ticket|कस्टमर\s*केयर|कस्टमर\s*सपोर्ट)",
+        "response": "असुविधा के लिए मैं दिल से माफ़ी चाहती हूँ! मैंने आपकी शिकायत प्राथमिकता पर दर्ज कर ली है और टिकट नंबर #CC-84291 जारी कर दिया है। हमारे सीनियर सर्विस मैनेजर 2 घंटे में आपसे संपर्क करेंगे। क्या मैं टिकट का लिंक वॉट्सऐप पर भेज दूँ?",
+        "handled_tag": "Empathetically handled customer complaint in Hindi; assigned priority ticket #CC-84291."
+    },
+    "whatsapp_request": {
+        "pattern": r"(वॉट्सऐप|whatsapp|whats\s*app|मैसेज|message|भेज\s*दो|send|ब्रोशर|pdf)",
+        "response": "जी बिल्कुल! मैंने पूरा प्रोजेक्ट ब्रोशर, फ्लोर प्लान और कीमत की सूची आपके वॉट्सऐप नंबर पर तुरंत भेज दी है। आप इसे आराम से देख सकते हैं।",
+        "handled_tag": "Dispatched full digital brochure and pricing details via WhatsApp in Hindi."
+    },
+    "site_visit_booking": {
+        "pattern": r"(साइट\s*विज़िट|site\s*visit|देखने\s*आना|फ्लैट\s*देखना|वीकेंड|शनिवार|रविवार|saturday|sunday|विज़िट)",
+        "response": "हमें आपके और आपके परिवार का स्वागत करने में बहुत खुशी होगी! क्या इस शनिवार सुबह 11 बजे या रविवार दोपहर 3 बजे का समय आपके लिए सुविधाजनक रहेगा?",
+        "handled_tag": "Invited customer for weekend site visit in Hindi; offered Saturday vs Sunday."
+    }
+}
+
+HINDI_FRICTION_PLAYBOOK = {
+    "in_office_meeting": {
+        "pattern": r"(मीटिंग|meeting|ऑफिस|office|व्यस्त|busy|काम\s*पर|बाद\s*में\s*(कॉल|बात)|शाम\s*को|अभी\s*बात\s*नहीं)",
+        "response": "जी मैं बिल्कुल समझ सकती हूँ, आपका समय कीमती है! मैं आपको अभी परेशान नहीं करूँगी। मैं आज शाम 6 बजे के बाद आपको कॉल कर लूँगी और सारी डिटेल्स आपके वॉट्सऐप पर भेज दी हैं।",
+        "handled_tag": "Respected Indian office work hours in Hindi; scheduled post-6 PM callback and WhatsApp dispatch."
+    },
+    "whatsapp_only_friction": {
+        "pattern": r"(सिर्फ\s*वॉट्सऐप|केवल\s*वॉट्सऐप|फोन\s*मत\s*करो|कॉल\s*मत\s*करो|no\s*calls|don'?t\s*call|only\s*whatsapp)",
+        "response": "जी बिल्कुल ठीक है, कोई बात नहीं! मैंने नोट कर लिया है कि आप वॉट्सऐप पर ही बात करना चाहते हैं। सारी तस्वीरें, फ्लोर प्लान और पेमेंट प्लान वॉट्सऐप पर भेज दिए हैं।",
+        "handled_tag": "Switched channel to WhatsApp-only communication in Hindi."
+    },
+    "loan_and_downpayment": {
+        "pattern": r"(लोन|loan|ईएमआई|emi|डाउन\s*पेमेंट|down\s*payment|बैंक|bank|sbi|hdfc|ब्याज)",
+        "response": "जी हाँ, 80% तक होम लोन एसबीआई और एचडीएफसी से तुरंत अप्रूव हो जाता है और आपको केवल 20% डाउन पेमेंट देनी होगी। क्या मैं ईएमआई कैलकुलेटर और बैंक ऑफर वॉट्सऐप पर शेयर करूँ?",
+        "handled_tag": "Guided through home loan and EMI options in Hindi."
+    }
+}

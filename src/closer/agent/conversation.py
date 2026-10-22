@@ -16,7 +16,10 @@ from src.closer.agent.prompt import (
     FRICTION_PLAYBOOK,
     INDIA_CUSTOMER_CARE_SYSTEM_PROMPT,
     INDIA_QUERY_PLAYBOOK,
-    INDIA_FRICTION_PLAYBOOK
+    INDIA_FRICTION_PLAYBOOK,
+    HINDI_CUSTOMER_CARE_SYSTEM_PROMPT,
+    HINDI_QUERY_PLAYBOOK,
+    HINDI_FRICTION_PLAYBOOK
 )
 from src.closer.agent.schemas import InboundLead, BuyerDossier, ObjectionRecord
 from src.closer.llm.router import OpenLLMRouter
@@ -28,25 +31,37 @@ class ConversationEngine:
     """
     Manages the live state of a qualification phone call.
     Handles user utterances, tool invocations, objection detection, and Pydantic dossier extraction.
-    Supports both US Luxury Real Estate ISA and India Customer Care & Lead Support modes.
+    Supports 3 Main Global Languages: US Luxury Real Estate ISA, India Customer Care, and Native Hindi Closing.
     """
 
     def __init__(self, lead: Optional[InboundLead] = None, market_mode: str = "usa"):
-        self.market_mode = market_mode.lower()
+        self.market_mode = market_mode.lower().strip()
         self.lead = lead or InboundLead(
             lead_id="sim_lead_001",
             full_name="Alex Morgan",
             phone_number="+1-310-555-0144",
             ad_campaign="Bel Air Sunset Modern Collection"
         )
+        if self.market_mode in ("hindi", "hi", "hi-in"):
+            region = "INDIA_HINDI"
+            currency = "INR"
+            sys_prompt = HINDI_CUSTOMER_CARE_SYSTEM_PROMPT
+        elif self.market_mode in ("india", "en-in"):
+            region = "INDIA"
+            currency = "INR"
+            sys_prompt = INDIA_CUSTOMER_CARE_SYSTEM_PROMPT
+        else:
+            region = "USA"
+            currency = "USD"
+            sys_prompt = ISA_SYSTEM_PROMPT
+
         self.dossier = BuyerDossier(
             full_name=self.lead.full_name,
             phone_number=self.lead.phone_number,
             email=self.lead.email,
-            market_region="INDIA" if self.market_mode == "india" else "USA",
-            budget_currency="INR" if self.market_mode == "india" else "USD"
+            market_region=region,
+            budget_currency=currency
         )
-        sys_prompt = INDIA_CUSTOMER_CARE_SYSTEM_PROMPT if self.market_mode == "india" else ISA_SYSTEM_PROMPT
         self.messages: List[Dict[str, str]] = [
             {"role": "system", "content": sys_prompt}
         ]
@@ -68,9 +83,15 @@ class ConversationEngine:
         return {}
 
     def set_market_mode(self, mode: str) -> None:
-        """Dynamically switches between 'usa' and 'india' market modes."""
-        self.market_mode = mode.lower()
-        if self.market_mode == "india":
+        """Dynamically switches between 'usa', 'india', and 'hindi' market modes."""
+        m = mode.lower().strip()
+        if m in ("hindi", "hi", "hi-in"):
+            self.market_mode = "hindi"
+            self.dossier.market_region = "INDIA_HINDI"
+            self.dossier.budget_currency = "INR"
+            self.messages = [{"role": "system", "content": HINDI_CUSTOMER_CARE_SYSTEM_PROMPT}]
+        elif m in ("india", "en-in"):
+            self.market_mode = "india"
             self.dossier.market_region = "INDIA"
             self.dossier.budget_currency = "INR"
             self.messages = [{"role": "system", "content": INDIA_CUSTOMER_CARE_SYSTEM_PROMPT}]
@@ -81,7 +102,16 @@ class ConversationEngine:
             self.messages = [{"role": "system", "content": ISA_SYSTEM_PROMPT}]
 
     def get_initial_greeting(self) -> str:
-        """Generates the sub-500ms initial call greeting."""
+        """Generates the sub-500ms initial call greeting across the 3 main languages."""
+        if self.market_mode == "hindi":
+            greeting = (
+                "नमस्ते जी! क्लोज़र एआई कस्टमर सपोर्ट में आपका स्वागत है। मैं स्वाति बात कर रही हूँ। "
+                "मैं आपकी प्रॉपर्टी इंक्वायरी और साइट विज़िट में किस प्रकार सहायता कर सकती हूँ?"
+            )
+            self.messages.append({"role": "assistant", "content": greeting})
+            self.turn_count += 1
+            return greeting
+
         if self.market_mode == "india":
             first_name = self.lead.full_name.split()[0] if self.lead.full_name else "Sir"
             greeting = (
@@ -117,6 +147,12 @@ class ConversationEngine:
         # 1. Update dossier extraction from new utterance
         self._extract_entities(clean_input)
         
+        # In Hindi Mode: Route to dedicated Hindi customer care and closing engine
+        if self.market_mode == "hindi":
+            hindi_reply = self._process_hindi_turn(clean_input)
+            self.messages.append({"role": "assistant", "content": hindi_reply})
+            return hindi_reply
+
         # In India Customer Care Mode: Route to dedicated Indian customer care engine
         if self.market_mode == "india":
             india_reply = self._process_india_turn(clean_input)
@@ -221,6 +257,83 @@ class ConversationEngine:
         return (
             "Thank you for sharing that! Our team is dedicated to providing you complete transparency and support. "
             "Shall I share the complete project details and pricing options directly on your WhatsApp?"
+        )
+
+    def _process_hindi_turn(self, clean_input: str) -> str:
+        """Processes turn under Native Hindi Customer Care & Closing mode."""
+        t = clean_input.lower()
+
+        # 1. Check Hindi Friction Playbook
+        for key, play in HINDI_FRICTION_PLAYBOOK.items():
+            if re.search(play["pattern"], t):
+                tag = play["handled_tag"]
+                if tag not in self.dossier.objections_handled:
+                    self.dossier.objections_handled.append(tag)
+                if key == "in_office_meeting":
+                    self.dossier.follow_up_note = "ग्राहक मीटिंग में हैं; शाम 6 बजे के बाद कॉल और वॉट्सऐप ब्रोशर शेड्यूल्ड।"
+                    self.dossier.timeframe = "callback_after_6pm"
+                    self.dossier.whatsapp_dispatched = True
+                    self.dossier.whatsapp_status = "sent"
+                    self.dossier.preferred_channel = "WhatsApp/Phone"
+                elif key == "whatsapp_only_friction":
+                    self.dossier.preferred_channel = "WhatsApp"
+                    self.dossier.whatsapp_dispatched = True
+                    self.dossier.whatsapp_status = "sent"
+                    self.dossier.follow_up_note = "ग्राहक ने केवल वॉट्सऐप पर बात करने का अनुरोध किया।"
+                self._score_lead()
+                return play["response"]
+
+        # 2. Check Hindi Query Playbook
+        for key, play in HINDI_QUERY_PLAYBOOK.items():
+            if re.search(play["pattern"], t):
+                tag = play["handled_tag"]
+                if tag not in self.dossier.objections_handled:
+                    self.dossier.objections_handled.append(tag)
+                if key == "customer_complaint_support":
+                    self.dossier.customer_type = "support_query"
+                    self.dossier.query_type = "customer_complaint"
+                    self.dossier.ticket_id = "CC-84291"
+                    self.dossier.query_resolved = True
+                    self.dossier.whatsapp_status = "sent"
+                    self.dossier.whatsapp_dispatched = True
+                    self.dossier.follow_up_note = "प्रायोरिटी सपोर्ट टिकट #CC-84291 दर्ज; 2 घंटे में समाधान।"
+                elif key == "whatsapp_request":
+                    self.dossier.whatsapp_dispatched = True
+                    self.dossier.whatsapp_status = "sent"
+                    self.dossier.preferred_channel = "WhatsApp"
+                elif key == "site_visit_booking":
+                    self.dossier.appointment_type = "weekend_site_visit"
+                    self.dossier.timeframe = "this_weekend"
+                    self.dossier.appointment_notes = "परिवार के साथ कॉम्प्लिमेंट्री वीआईपी साइट विज़िट"
+                self._score_lead()
+                return play["response"]
+
+        # 3. Dynamic Hindi Slot Confirmation
+        if any(w in t for w in ["शनिवार", "रविवार", "saturday", "sunday", "11 am", "11:00", "3 pm", "3:00", "11", "3"]):
+            day = "शनिवार सुबह 11:00 बजे" if any(x in t for x in ["शनिवार", "saturday", "11"]) else "रविवार दोपहर 3:00 बजे"
+            self.dossier.appointment_datetime = day
+            self.dossier.appointment_type = "weekend_site_visit"
+            self.dossier.appointment_notes = f"वीआईपी साइट विज़िट कन्फ़र्म: {day}"
+            self.dossier.follow_up_note = f"साइट विज़िट कन्फ़र्म: {day}."
+            self.is_completed = True
+            self._score_lead()
+            return (
+                f"बहुत बढ़िया! मैंने {day} की आपकी वीआईपी साइट विज़िट कन्फ़र्म कर दी है। "
+                "साइट पर हमारे सीनियर प्रोजेक्ट मैनेजर आपका स्वागत करेंगे। "
+                "लोकेशन मैप और विज़िट पास मैंने आपके वॉट्सऐप पर भेज दिया है।"
+            )
+
+        if any(w in t for w in ["हाँ", "हां", "theek", "theek hai", "sure", "okay", "yes", "achha"]):
+            self.dossier.whatsapp_dispatched = True
+            self.dossier.whatsapp_status = "sent"
+            return (
+                "शानदार! मैंने पूरा डिजिटल ब्रोशर, फ्लोर प्लान और कीमतें आपके वॉट्सऐप पर भेज दी हैं। "
+                "क्या आप इस वीकेंड हमारे साथ साइट विज़िट का समय रखना चाहेंगे?"
+            )
+
+        return (
+            "जानकारी साझा करने के लिए बहुत धन्यवाद! हमारी टीम आपकी पूरी सहायता के लिए तैयार है। "
+            "क्या मैं प्रोजेक्ट की पूरी जानकारी और कीमतें आपके वॉट्सऐप पर शेयर कर दूँ?"
         )
 
     def _extract_entities(self, text: str) -> None:

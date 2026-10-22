@@ -984,16 +984,17 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
             <div>
                 <div style="display:flex; align-items:center; gap:10px;">
                     <span class="logo-title">CLOSER AI</span>
-                    <span class="badge"><span class="status-dot"></span> DUAL-MARKET USA &amp; INDIA</span>
+                    <span class="badge"><span class="status-dot"></span> TRI-LANGUAGE: US • INDIA • HINDI</span>
                 </div>
-                <div class="subtitle">Autonomous Voice Lead Qualification &amp; Indian Customer Care Engine</div>
+                <div class="subtitle">Autonomous Voice Telephony &amp; Lead Closing Engine in 3 Main Global Languages</div>
             </div>
         </div>
 
-        <!-- Market Region Mode Toggle (USA vs India) -->
+        <!-- Market & Language Switcher (US English, Indian English, Hindi) -->
         <div class="market-switch-wrap">
-            <button id="btnMarketUSA" class="btn-market active" onclick="switchMarket('usa')">🇺🇸 USA: Luxury Real Estate ISA</button>
-            <button id="btnMarketIndia" class="btn-market" onclick="switchMarket('india')">🇮🇳 INDIA: Customer Care &amp; Support</button>
+            <button id="btnMarketUSA" class="btn-market active" onclick="switchMarket('usa')">🇺🇸 US English: Luxury ISA</button>
+            <button id="btnMarketIndia" class="btn-market" onclick="switchMarket('india')">🇮🇳 Indian English: Enterprise Support</button>
+            <button id="btnMarketHindi" class="btn-market" onclick="switchMarket('hindi')">🇮🇳 हिन्दी (Hindi): Customer Care &amp; Closing</button>
         </div>
 
         <div class="header-links">
@@ -1065,28 +1066,48 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
                 <div class="step-item"><span class="step-num">3</span> <span><strong>Review Live Dossier &amp; APILayer</strong> (Real-time Pydantic schema extraction &amp; carrier validation)</span></div>
             </div>
 
-            <!-- Instant One-Click Voice Selection & Studio Neural Controls -->
+            <!-- Instant One-Click Voice Selection & VoiceStudio Controls -->
             <div class="voice-controls">
                 <div class="control-group">
-                    <label class="control-label">Voice Persona:</label>
+                    <label class="control-label">Voice Persona &amp; Dialect (3 Main Languages):</label>
                     <select id="voiceSelect" class="voice-select">
-                        <option value="en-US-AriaNeural" selected>Sophia / Aria (US Female • Warm Consultative)</option>
-                        <option value="en-US-GuyNeural">Guy (US Male • Confident Luxury Broker)</option>
-                        <option value="en-US-JennyNeural">Jenny (US Female • Crisp Natural)</option>
-                        <option value="en-US-ChristopherNeural">Christopher (US Male • Authoritative Executive)</option>
-                        <option value="en-US-AvaNeural">Ava (US Female • Expressive Concierge)</option>
-                        <option value="en-IN-NeerjaNeural">Neerja / Priya (India Female • Customer Care Executive)</option>
-                        <option value="en-IN-PrabhatNeural">Prabhat / Aarav (India Male • Corporate Support)</option>
+                        <optgroup label="🇺🇸 US English (Luxury Real Estate ISA &amp; Deal Closer)">
+                            <option value="en-US-AvaNeural" selected>Ava (US Female • Ultra-Natural Concierge)</option>
+                            <option value="en-US-GuyNeural">Guy (US Male • Confident Luxury Broker)</option>
+                            <option value="en-US-AriaNeural">Sophia / Aria (US Female • Warm Consultative)</option>
+                            <option value="en-US-ChristopherNeural">Christopher (US Male • Authoritative Closer)</option>
+                            <option value="en-US-JennyNeural">Jenny (US Female • Crisp Natural)</option>
+                        </optgroup>
+                        <optgroup label="🇮🇳 Indian English (Enterprise Customer Care &amp; Support)">
+                            <option value="en-IN-NeerjaExpressiveNeural">Neerja (India Female • Expressive Relationship Manager)</option>
+                            <option value="en-IN-NeerjaNeural">Priya (India Female • Customer Care Executive)</option>
+                            <option value="en-IN-PrabhatNeural">Prabhat (India Male • Corporate Support)</option>
+                        </optgroup>
+                        <optgroup label="🇮🇳 हिन्दी (Hindi Customer Care &amp; Property Closing)">
+                            <option value="hi-IN-SwaraNeural">Swara / स्वाति (Hindi Female • Conversational &amp; Empathetic)</option>
+                            <option value="hi-IN-MadhurNeural">Madhur / मधुर (Hindi Male • Consultative Support &amp; Closing)</option>
+                        </optgroup>
                     </select>
                 </div>
                 
                 <div class="control-group">
                     <label class="control-label">Voice Intelligence Engine:</label>
                     <select id="voiceProviderSelect" class="voice-select" style="min-width:180px;" onchange="updateVoiceEngineBadge()">
-                        <option value="studio" selected>🎙️ Studio Broadcast Neural (48kHz Master • Built-in)</option>
+                        <option value="studio" selected>🎙️ VoiceStudio Neural Master (48kHz • Free &amp; Unlimited)</option>
                         <option value="elevenlabs">✨ ElevenLabs Turbo v2.5 (High Emotion &amp; Nuance)</option>
-                        <option value="sarvam">🇮🇳 Sarvam AI / Gnani Indic Neural (Native Indian Accent)</option>
+                        <option value="sarvam">🇮🇳 Sarvam AI / Gnani Indic Neural (Bulbul Vernacular)</option>
+                        <option value="cartesia">⚡ Cartesia Sonic Ultra-Low Latency</option>
                     </select>
+                </div>
+
+                <div class="control-group" style="min-width:130px;">
+                    <label class="control-label">Speed: <span id="lblVoiceRate" style="color:var(--cyan); font-weight:700;">+5%</span></label>
+                    <input type="range" id="voiceRateSlider" min="-15" max="25" value="5" step="5" style="width:100%; accent-color:var(--cyan);" oninput="updateRateLabel(this.value)">
+                </div>
+
+                <div class="control-group" style="min-width:130px;">
+                    <label class="control-label">Pitch: <span id="lblVoicePitch" style="color:var(--gold); font-weight:700;">+0Hz</span></label>
+                    <input type="range" id="voicePitchSlider" min="-6" max="6" value="0" step="1" style="width:100%; accent-color:var(--gold);" oninput="updatePitchLabel(this.value)">
                 </div>
 
                 <div class="control-group">
@@ -1102,17 +1123,31 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
                 </div>
 
                 <div class="voice-btn-group">
-                    <button class="btn-preview" onclick="testVoiceSample()" title="Synthesize live audio sample directly via server neural stream">🔊 Test Voice</button>
+                    <button class="btn-preview" onclick="testVoiceSample()" title="Synthesize live audio sample directly via VoiceStudio neural stream">🔊 Test Voice</button>
+                    <button class="btn-preview" id="btnDownloadAudio" onclick="downloadLastAudio()" style="background:rgba(16,185,129,0.15); color:#10b981; border:1px solid rgba(16,185,129,0.3);" title="Download latest synthesized speech as WAV file for social media marketing!">⬇ Save WAV</button>
                     <button class="btn-barge" onclick="simulateBargeIn()" title="Simulate caller interjecting mid-speech — cuts audio in <50ms">⚡ Barge-In</button>
                     <button class="btn-voice-keys" onclick="openKeyModal()" title="Configure ElevenLabs, Sarvam AI, and APILayer API Keys">⚙️ Cloud Keys</button>
                     <button class="btn-reset" title="Reset current conversation state" onclick="resetCall()">↻ Reset</button>
                 </div>
             </div>
 
+            <!-- Social Media Marketing Reel & Client Pitch Soundboard -->
+            <div class="soundboard-bar" style="background:rgba(255,255,255,0.02); border:1px solid var(--border-subtle); border-radius:10px; padding:10px 14px; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <span style="font-size:12px; font-weight:700; color:var(--cyan); text-transform:uppercase; letter-spacing:0.04em;">🎥 Social Media Hooks:</span>
+                    <span style="font-size:11px; color:var(--text-dim);">One-click client demo &amp; reel recordings</span>
+                </div>
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                    <button class="chip" onclick="playMarketingHook('usa')" style="background:rgba(59,130,246,0.12); color:#60a5fa; border:1px solid rgba(59,130,246,0.3); font-size:11px; cursor:pointer;">🇺🇸 Play US $15M Luxury Hook</button>
+                    <button class="chip" onclick="playMarketingHook('india')" style="background:rgba(245,158,11,0.12); color:#f59e0b; border:1px solid rgba(245,158,11,0.3); font-size:11px; cursor:pointer;">🇮🇳 Play India CC-8492 SLA Hook</button>
+                    <button class="chip" onclick="playMarketingHook('hindi')" style="background:rgba(16,185,129,0.12); color:#10b981; border:1px solid rgba(16,185,129,0.3); font-size:11px; cursor:pointer;">🇮🇳 Play हिन्दी (Hindi) Site Visit Hook</button>
+                </div>
+            </div>
+
             <!-- Live Telephony Chat Transcript Box -->
             <div class="chat-box" id="chatBox">
                 <div class="msg agent">
-                    <div class="msg-meta" id="chatAgentMeta">Sophia (Daniel &amp; Associates Luxury Concierge) • 24kHz High-Fidelity</div>
+                    <div class="msg-meta" id="chatAgentMeta">Ava (Daniel &amp; Associates Luxury Concierge) • 48kHz High-Fidelity</div>
                     Hi Alex, this is Sophia with Daniel &amp; Associates Luxury Realty. I noticed you just requested details on 10484 Bellagio Rd, Bel Air — I wanted to catch you while it's top of mind. Are you looking at this as a primary residence or a private investment?
                 </div>
             </div>
@@ -1139,6 +1174,13 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
                     <a href="#" class="chip chip-friction" onclick="quickFill('Please don\'t call now, send the full brochure and pricing on WhatsApp'); return false;">📲 "Send on WhatsApp Only"</a>
                     <a href="#" class="chip" onclick="quickFill('I have an issue with my booking, need customer support ticket'); return false;">⚠️ "Support Issue / Ticket"</a>
                     <a href="#" class="chip" onclick="quickFill('Is this project RERA registered and can we visit this Sunday with family?'); return false;">📜 "RERA &amp; Sunday Site Visit"</a>
+                </div>
+                <div id="hindiChips" style="display:none; flex-wrap:wrap; gap:8px;">
+                    <a href="#" class="chip" onclick="quickFill('नमस्ते, मुझे 3 बीएचके फ्लैट की कीमत जाननी है।'); return false;">🏢 '3 BHK फ्लैट की कीमत?'</a>
+                    <a href="#" class="chip chip-friction" onclick="quickFill('मैं अभी ऑफिस मीटिंग में हूँ, शाम 6 बजे के बाद कॉल करना।'); return false;">💼 'मीटिंग में हूँ, बाद में कॉल'</a>
+                    <a href="#" class="chip chip-friction" onclick="quickFill('अभी फोन मत करो, सारी डिटेल्स वॉट्सऐप पर भेज दो।'); return false;">📲 'वॉट्सऐप पर भेज दो'</a>
+                    <a href="#" class="chip" onclick="quickFill('क्या यह प्रोजेक्ट रेरा से अप्रूव्ड है और इस शनिवार साइट विज़िट हो सकती है?'); return false;">📜 'रेरा अप्रूवल &amp; साइट विज़िट'</a>
+                    <a href="#" class="chip" onclick="quickFill('मेरा बजट 1.5 करोड़ रुपये है, क्या 20% डाउन पेमेंट पर होम लोन मिल जाएगा?'); return false;">💰 '₹1.5 करोड़ बजट &amp; होम लोन'</a>
                 </div>
             </div>
         </div>
@@ -1407,13 +1449,37 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
     <script>
         let currentMarket = 'usa';
         let latestDossier = {};
+        let lastAudioBase64 = null;
+
+        function updateRateLabel(val) {
+            const el = document.getElementById('lblVoiceRate');
+            if (el) el.innerText = (val > 0 ? '+' : '') + val + '%';
+        }
+
+        function updatePitchLabel(val) {
+            const el = document.getElementById('lblVoicePitch');
+            if (el) el.innerText = (val > 0 ? '+' : '') + val + 'Hz';
+        }
+
+        function getAudioSettings() {
+            const rateSlider = document.getElementById('voiceRateSlider');
+            const pitchSlider = document.getElementById('voicePitchSlider');
+            const rateVal = rateSlider ? rateSlider.value : '5';
+            const pitchVal = pitchSlider ? pitchSlider.value : '0';
+            return {
+                rate: (rateVal >= 0 ? '+' : '') + rateVal + '%',
+                pitch: (pitchVal >= 0 ? '+' : '') + pitchVal + 'Hz'
+            };
+        }
 
         function switchMarket(market) {
             currentMarket = market;
             const btnUSA = document.getElementById('btnMarketUSA');
             const btnIndia = document.getElementById('btnMarketIndia');
+            const btnHindi = document.getElementById('btnMarketHindi');
             const usaChips = document.getElementById('usaChips');
             const indiaChips = document.getElementById('indiaChips');
+            const hindiChips = document.getElementById('hindiChips');
             const voiceSelect = document.getElementById('voiceSelect');
             const rowBHK = document.getElementById('rowBHK');
             const rowTicket = document.getElementById('rowTicket');
@@ -1428,8 +1494,10 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
             if (market === 'usa') {
                 btnUSA.className = 'btn-market active';
                 btnIndia.className = 'btn-market';
+                if (btnHindi) btnHindi.className = 'btn-market';
                 usaChips.style.display = 'inline-flex';
                 indiaChips.style.display = 'none';
+                if (hindiChips) hindiChips.style.display = 'none';
                 rowBHK.style.display = 'none';
                 rowTicket.style.display = 'none';
                 lblBudget.innerText = 'Budget Range';
@@ -1437,8 +1505,8 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
                 lblAppt.innerText = 'VIP Tour / Visit';
                 lblProperty.innerText = 'Target Listing / City';
                 agentConsoleTitle.innerText = 'Autonomous Voice Concierge';
-                voiceSelect.value = 'en-US-AriaNeural';
-                chatAgentMeta.innerText = 'Sophia (Daniel & Associates Luxury Concierge) • 24kHz High-Fidelity';
+                voiceSelect.value = 'en-US-AvaNeural';
+                chatAgentMeta.innerText = 'Ava (Daniel & Associates Luxury Concierge) • 48kHz VoiceStudio Master';
                 
                 // Update ROI metrics for USA
                 document.getElementById('roiValRevenue').innerText = '$38.4M';
@@ -1447,15 +1515,45 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
                 // Initial Greeting
                 chatBox.innerHTML = `
                     <div class="msg agent">
-                        <div class="msg-meta" id="chatAgentMeta">Sophia (Daniel &amp; Associates Luxury Concierge) • 24kHz High-Fidelity</div>
+                        <div class="msg-meta" id="chatAgentMeta">Ava (Daniel &amp; Associates Luxury Concierge) • 48kHz VoiceStudio Master</div>
                         Hi Alex, this is Sophia with Daniel &amp; Associates Luxury Realty. I noticed you just requested details on 10484 Bellagio Rd, Bel Air — I wanted to catch you while it's top of mind. Are you looking at this as a primary residence or a private investment?
+                    </div>
+                `;
+            } else if (market === 'hindi') {
+                if (btnHindi) btnHindi.className = 'btn-market active';
+                btnUSA.className = 'btn-market';
+                btnIndia.className = 'btn-market';
+                if (hindiChips) hindiChips.style.display = 'inline-flex';
+                usaChips.style.display = 'none';
+                indiaChips.style.display = 'none';
+                rowBHK.style.display = 'flex';
+                rowTicket.style.display = 'flex';
+                lblBudget.innerText = 'बजट (लाख / करोड़ रुपये)';
+                lblFinancing.innerText = 'होम लोन / डाउन पेमेंट';
+                lblAppt.innerText = 'साइट विज़िट समय';
+                lblProperty.innerText = 'प्रोजेक्ट / लोकेशन';
+                agentConsoleTitle.innerText = 'हिन्दी कस्टमर केयर एवं क्लोज़िंग एजेंट';
+                voiceSelect.value = 'hi-IN-SwaraNeural';
+                chatAgentMeta.innerText = 'स्वाति (क्लोज़र एआई सीनियर रिलेशनशिप मैनेजर) • 48kHz वॉइस स्टूडियो';
+
+                // Update ROI metrics for Hindi
+                document.getElementById('roiValRevenue').innerText = '₹18.5 Cr';
+                document.getElementById('roiLblRevenue').innerText = 'वीकेंड साइट विज़िट पाइपलाइन';
+
+                // Initial Hindi Greeting
+                chatBox.innerHTML = `
+                    <div class="msg agent">
+                        <div class="msg-meta" id="chatAgentMeta">स्वाति (क्लोज़र एआई सीनियर रिलेशनशिप मैनेजर) • 48kHz वॉइस स्टूडियो</div>
+                        नमस्ते जी! क्लोज़र एआई कस्टमर सपोर्ट में आपका स्वागत है। मैं स्वाति बात कर रही हूँ। मैं आपकी प्रॉपर्टी इंक्वायरी और साइट विज़िट में किस प्रकार सहायता कर सकती हूँ?
                     </div>
                 `;
             } else {
                 btnIndia.className = 'btn-market active';
                 btnUSA.className = 'btn-market';
+                if (btnHindi) btnHindi.className = 'btn-market';
                 indiaChips.style.display = 'inline-flex';
                 usaChips.style.display = 'none';
+                if (hindiChips) hindiChips.style.display = 'none';
                 rowBHK.style.display = 'flex';
                 rowTicket.style.display = 'flex';
                 lblBudget.innerText = 'Budget in Crores / Lakhs';
@@ -1463,8 +1561,8 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
                 lblAppt.innerText = 'Site Visit / Schedule';
                 lblProperty.innerText = 'Project / Location';
                 agentConsoleTitle.innerText = 'Indian Customer Care & Lead Support';
-                voiceSelect.value = 'en-IN-NeerjaNeural';
-                chatAgentMeta.innerText = 'Priya (CLOSER AI Indian Customer Care) • Warm Hindi/English Neural';
+                voiceSelect.value = 'en-IN-NeerjaExpressiveNeural';
+                chatAgentMeta.innerText = 'Neerja (CLOSER AI Indian Customer Care) • 48kHz Expressive Neural';
 
                 // Update ROI metrics for India
                 document.getElementById('roiValRevenue').innerText = '₹12.5 Cr';
@@ -1473,8 +1571,8 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
                 // Initial Indian Greeting
                 chatBox.innerHTML = `
                     <div class="msg agent">
-                        <div class="msg-meta" id="chatAgentMeta">Priya (CLOSER AI Indian Customer Care) • Warm Hindi/English Neural</div>
-                        Namaste! Thank you for calling Prestige &amp; Sobha Customer Care. My name is Priya. How may I assist you with our luxury residential projects in Whitefield or your existing booking today?
+                        <div class="msg-meta" id="chatAgentMeta">Neerja (CLOSER AI Indian Customer Care) • 48kHz Expressive Neural</div>
+                        Namaste! Thank you for calling Prestige &amp; Sobha Customer Care. My name is Neerja. How may I assist you with our luxury residential projects in Whitefield or your existing booking today?
                     </div>
                 `;
             }
@@ -1563,6 +1661,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
             getAudioContext();
             const voice = document.getElementById('voiceSelect').value;
             const provider = document.getElementById('voiceProviderSelect') ? document.getElementById('voiceProviderSelect').value : 'studio';
+            const audioSettings = getAudioSettings();
             const elKey = localStorage.getItem('closer_elevenlabs_key') || '';
             const sarvKey = localStorage.getItem('closer_sarvam_key') || '';
             
@@ -1575,6 +1674,8 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
                     utterance: 'PREVIEW_SAMPLE',
                     voice: voice,
                     provider: provider,
+                    rate: audioSettings.rate,
+                    pitch: audioSettings.pitch,
                     elevenlabs_key: elKey,
                     sarvam_key: sarvKey
                 })
@@ -1593,6 +1694,47 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
         function escapeHtml(str) {
             if (!str) return '';
             return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        function playMarketingHook(market) {
+            switchMarket(market);
+            const input = document.getElementById('userInput');
+            if (market === 'usa') {
+                input.value = "Hi, I just saw the $15M Bel Air estate listing on Bellagio Road. Can we book a private VIP walkthrough this Thursday at 2 PM? We are fully cash verified.";
+            } else if (market === 'india') {
+                input.value = "Namaste, I need an immediate status update on my customer ticket CC-84291 for Sobha Windsor, and I want to book a Saturday site visit for a 3 BHK.";
+            } else if (market === 'hindi') {
+                input.value = "नमस्ते जी, मुझे प्रेस्टीज वाइटफील्ड प्रोजेक्ट में 3 बीएचके का रेट जानना है और इस शनिवार दोपहर 2 बजे फैमिली के साथ साइट विज़िट बुक करनी है।";
+            }
+            sendTurn();
+        }
+
+        function downloadLastAudio() {
+            if (!lastAudioBase64) {
+                alert("Please click 'Test Audio Sample' or send a message first to generate studio WAV audio!");
+                return;
+            }
+            try {
+                const isWav = lastAudioBase64.startsWith('UklGR');
+                const mimeType = isWav ? 'audio/wav' : 'audio/mpeg';
+                const ext = isWav ? 'wav' : 'mp3';
+                const binaryStr = atob(lastAudioBase64);
+                const bytes = new Uint8Array(binaryStr.length);
+                for (let i = 0; i < binaryStr.length; i++) {
+                    bytes[i] = binaryStr.charCodeAt(i);
+                }
+                const blob = new Blob([bytes], { type: mimeType });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `closer-ai-${currentMarket}-voice-${Date.now()}.${ext}`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(() => URL.revokeObjectURL(url), 1000);
+            } catch (e) {
+                console.error("Audio download error:", e);
+            }
         }
 
         function sendTurn() {
@@ -1618,6 +1760,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
             const voice = document.getElementById('voiceSelect').value;
             const provider = document.getElementById('voiceProviderSelect') ? document.getElementById('voiceProviderSelect').value : 'studio';
             const llmModel = document.getElementById('llmEngineSelect') ? document.getElementById('llmEngineSelect').value : 'llama-3.3-70b';
+            const audioSettings = getAudioSettings();
             const elKey = localStorage.getItem('closer_elevenlabs_key') || '';
             const sarvKey = localStorage.getItem('closer_sarvam_key') || '';
 
@@ -1629,13 +1772,15 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
                     voice: voice,
                     model_id: llmModel,
                     provider: provider,
+                    rate: audioSettings.rate,
+                    pitch: audioSettings.pitch,
                     elevenlabs_key: elKey,
                     sarvam_key: sarvKey
                 })
             })
             .then(res => res.json())
             .then(data => {
-                const personaName = currentMarket === 'india' ? 'Priya (Customer Care)' : 'Sophia (Luxury Concierge)';
+                const personaName = currentMarket === 'hindi' ? 'स्वाति (Relationship Manager)' : (currentMarket === 'india' ? 'Neerja (Customer Care)' : 'Sophia (Luxury Concierge)');
                 const latency = data.llm_latency_ms || 88;
                 const paramScale = data.llm_parameters || '175B+ Catalog';
                 const voiceEngineLabel = data.voice_provider || (provider === 'elevenlabs' ? 'ElevenLabs Turbo' : (provider === 'sarvam' ? 'Sarvam Indic Neural' : 'Studio Broadcast Neural 48kHz'));
@@ -1735,6 +1880,10 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
                 setVadState('listening');
                 return;
             }
+
+            lastAudioBase64 = b64;
+            const btnDl = document.getElementById('btnDownloadAudio');
+            if (btnDl) btnDl.style.display = 'inline-flex';
 
             setVadState('speaking');
 
@@ -2347,6 +2496,7 @@ class DashboardHTTPHandler(http.server.BaseHTTPRequestHandler):
             voice = data.get("voice", "en-US-AriaNeural")
             custom_text = data.get("text", "")
             rate = data.get("rate")
+            pitch = data.get("pitch")
             provider = data.get("provider", "studio")
             elevenlabs_key = data.get("elevenlabs_key") or os.environ.get("ELEVENLABS_API_KEY", "")
             sarvam_key = data.get("sarvam_key") or os.environ.get("SARVAM_API_KEY", "")
@@ -2354,7 +2504,9 @@ class DashboardHTTPHandler(http.server.BaseHTTPRequestHandler):
             if utterance in ("PREVIEW_SAMPLE", "STUDIO_SAMPLE"):
                 if custom_text:
                     reply = custom_text
-                elif "en-IN" in voice or "hi-IN" in voice:
+                elif "hi-in" in voice.lower() or "swara" in voice.lower() or "madhur" in voice.lower():
+                    reply = "नमस्ते! क्लोज़र एआई कस्टमर सपोर्ट में आपका स्वागत है। मैं आपकी प्रॉपर्टी सर्च और साइट विज़िट में किस प्रकार सहायता कर सकती हूँ?"
+                elif "en-in" in voice.lower() or "neerja" in voice.lower() or "prabhat" in voice.lower():
                     reply = "Namaste! This is CLOSER AI client relationship concierge. How may I assist you with your premium residential inquiry today?"
                 else:
                     reply = "Hello, this is CLOSER AI luxury real estate concierge. How can I assist you with your estate search today?"
@@ -2366,6 +2518,7 @@ class DashboardHTTPHandler(http.server.BaseHTTPRequestHandler):
                     reply,
                     voice=voice,
                     rate=rate,
+                    pitch=pitch,
                     provider=provider,
                     elevenlabs_key=elevenlabs_key,
                     sarvam_key=sarvam_key
