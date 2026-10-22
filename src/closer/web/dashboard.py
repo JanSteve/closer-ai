@@ -137,16 +137,23 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
             gap: 14px;
         }
         .brand-icon {
-            width: 38px;
-            height: 38px;
-            background: linear-gradient(135deg, #3b82f6 0%, #1e3a8a 100%);
-            border: 1px solid rgba(255,255,255,0.2);
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.14);
             border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
-            box-shadow: 0 4px 16px var(--primary-glow);
+            box-shadow: 0 4px 16px rgba(0, 229, 255, 0.18);
+            overflow: hidden;
+            padding: 3px;
+        }
+        .brand-icon img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            display: block;
         }
         .logo-title {
             font-size: 22px;
@@ -973,7 +980,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 <body>
     <div class="header">
         <div class="logo-wrap">
-            <div class="brand-icon">⚡</div>
+            <div class="brand-icon"><img src="/assets/logo.webp" alt="CLOSER AI"></div>
             <div>
                 <div style="display:flex; align-items:center; gap:10px;">
                     <span class="logo-title">CLOSER AI</span>
@@ -2216,6 +2223,8 @@ class DashboardHTTPHandler(http.server.BaseHTTPRequestHandler):
                     content_type = "application/javascript; charset=utf-8"
                 elif rel_path.endswith(".webp"):
                     content_type = "image/webp"
+                elif rel_path.endswith(".png"):
+                    content_type = "image/png"
                 elif rel_path.endswith(".woff2"):
                     content_type = "font/woff2"
                 elif rel_path.endswith(".html"):

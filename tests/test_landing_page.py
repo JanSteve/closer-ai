@@ -50,6 +50,28 @@ class TestLandingPage(unittest.TestCase):
         content = self.logo_file.read_bytes()
         self.assertTrue(content[:4] == b"RIFF" and b"WEBP" in content[:16], "logo.webp must be valid WebP")
 
+    def test_brand_identity_assets(self):
+        """Verifies presence and valid signatures of official CLOSER AI logo suite."""
+        brand_suite = [
+            ROOT_DIR / "assets" / "closer-logo-dark.png",
+            ROOT_DIR / "assets" / "closer-logo-transparent.png",
+            ROOT_DIR / "assets" / "closer-logo-transparent.webp",
+            ROOT_DIR / "assets" / "closer-symbol-dark.png",
+            ROOT_DIR / "assets" / "closer-symbol-dark.webp",
+            ROOT_DIR / "assets" / "closer-symbol-transparent.png",
+            ROOT_DIR / "assets" / "closer-symbol-transparent.webp",
+            ROOT_DIR / "assets" / "logo.png",
+            ROOT_DIR / "assets" / "logo.webp",
+        ]
+        for asset in brand_suite:
+            self.assertTrue(asset.exists(), f"Brand asset {asset.name} must exist")
+            self.assertGreater(asset.stat().st_size, 1000, f"Brand asset {asset.name} must be > 1KB")
+            raw = asset.read_bytes()
+            if asset.suffix == ".png":
+                self.assertEqual(raw[:8], b"\x89PNG\r\n\x1a\n", f"{asset.name} must be valid PNG")
+            elif asset.suffix == ".webp":
+                self.assertTrue(raw[:4] == b"RIFF" and b"WEBP" in raw[:16], f"{asset.name} must be valid WebP")
+
     def test_html_document_metadata_and_video(self):
         """Verifies title, background video, and exact CloudFront source URL."""
         html = self.index_file.read_text(encoding="utf-8")
