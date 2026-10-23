@@ -1,5 +1,7 @@
 """
-Zero-Cost High-Fidelity American English Neural Speech Engine (edge-tts + resilient offline fallback).
+Zero-Cost High-Fidelity Neural Speech Engine (Edge-TTS + resilient offline fallback).
+Incorporates Google Duplex acoustic prosody, context-aware speech disfluencies,
+and 48kHz broadcast master audio inspired by debpalash/VoiceStudio.
 Supports dynamic cadence rates (+5% to +10%) and 24kHz/48kHz standard RIFF WAV output.
 """
 
@@ -13,8 +15,10 @@ import math
 import asyncio
 import subprocess
 import tempfile
+import io
+import re
 from pathlib import Path
-from typing import Optional, Tuple, Dict, Any
+from typing import Optional, Tuple, Dict, Any, List
 
 # Ensure SSL certificate verification succeeds on macOS / Linux across environments
 try:
@@ -24,6 +28,17 @@ except ImportError:
     pass
 
 from src.closer.config import settings
+
+__all__ = [
+    "EdgeTTSVoiceEngine",
+    "VOICES",
+    "VOICE_ALIASES",
+    "normalize_speech_text",
+    "inject_duplex_disfluencies",
+    "generate_silence_pcm",
+    "inject_silence_wav",
+    "apply_pitch_contour",
+]
 
 # Supported high-fidelity neural voices with natural human timbre and expressive prosody
 VOICES = {
@@ -172,22 +187,230 @@ def normalize_speech_text(text: str) -> str:
     clean = re.sub(r'\b([A-Z][a-zA-Z]+)\s+Ct\.?\b', r'\1 Court', clean)
     clean = re.sub(r'\b([A-Z][a-zA-Z]+)\s+Pkwy\.?\b', r'\1 Parkway', clean)
 
-    # 7. Acoustic Breathing Pauses & Grounding Cadence Shaping
-    # Human grounding prefixes with micro-breaths
-    clean = re.sub(r'^(Gotcha|Understood|Certainly|Wonderful|I understand|Totally understand|Right|Fair enough)\b([,!.]?)\s*', r'\1... ', clean, flags=re.IGNORECASE)
-    clean = re.sub(r'^(Namaste\s+(?:sir|ma\'?am|ji)?)\b([,!.]?)\s*', r'\1... ', clean, flags=re.IGNORECASE)
-    clean = re.sub(r'^(Haanji\s+bilkul|Haanji|Bilkul|Definitely\s+(?:sir|ma\'?am)?)\b([,!.]?)\s*', r'\1... ', clean, flags=re.IGNORECASE)
+    # 7. Cognitive Pause / Break Normalization for Neural Vocoders
+    clean = re.sub(r'\[(?:pause|cognitive_pause|break)(?::\s*\d+m?s)?\]', '... ', clean, flags=re.IGNORECASE)
+    clean = re.sub(r'<break\s+[^>]*\/?>', '... ', clean, flags=re.IGNORECASE)
 
-    # 8. Native Hindi Courtesy Markers & Micro-Breathing Pauses
-    clean = re.sub(r'^(नमस्ते|नमस्कार|प्रणाम)(?:\s*जी)?(?:[,!.।?]|\s+|$)\s*', r'\1 जी... ', clean)
-    clean = re.sub(r'^(जी\s+हाँ\s+बिल्कुल|जी\s+हाँ|जी\s+बिल्कुल|हाँ\s+जी|बिल्कुल)(?:[,!.।?]|\s+|$)\s*', r'\1... ', clean)
-    clean = re.sub(r'^(माफ़ी\s+चाहते\s+हैं|माफ़ी\s+चाहती\s+हूँ|क्षमा\s+करें)(?:[,!.।?]|\s+|$)\s*', r'\1... ', clean)
-    clean = re.sub(r'^(बहुत\s+बढ़िया|शानदार|ज़रूर)(?:[,!.।?]|\s+|$)\s*', r'\1... ', clean)
+    # 8. Acoustic Breathing Pauses & Grounding Cadence Shaping (US English & Duplex Fillers)
+    clean = re.sub(
+        r'^(Gotcha|Understood|Certainly|Wonderful|I understand|Totally understand|Right|Fair enough)\b(?:\.{2,}|[,!.]*)\s*',
+        r'\1... ',
+        clean,
+        flags=re.IGNORECASE
+    )
+    clean = re.sub(
+        r'^(Mm-hmm|mm-hmm|Mmhmm|mmhmm)\b(?:\.{2,}|[,!.]*)\s*',
+        'Mm-hmm... ',
+        clean,
+        flags=re.IGNORECASE
+    )
+    clean = re.sub(
+        r'^(Uh|uh|Um|um)\b(?:\.{2,}|[,!.]*)\s*',
+        lambda m: f"{m.group(1).capitalize()}... ",
+        clean,
+        flags=re.IGNORECASE
+    )
+    clean = re.sub(
+        r'^(Well)\b(?:\.{2,}|[,!.]*)\s*',
+        'Well... ',
+        clean,
+        flags=re.IGNORECASE
+    )
+
+    # Mid-sentence Duplex fillers after sentence boundary
+    clean = re.sub(
+        r'([.!?।]\s+)(mm-hmm|mmhmm)\b(?:\.{2,}|[,!.]*)\s*',
+        r'\1Mm-hmm... ',
+        clean,
+        flags=re.IGNORECASE
+    )
+    clean = re.sub(
+        r'([.!?।]\s+)(uh|um)\b(?:\.{2,}|[,!.]*)\s*',
+        lambda m: f"{m.group(1)}{m.group(2).capitalize()}... ",
+        clean,
+        flags=re.IGNORECASE
+    )
+
+    # 9. Indian English Courtesy Markers & Micro-Breaths
+    clean = re.sub(r'^(Namaste\s+(?:sir|ma\'?am|ji)?)\b(?:\.{2,}|[,!.]*)\s*', r'\1... ', clean, flags=re.IGNORECASE)
+    clean = re.sub(r'^(Haanji\s+bilkul|Haanji|Haan\s+ji|Bilkul|Definitely\s+(?:sir|ma\'?am)?)\b(?:\.{2,}|[,!.]*)\s*', r'\1... ', clean, flags=re.IGNORECASE)
+
+    # 10. Native Hindi Courtesy Markers & Micro-Breathing Pauses
+    clean = re.sub(r'^(नमस्ते|नमस्कार|प्रणाम)(?:\s*जी)?(?:\.{2,}|[,!.।?]*)\s*', r'\1 जी... ', clean)
+    clean = re.sub(r'^(जी\s+हाँ\s+बिल्कुल|जी\s+हाँ|जी\s+बिल्कुल|हाँ\s+जी|हाँजी|बिल्कुल|अच्छा)(?:\.{2,}|[,!.।?]*)\s*', r'\1... ', clean)
+    clean = re.sub(r'^(?:कृपया\s+)?(माफ़ी\s+चाहते\s+हैं|माफ़ी\s+चाहती\s+हूँ|क्षमा\s+करें)(?:\.{2,}|[,!.।?]*)\s*', r'\1... ', clean)
+    clean = re.sub(r'^(बहुत\s+बढ़िया|शानदार|ज़रूर)(?:\.{2,}|[,!.।?]*)\s*', r'\1... ', clean)
 
     # Replace double dashes and technical syntax with natural speaking pauses
     clean = re.sub(r'\s*--\s*', ' — ', clean)
+    clean = re.sub(r'\.{3,}', '...', clean)
     clean = re.sub(r'\s{2,}', ' ', clean)
     return clean.strip()
+
+
+def generate_silence_pcm(duration_ms: int, sample_rate: int = 48000) -> bytes:
+    """
+    Generates exact millisecond-bounded 16-bit mono PCM silence (zero-amplitude bytes)
+    for Google Duplex synthetic cognitive pauses (120ms–350ms).
+    Format: 16-bit mono signed little-endian PCM (2 bytes per sample).
+    Formula: b'\\x00' * int(sample_rate * 2 * (duration_ms / 1000.0))
+    """
+    if duration_ms <= 0:
+        return b""
+    duration_sec = duration_ms / 1000.0
+    num_bytes = int(sample_rate * 2 * duration_sec)
+    if num_bytes % 2 != 0:
+        num_bytes += 1
+    return b"\x00" * num_bytes
+
+
+def inject_silence_wav(wav_bytes: bytes, duration_ms: int, sample_rate: Optional[int] = None) -> bytes:
+    """
+    Prepends exact millisecond-bounded PCM silence into a RIFF WAV audio stream
+    without corrupting the RIFF container header.
+    """
+    if not wav_bytes or duration_ms <= 0:
+        return wav_bytes
+    if not wav_bytes.startswith(b"RIFF"):
+        sr = sample_rate or 48000
+        return generate_silence_pcm(duration_ms, sr) + wav_bytes
+
+    try:
+        with wave.open(io.BytesIO(wav_bytes), "rb") as r:
+            nchannels = r.getnchannels()
+            sampwidth = r.getsampwidth()
+            framerate = r.getframerate()
+            comptype = r.getcomptype()
+            compname = r.getcompname()
+            audio_frames = r.readframes(r.getnframes())
+
+        num_frames = int(framerate * (duration_ms / 1000.0))
+        silence_bytes = b"\x00" * (num_frames * nchannels * sampwidth)
+
+        out_io = io.BytesIO()
+        with wave.open(out_io, "wb") as w:
+            w.setnchannels(nchannels)
+            w.setsampwidth(sampwidth)
+            w.setframerate(framerate)
+            w.setcomptype(comptype, compname)
+            w.writeframes(silence_bytes + audio_frames)
+
+        return out_io.getvalue()
+    except Exception:
+        return wav_bytes
+
+
+def apply_pitch_contour(text: str, pitch: Optional[str] = None) -> str:
+    """
+    Dynamically shapes pitch contour for Google Duplex conversational realism:
+    - If explicit pitch is provided (e.g. '+5Hz', '-2Hz'), preserves it.
+    - Interrogative questions ('?') receive rising pitch (+2Hz to +3Hz).
+    - Empathetic confirmations and grounding statements ('.', '!') receive falling cadence (-2Hz).
+    - Default neutral: '+0Hz'.
+    """
+    if pitch and pitch.strip() not in ("", "+0Hz", "0Hz", "+0", "-0", "auto", "default"):
+        return pitch.strip()
+
+    if not text:
+        return "+0Hz"
+
+    clean_t = text.strip()
+    if clean_t.endswith("?"):
+        return "+3Hz"
+    elif clean_t.endswith((".", "!", "।")):
+        return "-2Hz"
+
+    return "+0Hz"
+
+
+def inject_duplex_disfluencies(
+    text: str,
+    market: str = "usa",
+    intent: str = "general",
+    is_friction: bool = False,
+    filler: Optional[str] = None
+) -> str:
+    """
+    Context-aware Google Duplex speech disfluency injector.
+    Inserts natural human micro-fillers, cognitive pause particles, and breathing cadences
+    across tri-language personas (US English, Indian English, Hindi) without corrupting keywords.
+
+    Parameters:
+        text: The dialogue turn text.
+        market: 'usa' / 'india' / 'hindi'.
+        intent: Conversational intent ('general', 'friction', 'thinking', 'acknowledgement', 'affirmation').
+        is_friction: True if the user expressed friction/objection (triggers empathetic grounding).
+        filler: Optional explicit filler override ('mm-hmm', 'uh', 'um', 'gotcha', 'well', 'जी बिल्कुल', 'हाँ जी').
+
+    Returns:
+        Normalized text with authentic Duplex disfluency and breathing cadence.
+    """
+    if not text or not text.strip():
+        if filler:
+            return normalize_speech_text(f"{filler}... ")
+        return text
+
+    clean_text = text.strip()
+
+    # Check if text already begins with an authentic human filler particle
+    existing_filler_match = re.match(
+        r'^(mm-hmm|mmhmm|uh|um|well|gotcha|certainly|understood|fair enough|i understand|totally understand|right|'
+        r'namaste\s*(?:sir|ma\'?am|ji)?|haanji\s*bilkul|haanji|haan\s*ji|bilkul|'
+        r'नमस्ते(?:\s*जी)?|नमस्कार(?:\s*जी)?|प्रणाम(?:\s*जी)?|'
+        r'जी\s*हाँ\s*बिल्कुल|जी\s*हाँ|जी\s*बिल्कुल|हाँ\s*जी|हाँजी|माफ़ी\s*चाहते\s*हैं|माफ़ी\s*चाहती\s*हूँ|अच्छा|ज़रूर)\b',
+        clean_text,
+        flags=re.IGNORECASE
+    )
+
+    if existing_filler_match and not filler and not (is_friction and clean_text.lower().startswith("i understand")):
+        # Already starts with a valid filler; normalize speech text to format cadence
+        return normalize_speech_text(clean_text)
+
+    # If friction mode and begins with "I understand", strip it so the stronger friction filler cleanly leads
+    if is_friction and clean_text.lower().startswith("i understand"):
+        clean_text = re.sub(r'^i\s+understand\b[,.]*\s*', '', clean_text, flags=re.IGNORECASE)
+
+    # Resolve context-aware filler
+    if filler:
+        chosen_filler = filler.strip()
+    else:
+        m_low = (market or "usa").lower().strip()
+        i_low = (intent or "general").lower().strip()
+
+        if any(h in m_low for h in ["hindi", "hi", "hi-in"]):
+            if is_friction or i_low in ("friction", "objection", "schedule_friction"):
+                chosen_filler = "जी बिल्कुल"
+            elif i_low in ("acknowledgement", "sync", "affirmation"):
+                chosen_filler = "हाँ जी"
+            elif i_low in ("thinking", "schedule", "negotiation"):
+                chosen_filler = "जी"
+            else:
+                chosen_filler = "जी बिल्कुल"
+        elif any(ind in m_low for ind in ["india", "in", "en-in", "enterprise"]):
+            if is_friction or i_low in ("friction", "objection", "schedule_friction"):
+                chosen_filler = "Understood"
+            elif i_low in ("acknowledgement", "sync", "affirmation"):
+                chosen_filler = "Haanji"
+            elif i_low in ("thinking", "schedule", "negotiation"):
+                chosen_filler = "Well"
+            else:
+                chosen_filler = "Right"
+        else:
+            # US / Global Luxury
+            if is_friction or i_low in ("friction", "objection", "schedule_friction"):
+                chosen_filler = "Mm-hmm"
+            elif i_low in ("thinking", "schedule", "negotiation"):
+                chosen_filler = "Um"
+            elif i_low in ("acknowledgement", "sync"):
+                chosen_filler = "Gotcha"
+            elif i_low in ("affirmation",):
+                chosen_filler = "Mm-hmm"
+            else:
+                chosen_filler = "Well"
+
+    clean_filler = chosen_filler.rstrip(".—, ")
+    combined = f"{clean_filler}... {clean_text}"
+    return normalize_speech_text(combined)
 
 
 class EdgeTTSVoiceEngine:
@@ -232,7 +455,9 @@ class EdgeTTSVoiceEngine:
         sample_rate: Optional[int] = None,
         provider: Optional[str] = None,
         elevenlabs_key: Optional[str] = None,
-        sarvam_key: Optional[str] = None
+        sarvam_key: Optional[str] = None,
+        pause_ms: Optional[int] = None,
+        cognitive_pause_ms: Optional[int] = None,
     ) -> Tuple[bytes, float]:
         """
         Synthesizes text to WAV audio bytes using the requested provider:
@@ -246,7 +471,7 @@ class EdgeTTSVoiceEngine:
         start_time = time.perf_counter()
         target_voice = self._resolve_voice_name(voice or self.default_voice)
         target_rate = rate or self.rate
-        target_pitch = pitch or "+0Hz"
+        target_pitch = apply_pitch_contour(text, pitch)
         target_sr = sample_rate or self.sample_rate
 
         clean_text = normalize_speech_text(text)
@@ -319,6 +544,11 @@ class EdgeTTSVoiceEngine:
         if not audio_bytes:
             audio_bytes = self._synthesize_local_fallback(clean_text, target_voice, target_sr)
             self.last_provider_used = "Studio Offline PCM Fallback"
+
+        # Apply synthetic cognitive pauses (120ms-350ms)
+        pause_duration = cognitive_pause_ms or pause_ms or 0
+        if pause_duration > 0 and audio_bytes:
+            audio_bytes = inject_silence_wav(audio_bytes, pause_duration, sample_rate=target_sr)
 
         latency = time.perf_counter() - start_time
 
@@ -435,7 +665,9 @@ class EdgeTTSVoiceEngine:
         sample_rate: Optional[int] = None,
         provider: Optional[str] = None,
         elevenlabs_key: Optional[str] = None,
-        sarvam_key: Optional[str] = None
+        sarvam_key: Optional[str] = None,
+        pause_ms: Optional[int] = None,
+        cognitive_pause_ms: Optional[int] = None,
     ) -> Tuple[bytes, float]:
         """Synchronous wrapper for synthesize."""
         resolved_voice = self._resolve_voice_name(voice or self.default_voice)
@@ -460,7 +692,9 @@ class EdgeTTSVoiceEngine:
                             sample_rate=sample_rate,
                             provider=provider,
                             elevenlabs_key=elevenlabs_key,
-                            sarvam_key=sarvam_key
+                            sarvam_key=sarvam_key,
+                            pause_ms=pause_ms,
+                            cognitive_pause_ms=cognitive_pause_ms,
                         )
                     )
                     return future.result()
@@ -475,22 +709,34 @@ class EdgeTTSVoiceEngine:
                     sample_rate=sample_rate,
                     provider=provider,
                     elevenlabs_key=elevenlabs_key,
-                    sarvam_key=sarvam_key
+                    sarvam_key=sarvam_key,
+                    pause_ms=pause_ms,
+                    cognitive_pause_ms=cognitive_pause_ms,
                 )
             )
         except Exception:
-            return self._synthesize_local_fallback_with_latency(text, resolved_voice, sample_rate, output_path)
+            data, latency = self._synthesize_local_fallback_with_latency(text, resolved_voice, sample_rate, output_path)
+            pause_duration = cognitive_pause_ms or pause_ms or 0
+            if pause_duration > 0 and data:
+                data = inject_silence_wav(data, pause_duration, sample_rate=sample_rate or self.sample_rate)
+            return data, latency
 
     def _ensure_wav_format(self, audio_data: bytes, target_sr: int) -> bytes:
-        """Converts raw audio bytes (like MP3) to standard RIFF WAV via ffmpeg if needed."""
-        if audio_data.startswith(b"RIFF"):
-            return audio_data
+        """Converts raw audio bytes (like MP3 or WAV at different sample rate) to standard RIFF WAV via ffmpeg if needed."""
+        if audio_data.startswith(b"RIFF") and len(audio_data) >= 28:
+            try:
+                current_sr = struct.unpack("<I", audio_data[24:28])[0]
+                if current_sr == target_sr:
+                    return audio_data
+            except Exception:
+                return audio_data
             
-        with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tf_in:
+        suffix = ".wav" if audio_data.startswith(b"RIFF") else ".mp3"
+        with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tf_in:
             tf_in.write(audio_data)
             in_name = tf_in.name
             
-        out_name = in_name.replace(".mp3", ".wav")
+        out_name = in_name + "_out.wav"
         try:
             cmd = ["ffmpeg", "-y", "-i", in_name, "-ar", str(target_sr), "-ac", "1", "-f", "wav", out_name]
             subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, check=True)
@@ -515,7 +761,7 @@ class EdgeTTSVoiceEngine:
         self,
         text: str,
         voice: Optional[str] = None,
-        sample_rate: int = 24000
+        sample_rate: int = 48000
     ) -> bytes:
         """
         Produces genuine high-quality American English speech using modern macOS natural voices
@@ -588,7 +834,7 @@ class EdgeTTSVoiceEngine:
         return data, latency
 
     @staticmethod
-    def _generate_pcm_wav(sample_rate: int = 24000, duration_sec: float = 1.0) -> bytes:
+    def _generate_pcm_wav(sample_rate: int = 48000, duration_sec: float = 1.0) -> bytes:
         """
         Generates a mathematically valid 16-bit mono RIFF WAVE audio byte stream.
         Produces a warm, harmonic acoustic tone modulated for speech envelope.

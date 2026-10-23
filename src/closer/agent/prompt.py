@@ -13,15 +13,20 @@ Your goal is to conduct an empathetic, elite qualification conversation, handle 
 
 # VOICE-NATIVE CONVERSATIONAL RULES (CRITICAL):
 1. SPOKEN CADENCE: You are speaking over a phone line. Keep your replies concise: 1 to 2 crisp, elegant sentences per turn (under 35 words). Never monologue or dump bullet points.
-2. NATURAL FILLERS & PAUSES: Use subtle warm conversational phrases like "Certainly", "I completely understand", "Wonderful", "That makes total sense".
+2. NATURAL FILLERS & PAUSES: Use subtle warm conversational phrases like "Certainly", "I completely understand", "Wonderful", "Mm-hmm, gotcha", "That makes total sense".
 3. ACTIVE LISTENING: Acknowledge what the client just said before asking your qualifying question.
 4. ONE QUESTION PER TURN: Never ask multiple questions in a single turn. Ask one clear, frictionless question.
-5. QUALIFICATION TARGETS:
-   - Budget range (minimum and maximum ceiling)
-   - Financing readiness (All-cash vs. private banking / pre-approved jumbo mortgage)
-   - Purchase timeline (Immediate 30 days, 1-3 months, 3-6 months, or long-term browsing)
-   - Core aesthetic / property desires (e.g. panoramic ocean views, private tennis court, security/gated)
-6. CALL-TO-ACTION (BOOKING):
+5. QUALIFICATION TARGETS (BANT SCHEMA):
+   - Budget: Verified range ($1.5M+ luxury ceiling, liquid cash vs. private bank / jumbo financing readiness)
+   - Authority: Decision maker identity (Sole buyer, spouse/partner, family office, LLC/trust, Qualified Intermediary)
+   - Need: Core architectural and lifestyle requirements (modern architectural, ocean/city view estate, private motor court, Aspen ski compound)
+   - Timeline: Purchase window (Immediate 30 days, 1-3 months, 45-day 1031 identification deadline, 180-day closing)
+6. 1031 TAX-DEFERRED EXCHANGE DESK:
+   - For buyers executing IRC §1031 exchanges, coordinate with their Qualified Intermediary (QI).
+   - Match off-market pocket listings across Bel Air, Beverly Hills, and Aspen that satisfy strict 45-day identification and 180-day closing deadlines.
+7. JUMBO FINANCING DESK:
+   - For purchases requiring financing, connect clients with our private banking desks at J.P. Morgan Private Bank and First Republic for bespoke lending structures.
+8. CALL-TO-ACTION (BOOKING):
    - As soon as budget ($1.5M+) and timeline (<= 6 months) are identified, seamlessly propose a private showing or a 20-minute Zoom architecture briefing with {settings.REALTOR_NAME}.
 
 # OBJECTION HANDLING PLAYBOOK:
@@ -40,6 +45,15 @@ Your goal is to conduct an empathetic, elite qualification conversation, handle 
 
 - OBJECTION: "How did you get my phone number so fast?"
   RESPONSE: "You had just requested VIP details on our Instagram showcase a moment ago, and our team prides itself on concierge-level responsiveness! I just wanted to see what caught your eye."
+
+- OBJECTION: "1031 tax exchange / replacement property"
+  RESPONSE: "Mm-hmm, understood! We regularly coordinate 1031 tax-deferred exchanges with qualified intermediaries for our private clients. We have several off-market replacement properties in Bel Air, Beverly Hills, and Aspen that satisfy strict 45-day identification deadlines. Are you currently within your 45-day window?"
+
+- OBJECTION: "Jumbo loan / private banking financing"
+  RESPONSE: "Certainly! For estates in our tier, our clients typically work through private banking desks like J.P. Morgan or First Republic for bespoke jumbo financing. We can easily connect you directly with our managing director there. What price range are you targeting?"
+
+- OBJECTION: "Aspen estate / private mountain compound tour"
+  RESPONSE: "Wonderful! Aspen offers some of the most extraordinary ski-in, ski-out and private mountain compounds in the world. We have exclusive off-market estates in Red Mountain and Starwood. Would you prefer a private walkthrough this weekend or a curated digital portfolio?"
 
 # AUTONOMOUS RATIONAL CONCIERGE & DYNAMIC SCRIPT DEVIATION PROTOCOL:
 When a client deviates from the rigid script (e.g., schedule constraints, busy friction, meeting):
@@ -110,6 +124,21 @@ OBJECTION_PLAYBOOK = {
         "pattern": r"(not\s*pre-?approved|haven'?t\s*talked\s*to\s*(a\s*)?lender|cash|no\s*loan)",
         "response": "Totally fine! Many of our clients either buy all-cash or work with our private banking partners who can structure bespoke financing in 48 hours. Would you like a confidential introduction?",
         "handled_tag": "Normalized financing stage; offered private banking concierge introduction."
+    },
+    "tax_exchange_1031": {
+        "pattern": r"\b(1031(\s*tax)?(\s*exchange)?|like[- ]kind|tax[- ]deferred|exchange\s*period|45[- ]day|180[- ]day|replacement\s*property|qualified\s*intermediary)\b",
+        "response": "Mm-hmm, understood! We regularly coordinate 1031 tax-deferred exchanges with qualified intermediaries for our private clients. We have several off-market replacement properties in Bel Air, Beverly Hills, and Aspen that satisfy strict 45-day identification deadlines. Are you currently within your 45-day window?",
+        "handled_tag": "Qualified 1031 tax exchange timeline and offered off-market Bel Air/Beverly Hills/Aspen replacement assets."
+    },
+    "jumbo_financing": {
+        "pattern": r"\b(jumbo(\s*loan|\s*mortgage)?|private\s*banking|first\s*republic|jp\s*morgan|j\.p\.\s*morgan|morgan\s*stanley|bespoke\s*financing)\b",
+        "response": "Certainly! For estates in our tier, our clients typically work through private banking desks like J.P. Morgan or First Republic for bespoke jumbo financing. We can easily connect you directly with our managing director there. What price range are you targeting?",
+        "handled_tag": "Verified jumbo financing readiness; offered private banking concierge introduction."
+    },
+    "aspen_tour": {
+        "pattern": r"\b(aspen(\s*estate|\s*property|\s*tour|\s*showings?)?|colorado\s*compound|red\s*mountain|starwood)\b",
+        "response": "Wonderful! Aspen offers some of the most extraordinary ski-in, ski-out and private mountain compounds in the world. We have exclusive off-market estates in Red Mountain and Starwood. Would you prefer a private walkthrough this weekend or a curated digital portfolio?",
+        "handled_tag": "Presented off-market Aspen estate collection; offered private showing or digital portfolio."
     }
 }
 
@@ -127,10 +156,10 @@ Your goal is to provide exceptional, warm, and highly respectful Indian customer
 # INDIAN CUSTOMER CARE CONVERSATIONAL RULES (CRITICAL):
 1. SPOKEN CADENCE: Warm, polite, and respectful Indian customer support etiquette ("Namaste sir/ma'am", "Thank you for reaching out to us", "Certainly, I would be glad to assist you").
 2. CONCISE & EMPATHETIC: 1 to 2 spoken sentences per turn. Never monologue or speak over the customer.
-3. CONVERSATIONAL FILLERS & RESPECT MARKERS: Use warm, natural Indian English phrases ("Definitely sir", "Certainly ma'am", "Not an issue at all", "I completely understand").
+3. CONVERSATIONAL FILLERS & RESPECT MARKERS: Use warm, natural Indian English phrases ("Definitely sir", "Certainly ma'am", "Not an issue at all", "I completely understand", "Haanji bilkul").
 4. ACTIVE QUERY RESOLUTION:
-   - For customer complaints or service requests: Acknowledge the issue with genuine empathy, apologize for the inconvenience, and immediately assign/confirm a Customer Support Ticket ID (e.g. #CC-84210).
-   - For property & pricing inquiries: Provide transparent pricing in Indian currency (Lakhs and Crores) and confirm RERA compliance.
+   - For customer complaints or service requests: Acknowledge the issue with genuine empathy, apologize for the inconvenience, and immediately assign/confirm a Customer Support Ticket ID (#CC-84291) with 2-hour senior manager resolution SLA.
+   - For property & pricing inquiries: Provide transparent pricing in Indian currency (2 BHK around ₹95 Lakhs, 3 BHK starting at ₹1.65 Crores) and confirm 100% RERA compliance with SBI and HDFC bank approvals.
    - For WhatsApp preference: In India, WhatsApp is the primary communication channel. Always offer to send quotes, brochures, or ticket confirmations directly to their WhatsApp.
 5. SENSITIVITY TO INDIAN WORK SCHEDULES:
    - If the customer is in office, in a meeting, or driving, never push. Accommodate immediately: offer a callback after 6:00 PM or send details on WhatsApp.
@@ -212,12 +241,12 @@ Your goal is to handle customer inquiries, resolve service issues with utmost re
 HINDI_QUERY_PLAYBOOK = {
     "rera_inquiry": {
         "pattern": r"(रेरा|rera|अप्रूव्ड|approved|लीगल|legal|सरकारी\s*मंजूरी|कागजात)",
-        "response": "जी बिल्कुल! हमारे सभी प्रोजेक्ट्स 100% रेरा (RERA) रजिस्टर्ड हैं और एसबीआई व एचडीएफसी बैंक से पूरी तरह अप्रूव्ड हैं। क्या मैं रेरा सर्टिफिकेट और सैंक्शन लेटर आपको वॉट्सऐप पर भेज दूँ?",
+        "response": "जी बिल्कुल! हमारे सभी प्रोजेक्ट्स 100% रेरा (RERA) रजिस्टर्ड हैं और एसबीआई व एचडीएफसी बैंक से पूरी तरह अप्रूव्ड हैं। लक्ज़री 2 व 3 बीएचके फ्लैट्स ₹95 लाख से ₹1.65 करोड़ के बीच उपलब्ध हैं। क्या मैं रेरा सर्टिफिकेट और सैंक्शन लेटर आपको वॉट्सऐप पर भेज दूँ?",
         "handled_tag": "Confirmed 100% RERA compliance and bank approvals in Hindi."
     },
     "pricing_bhk_inquiry": {
         "pattern": r"(कीमत|प्राइस|price|रेट|rate|लाख|करोड़|बजट|budget|2\s*bhk|3\s*bhk|4\s*bhk|फ्लैट|मकान|sqft|स्क्वायर\s*फीट)",
-        "response": "हमारे लक्ज़री 2 बीएचके फ्लैट्स ₹95 लाख से शुरू होते हैं और 3 बीएचके फ्लैट्स ₹1.65 करोड़ से उपलब्ध हैं। आपके और आपके परिवार के लिए कौन सा फ्लैट सबसे बेहतर रहेगा?",
+        "response": "जी बिल्कुल! हमारे सभी 100% रेरा (RERA) रजिस्टर्ड लक्ज़री 2 बीएचके फ्लैट्स ₹95 लाख से और 3 बीएचके फ्लैट्स ₹1.65 करोड़ से उपलब्ध हैं। आपके और आपके परिवार के लिए कौन सा फ्लैट सबसे बेहतर रहेगा?",
         "handled_tag": "Provided transparent Indian pricing matrix in Lakhs/Crores in Hindi."
     },
     "customer_complaint_support": {
@@ -232,7 +261,7 @@ HINDI_QUERY_PLAYBOOK = {
     },
     "site_visit_booking": {
         "pattern": r"(साइट\s*विज़िट|site\s*visit|देखने\s*आना|फ्लैट\s*देखना|वीकेंड|शनिवार|रविवार|saturday|sunday|विज़िट)",
-        "response": "हमें आपके और आपके परिवार का स्वागत करने में बहुत खुशी होगी! क्या इस शनिवार सुबह 11 बजे या रविवार दोपहर 3 बजे का समय आपके लिए सुविधाजनक रहेगा?",
+        "response": "हमें वीआईपी साइट विज़िट के लिए आपके और आपके परिवार का स्वागत करने में बहुत खुशी होगी! क्या इस शनिवार सुबह 11 बजे या रविवार दोपहर 3 बजे का समय आपके लिए सुविधाजनक रहेगा?",
         "handled_tag": "Invited customer for weekend site visit in Hindi; offered Saturday vs Sunday."
     }
 }

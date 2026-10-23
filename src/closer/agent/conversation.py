@@ -35,18 +35,24 @@ class ConversationEngine:
     """
 
     def __init__(self, lead: Optional[InboundLead] = None, market_mode: str = "usa"):
-        self.market_mode = market_mode.lower().strip()
         self.lead = lead or InboundLead(
             lead_id="sim_lead_001",
             full_name="Alex Morgan",
             phone_number="+1-310-555-0144",
             ad_campaign="Bel Air Sunset Modern Collection"
         )
-        if self.market_mode in ("hindi", "hi", "hi-in"):
-            region = "INDIA_HINDI"
+        if lead and getattr(lead, "market_region", None):
+            if "hindi" in str(lead.market_region).lower():
+                market_mode = "hindi"
+            elif "india" in str(lead.market_region).lower() and market_mode == "usa":
+                market_mode = "india"
+
+        self._market_mode = market_mode.lower().strip()
+        if self._market_mode in ("hindi", "hi", "hi-in"):
+            region = "INDIA"
             currency = "INR"
             sys_prompt = HINDI_CUSTOMER_CARE_SYSTEM_PROMPT
-        elif self.market_mode in ("india", "en-in"):
+        elif self._market_mode in ("india", "en-in"):
             region = "INDIA"
             currency = "INR"
             sys_prompt = INDIA_CUSTOMER_CARE_SYSTEM_PROMPT
@@ -72,6 +78,14 @@ class ConversationEngine:
         self.dossier.active_llm_model = self.llm_router.active_model_id
         self.dossier.llm_parameter_scale = self.llm_router.active_profile.parameter_scale
 
+    @property
+    def market_mode(self) -> str:
+        return self._market_mode
+
+    @market_mode.setter
+    def market_mode(self, mode: str) -> None:
+        self.set_market_mode(mode)
+
     def set_llm_model(self, model_id_or_alias: str) -> Dict[str, Any]:
         """Dynamically switches the active open-source foundation model (e.g., bloomz-176b, llama-3.3-70b)."""
         if self.llm_router:
@@ -85,18 +99,16 @@ class ConversationEngine:
     def set_market_mode(self, mode: str) -> None:
         """Dynamically switches between 'usa', 'india', and 'hindi' market modes."""
         m = mode.lower().strip()
+        self._market_mode = m
         if m in ("hindi", "hi", "hi-in"):
-            self.market_mode = "hindi"
-            self.dossier.market_region = "INDIA_HINDI"
+            self.dossier.market_region = "INDIA"
             self.dossier.budget_currency = "INR"
             self.messages = [{"role": "system", "content": HINDI_CUSTOMER_CARE_SYSTEM_PROMPT}]
         elif m in ("india", "en-in"):
-            self.market_mode = "india"
             self.dossier.market_region = "INDIA"
             self.dossier.budget_currency = "INR"
             self.messages = [{"role": "system", "content": INDIA_CUSTOMER_CARE_SYSTEM_PROMPT}]
         else:
-            self.market_mode = "usa"
             self.dossier.market_region = "USA"
             self.dossier.budget_currency = "USD"
             self.messages = [{"role": "system", "content": ISA_SYSTEM_PROMPT}]
@@ -150,37 +162,65 @@ class ConversationEngine:
         # In Hindi Mode: Route to dedicated Hindi customer care and closing engine
         if self.market_mode == "hindi":
             hindi_reply = self._process_hindi_turn(clean_input)
+            self._update_telemetry(clean_input, hindi_reply)
             self.messages.append({"role": "assistant", "content": hindi_reply})
             return hindi_reply
 
         # In India Customer Care Mode: Route to dedicated Indian customer care engine
         if self.market_mode == "india":
             india_reply = self._process_india_turn(clean_input)
+            self._update_telemetry(clean_input, india_reply)
             self.messages.append({"role": "assistant", "content": india_reply})
             return india_reply
 
         # 2. Autonomous rational concierge: handle script deviations, schedule friction & busy constraints
         deviation_response = self._handle_script_deviation(clean_input)
         if deviation_response:
+            self._update_telemetry(clean_input, deviation_response)
             self.messages.append({"role": "assistant", "content": deviation_response})
             return deviation_response
 
         # 3. Check for objection triggers
         objection_response = self._handle_objection(clean_input)
         if objection_response:
+            self._update_telemetry(clean_input, objection_response)
             self.messages.append({"role": "assistant", "content": objection_response})
             return objection_response
             
         # 4. Check for appointment scheduling request or confirmation
         booking_response = self._handle_booking_flow(clean_input)
         if booking_response:
+            self._update_telemetry(clean_input, booking_response)
             self.messages.append({"role": "assistant", "content": booking_response})
             return booking_response
 
         # 5. Standard qualification progression
         reply = self._generate_qualification_turn(clean_input)
+        self._update_telemetry(clean_input, reply)
         self.messages.append({"role": "assistant", "content": reply})
         return reply
+
+    def _update_telemetry(self, user_text: str, agent_reply: str) -> None:
+        """Profiles latency tier and disfluency telemetry based on Google Duplex principles."""
+        t_low = user_text.lower()
+        is_reflex = bool(re.search(
+            r"^(hello\??|hi\??|hey\??|can you hear me\??|are you there\??|you there\??|yeah\??|yes\??|yep\??|speaking\??|uh-huh\??|haanji\??|namaste\??)\b",
+            t_low
+        )) and len(user_text.split()) <= 4
+        is_complex = any(k in t_low for k in ["tomorrow", "busy", "meeting", "1031", "rera", "complaint", "ticket", "site visit", "विज़िट", "शिकायत", "aspen", "jumbo", "financing"])
+
+        if is_reflex:
+            self.dossier.response_latency_tier = "reflex_sync"
+            self.dossier.disfluency_type = "acknowledgment"
+        elif is_complex:
+            self.dossier.response_latency_tier = "cognitive_paced"
+            self.dossier.disfluency_type = "cognitive_hesitation"
+        else:
+            self.dossier.response_latency_tier = "conversational"
+            self.dossier.disfluency_type = "acknowledgment"
+
+        if agent_reply and ("— or actually" in agent_reply.lower() or "or actually" in agent_reply.lower()):
+            self.dossier.disfluency_type = "self_correction"
 
     def _process_india_turn(self, clean_input: str) -> str:
         """Processes turn under India Customer Care & Lead Support mode."""
@@ -195,9 +235,13 @@ class ConversationEngine:
                 if key == "in_office_meeting":
                     self.dossier.follow_up_note = "Customer in office/meeting; scheduled callback after 6:00 PM and sent WhatsApp brochure."
                     self.dossier.timeframe = "callback_after_6pm"
+                    self.dossier.bant_timeline_confirmed = "Callback after 6:00 PM today"
                     self.dossier.whatsapp_dispatched = True
                     self.dossier.whatsapp_status = "sent"
-                    self.dossier.preferred_channel = "WhatsApp/Phone"
+                    if "whatsapp" in t or "वॉट्सऐप" in t:
+                        self.dossier.preferred_channel = "WhatsApp"
+                    else:
+                        self.dossier.preferred_channel = "WhatsApp/Phone"
                 elif key == "whatsapp_only_friction":
                     self.dossier.preferred_channel = "WhatsApp"
                     self.dossier.whatsapp_dispatched = True
@@ -220,14 +264,36 @@ class ConversationEngine:
                     self.dossier.whatsapp_status = "sent"
                     self.dossier.whatsapp_dispatched = True
                     self.dossier.follow_up_note = "Logged priority ticket #CC-84291; manager resolution within 2 hours."
+                    self.dossier.bant_authority_verified = self.dossier.bant_authority_verified or "Authorized Account Holder"
+                    self.dossier.bant_need_identified = "Customer Complaint & SLA Resolution"
+                    self.dossier.bant_timeline_confirmed = "2-hour senior manager resolution SLA"
                 elif key == "whatsapp_request":
                     self.dossier.whatsapp_dispatched = True
                     self.dossier.whatsapp_status = "sent"
                     self.dossier.preferred_channel = "WhatsApp"
                 elif key == "site_visit_booking":
+                    if any(w in t for w in ["saturday", "sunday", "11 am", "11:00", "3 pm", "3:00"]):
+                        day = "Saturday 11:00 AM" if ("saturday" in t or "11" in t) else "Sunday 3:00 PM"
+                        self.dossier.appointment_datetime = day
+                        self.dossier.appointment_type = "weekend_site_visit"
+                        self.dossier.appointment_notes = f"Confirmed site visit for {day} with project relationship manager"
+                        self.dossier.follow_up_note = f"Confirmed VIP site visit for {day}."
+                        self.dossier.bant_timeline_confirmed = f"Weekend VIP Site Visit: {day}"
+                        self.dossier.bant_authority_verified = self.dossier.bant_authority_verified or "Family Decision Maker"
+                        self.dossier.whatsapp_dispatched = True
+                        self.dossier.whatsapp_status = "sent"
+                        self.is_completed = True
+                        self._score_lead()
+                        return (
+                            f"Excellent! I have confirmed your VIP site visit for {day}. "
+                            "Our project manager will welcome you and your family at the site lounge. "
+                            "I have also sent the Google Maps location and visit pass directly to your WhatsApp."
+                        )
                     self.dossier.appointment_type = "weekend_site_visit"
                     self.dossier.timeframe = "this_weekend"
                     self.dossier.appointment_notes = "Complimentary VIP site visit with family"
+                    self.dossier.bant_authority_verified = self.dossier.bant_authority_verified or "Family Decision Maker"
+                    self.dossier.bant_timeline_confirmed = "Weekend VIP Site Visit"
                 self._score_lead()
                 return play["response"]
 
@@ -238,6 +304,10 @@ class ConversationEngine:
             self.dossier.appointment_type = "weekend_site_visit"
             self.dossier.appointment_notes = f"Confirmed site visit for {day} with project relationship manager"
             self.dossier.follow_up_note = f"Confirmed VIP site visit for {day}."
+            self.dossier.bant_timeline_confirmed = f"Weekend VIP Site Visit: {day}"
+            self.dossier.bant_authority_verified = self.dossier.bant_authority_verified or "Family Decision Maker"
+            self.dossier.whatsapp_dispatched = True
+            self.dossier.whatsapp_status = "sent"
             self.is_completed = True
             self._score_lead()
             return (
@@ -272,9 +342,13 @@ class ConversationEngine:
                 if key == "in_office_meeting":
                     self.dossier.follow_up_note = "ग्राहक मीटिंग में हैं; शाम 6 बजे के बाद कॉल और वॉट्सऐप ब्रोशर शेड्यूल्ड।"
                     self.dossier.timeframe = "callback_after_6pm"
+                    self.dossier.bant_timeline_confirmed = "आज शाम 6 बजे के बाद कॉल"
                     self.dossier.whatsapp_dispatched = True
                     self.dossier.whatsapp_status = "sent"
-                    self.dossier.preferred_channel = "WhatsApp/Phone"
+                    if "whatsapp" in t or "वॉट्सऐप" in t:
+                        self.dossier.preferred_channel = "WhatsApp"
+                    else:
+                        self.dossier.preferred_channel = "WhatsApp/Phone"
                 elif key == "whatsapp_only_friction":
                     self.dossier.preferred_channel = "WhatsApp"
                     self.dossier.whatsapp_dispatched = True
@@ -297,14 +371,36 @@ class ConversationEngine:
                     self.dossier.whatsapp_status = "sent"
                     self.dossier.whatsapp_dispatched = True
                     self.dossier.follow_up_note = "प्रायोरिटी सपोर्ट टिकट #CC-84291 दर्ज; 2 घंटे में समाधान।"
+                    self.dossier.bant_authority_verified = self.dossier.bant_authority_verified or "मुख्य खाताधारक / ग्राहक"
+                    self.dossier.bant_need_identified = "कस्टमर सपोर्ट व शिकायत समाधान"
+                    self.dossier.bant_timeline_confirmed = "2 घंटे में सीनियर मैनेजर रिज़ॉल्यूशन एसएलए"
                 elif key == "whatsapp_request":
                     self.dossier.whatsapp_dispatched = True
                     self.dossier.whatsapp_status = "sent"
                     self.dossier.preferred_channel = "WhatsApp"
                 elif key == "site_visit_booking":
+                    if any(w in t for w in ["शनिवार", "रविवार", "saturday", "sunday", "11 am", "11:00", "3 pm", "3:00", "11", "3"]):
+                        day = "शनिवार सुबह 11:00 बजे" if any(x in t for x in ["शनिवार", "saturday", "11"]) else "रविवार दोपहर 3:00 बजे"
+                        self.dossier.appointment_datetime = day
+                        self.dossier.appointment_type = "weekend_site_visit"
+                        self.dossier.appointment_notes = f"वीआईपी साइट विज़िट कन्फ़र्म: {day}"
+                        self.dossier.follow_up_note = f"साइट विज़िट कन्फ़र्म: {day}."
+                        self.dossier.bant_timeline_confirmed = f"साइट विज़िट: {day}"
+                        self.dossier.bant_authority_verified = self.dossier.bant_authority_verified or "पारिवारिक निर्णय / मुख्य खरीदार"
+                        self.dossier.whatsapp_dispatched = True
+                        self.dossier.whatsapp_status = "sent"
+                        self.is_completed = True
+                        self._score_lead()
+                        return (
+                            f"बहुत बढ़िया! मैंने {day} की आपकी वीआईपी साइट विज़िट कन्फ़र्म कर दी है। "
+                            "साइट पर हमारे सीनियर प्रोजेक्ट मैनेजर आपका स्वागत करेंगे। "
+                            "लोकेशन मैप और विज़िट पास मैंने आपके वॉट्सऐप पर भेज दिया है।"
+                        )
                     self.dossier.appointment_type = "weekend_site_visit"
                     self.dossier.timeframe = "this_weekend"
                     self.dossier.appointment_notes = "परिवार के साथ कॉम्प्लिमेंट्री वीआईपी साइट विज़िट"
+                    self.dossier.bant_authority_verified = self.dossier.bant_authority_verified or "पारिवारिक निर्णय / मुख्य खरीदार"
+                    self.dossier.bant_timeline_confirmed = "शनिवार/रविवार वीआईपी साइट विज़िट"
                 self._score_lead()
                 return play["response"]
 
@@ -315,6 +411,10 @@ class ConversationEngine:
             self.dossier.appointment_type = "weekend_site_visit"
             self.dossier.appointment_notes = f"वीआईपी साइट विज़िट कन्फ़र्म: {day}"
             self.dossier.follow_up_note = f"साइट विज़िट कन्फ़र्म: {day}."
+            self.dossier.bant_timeline_confirmed = f"साइट विज़िट: {day}"
+            self.dossier.bant_authority_verified = self.dossier.bant_authority_verified or "पारिवारिक निर्णय / मुख्य खरीदार"
+            self.dossier.whatsapp_dispatched = True
+            self.dossier.whatsapp_status = "sent"
             self.is_completed = True
             self._score_lead()
             return (
@@ -369,11 +469,23 @@ class ConversationEngine:
                     self.dossier.budget_max = val
                     self.dossier.budget_min = int(val * 0.8)
 
-        # Pre-approval / Financing
+        # Pre-approval / Jumbo Financing / Private Banking
         if any(w in t for w in ["all cash", "paying cash", "cash buyer", "liquid"]):
             self.dossier.pre_approved = True
             self.dossier.financing_type = "cash"
             self.dossier.qualification_reasons.append("Verified all-cash buyer")
+        elif re.search(r'\b(jumbo(\s*loan|\s*mortgage)?|private\s*banking|first\s*republic|jp\s*morgan|j\.p\.\s*morgan|morgan\s*stanley|bespoke\s*financing)\b', t):
+            self.dossier.pre_approved = True
+            if re.search(r'\b(jp\s*morgan|j\.p\.\s*morgan)\b', t):
+                self.dossier.lender_name = "J.P. Morgan Private Bank"
+                self.dossier.financing_type = "private_banking"
+            elif "first republic" in t:
+                self.dossier.lender_name = "First Republic"
+                self.dossier.financing_type = "private_banking"
+            else:
+                self.dossier.financing_type = "jumbo_loan"
+            if "Private banking / jumbo financing readiness" not in self.dossier.qualification_reasons:
+                self.dossier.qualification_reasons.append("Private banking / jumbo financing readiness")
         elif any(w in t for w in ["pre-approved", "pre approved", "preapproval", "bank approved"]):
             self.dossier.pre_approved = True
             self.dossier.financing_type = "pre_approved_jumbo"
@@ -381,6 +493,22 @@ class ConversationEngine:
         elif any(w in t for w in ["haven't talked", "not approved", "no pre-approval", "haven't spoken"]):
             self.dossier.pre_approved = False
             self.dossier.financing_type = "needs_lender_intro"
+
+        # 1031 Tax-Deferred Exchange
+        if re.search(r'\b(1031(\s*tax)?(\s*exchange)?|like[- ]kind|tax[- ]deferred|exchange\s*period|replacement\s*property|qualified\s*intermediary)\b', t):
+            self.dossier.tax_exchange_1031 = True
+            days_match = re.search(r'\b(45|180|\d+)\s*[- ]?days?\b', t)
+            if days_match:
+                self.dossier.exchange_deadline_days = int(days_match.group(1))
+            else:
+                self.dossier.exchange_deadline_days = 45
+            self.dossier.bant_timeline_confirmed = f"{self.dossier.exchange_deadline_days}-day identification deadline"
+            if not self.dossier.timeframe:
+                self.dossier.timeframe = f"1031 exchange ({self.dossier.exchange_deadline_days} days)"
+            if not self.dossier.bant_authority_verified:
+                self.dossier.bant_authority_verified = "Qualified Intermediary / 1031 Entity"
+            if "1031 tax exchange qualified with active timeline" not in self.dossier.qualification_reasons:
+                self.dossier.qualification_reasons.append("1031 tax exchange qualified with active timeline")
 
         # Timeframe
         if re.search(r'\b(tomorrow|next day)\b', t):
@@ -395,20 +523,22 @@ class ConversationEngine:
             self.dossier.timeframe = "browsing (6+ months)"
 
         # Target locations
-        for loc in ["Beverly Hills", "Bel Air", "Malibu", "Brentwood", "Holmby Hills", "Pacific Palisades", "Tribeca", "Miami Beach"]:
+        for loc in ["Beverly Hills", "Bel Air", "Malibu", "Brentwood", "Holmby Hills", "Pacific Palisades", "Tribeca", "Miami Beach", "Aspen"]:
             if loc.lower() in t and loc not in self.dossier.target_locations:
                 self.dossier.target_locations.append(loc)
 
         # Property type
         if "penthouse" in t:
             self.dossier.property_type = "Penthouse"
+        elif any(w in t for w in ["aspen", "mountain compound", "ski compound", "ski-in"]):
+            self.dossier.property_type = "Aspen Mountain Compound"
         elif any(w in t for w in ["villa", "estate", "single family", "mansion"]):
             self.dossier.property_type = "Luxury Estate"
         elif "modern" in t or "contemporary" in t:
             self.dossier.property_type = "Modern Architectural"
 
-        # Indian INR Budget extraction (Lakhs & Crores)
-        cr_match = re.search(r'(?:₹|rs\.?|inr)?\s*(\d+(?:\.\d+)?)\s*(?:cr\b|crores?\b)', t)
+        # Indian INR Budget extraction (Lakhs & Crores, English & Hindi Devanagari)
+        cr_match = re.search(r'(?:₹|rs\.?|inr)?\s*(\d+(?:\.\d+)?)\s*(?:cr\b|crores?\b|करोड़)', t)
         if cr_match:
             cr_val = float(cr_match.group(1))
             amount = int(cr_val * 10_000_000)
@@ -417,7 +547,7 @@ class ConversationEngine:
             self.dossier.budget_currency = "INR"
             self.dossier.budget_inr_text = f"₹{cr_val} Crores"
         else:
-            lakh_match = re.search(r'(?:₹|rs\.?|inr)?\s*(\d+(?:\.\d+)?)\s*(?:lakhs?\b|lacs?\b|l\b)', t)
+            lakh_match = re.search(r'(?:₹|rs\.?|inr)?\s*(\d+(?:\.\d+)?)\s*(?:lakhs?\b|lacs?\b|l\b|लाख)', t)
             if lakh_match:
                 lakh_val = float(lakh_match.group(1))
                 amount = int(lakh_val * 100_000)
@@ -426,12 +556,22 @@ class ConversationEngine:
                 self.dossier.budget_currency = "INR"
                 self.dossier.budget_inr_text = f"₹{int(lakh_val)} Lakhs"
 
-        # Indian BHK configuration
-        bhk_match = re.search(r'\b(1|2|3|4|5)\s*bhk\b', t)
+        # Indian / Hindi BHK configuration
+        bhk_match = re.search(r'(?:^|\b|\s)([1-5])\s*(?:bhk|बीएचके)', t)
         if bhk_match:
-            self.dossier.bhk_preference = f"{bhk_match.group(1)} BHK"
-            self.dossier.property_type = f"{bhk_match.group(1)} BHK Luxury Apartment"
-        elif "villa" in t:
+            num = bhk_match.group(1)
+            self.dossier.bhk_preference = f"{num} BHK"
+            self.dossier.property_type = f"{num} BHK Luxury Apartment"
+            if not self.dossier.budget_max and self.market_mode in ("india", "hindi"):
+                if num == "2":
+                    self.dossier.budget_max = 9_500_000
+                    self.dossier.budget_inr_text = "₹95 Lakhs"
+                    self.dossier.budget_currency = "INR"
+                elif num == "3":
+                    self.dossier.budget_max = 16_500_000
+                    self.dossier.budget_inr_text = "₹1.65 Crores"
+                    self.dossier.budget_currency = "INR"
+        elif any(w in t for w in ["villa", "विला", "विल्ला"]):
             self.dossier.bhk_preference = "Luxury Villa"
             self.dossier.property_type = "Gated Community Villa"
 
@@ -442,8 +582,49 @@ class ConversationEngine:
             if loc.lower() in t and loc not in self.dossier.target_locations:
                 self.dossier.target_locations.append(loc)
 
+        # BANT Authority Verification
+        if re.search(r'\b(family\s*office|family\s*trust|trustee|trust)\b', t):
+            self.dossier.bant_authority_verified = "Family Office / Trust"
+        elif re.search(r'\b(sole\s*(buyer|purchaser|decision\s*maker)|myself|on\s*my\s*own|just\s*me|i\s*am\s*the\s*(buyer|decision\s*maker))\b', t):
+            self.dossier.bant_authority_verified = "Sole Decision Maker"
+        elif re.search(r'\b(llc|corporate|corporation|company|entity)\b', t):
+            self.dossier.bant_authority_verified = "Corporate Entity / LLC"
+        elif re.search(r'\b(qualified\s*intermediary|qi|1031\s*entity)\b', t):
+            self.dossier.bant_authority_verified = "Qualified Intermediary / 1031 Entity"
+        elif re.search(r'\b(my\s*wife|my\s*husband|my\s*spouse|my\s*partner|wife\s*and\s*i|husband\s*and\s*i|with\s*my\s*family|our\s*family)\b', t):
+            self.dossier.bant_authority_verified = "Co-Buyer with Spouse/Partner"
+        elif any(w in t for w in ["परिवार", "family", "माता-पिता", "पत्नी", "पति"]):
+            self.dossier.bant_authority_verified = "Family Decision Maker"
+        elif any(w in t for w in ["अकेले", "खुद", "मैं खुद"]):
+            self.dossier.bant_authority_verified = "Sole Decision Maker"
+
+        # BANT Need Identification
+        if self.dossier.tax_exchange_1031:
+            loc_str = f" in {', '.join(self.dossier.target_locations)}" if self.dossier.target_locations else " in Bel Air / Beverly Hills / Aspen"
+            self.dossier.bant_need_identified = f"1031 Exchange Replacement Estate{loc_str}"
+        elif self.dossier.bhk_preference and self.dossier.target_locations:
+            self.dossier.bant_need_identified = f"{self.dossier.bhk_preference} Luxury Apartment in {', '.join(self.dossier.target_locations)}"
+        elif self.dossier.bhk_preference:
+            self.dossier.bant_need_identified = f"{self.dossier.bhk_preference} Luxury Apartment"
+        elif self.dossier.property_type and self.dossier.target_locations:
+            self.dossier.bant_need_identified = f"{self.dossier.property_type} in {', '.join(self.dossier.target_locations)}"
+        elif self.dossier.property_type:
+            self.dossier.bant_need_identified = self.dossier.property_type
+        elif "aspen" in t:
+            self.dossier.bant_need_identified = "Private Mountain Compound in Aspen"
+        elif any(w in t for w in ["modern", "architectural", "contemporary"]):
+            self.dossier.bant_need_identified = "Modern Architectural View Estate"
+
+        # BANT Timeline Confirmation
+        if self.dossier.tax_exchange_1031 and self.dossier.exchange_deadline_days:
+            self.dossier.bant_timeline_confirmed = f"{self.dossier.exchange_deadline_days}-day identification deadline"
+        elif self.dossier.timeframe:
+            self.dossier.bant_timeline_confirmed = self.dossier.timeframe
+        if self.dossier.appointment_datetime:
+            self.dossier.bant_timeline_confirmed = f"Confirmed appointment: {self.dossier.appointment_datetime}"
+
         # WhatsApp channel
-        if "whatsapp" in t or "whats app" in t:
+        if "whatsapp" in t or "whats app" in t or "वॉट्सऐप" in t:
             self.dossier.preferred_channel = "WhatsApp"
             self.dossier.whatsapp_dispatched = True
             self.dossier.whatsapp_status = "sent"
@@ -501,16 +682,27 @@ class ConversationEngine:
         if self.dossier.financing_type == "cash":
             score += 20
             reasons.append("Cash verification adds high conversion confidence")
+        elif self.dossier.financing_type == "private_banking":
+            score += 20
+            reasons.append("Private banking jumbo readiness adds high qualification")
         elif self.dossier.pre_approved is True:
             score += 15
             reasons.append("Pre-approval verified")
         elif self.dossier.pre_approved is False:
             score -= 5
 
+        # 1031 Tax-Deferred Exchange scoring
+        if self.dossier.tax_exchange_1031:
+            score += 20
+            reasons.append("Active 1031 tax exchange qualified with statutory deadline")
+
         # Timeline scoring
         if self.dossier.timeframe in ("immediate (0-30 days)", "1-3 months", "tomorrow (immediate)"):
             score += 20
             reasons.append("High urgency timeline (<= 90 days)")
+        elif self.dossier.timeframe and "1031" in self.dossier.timeframe:
+            score += 20
+            reasons.append("Strict 1031 statutory timeline")
         elif self.dossier.timeframe == "3-6 months":
             score += 10
         elif self.dossier.timeframe == "browsing (6+ months)":
@@ -520,12 +712,28 @@ class ConversationEngine:
         if self.dossier.objections_handled:
             score += 5
 
+        # BANT Budget qualification
+        if self.dossier.budget_currency == "INR":
+            if self.dossier.budget_max and self.dossier.budget_max >= 5_000_000:
+                self.dossier.bant_budget_qualified = True
+            elif self.dossier.bhk_preference:
+                self.dossier.bant_budget_qualified = True
+        else:
+            if self.dossier.budget_max and self.dossier.budget_max >= 1_500_000:
+                self.dossier.bant_budget_qualified = True
+            elif self.dossier.financing_type in ("cash", "private_banking", "pre_approved_jumbo"):
+                self.dossier.bant_budget_qualified = True
+            elif self.dossier.pre_approved:
+                self.dossier.bant_budget_qualified = True
+            elif self.dossier.tax_exchange_1031:
+                self.dossier.bant_budget_qualified = True
+
         self.dossier.intent_score = min(100, max(0, score))
         
-        # Qualified logic: Must have budget >= $1.5M (or cash/pre-approved) and reasonable timeframe
-        budget_ok = (self.dossier.budget_max is not None and self.dossier.budget_max >= 1_500_000)
+        # Qualified logic: Must have budget >= $1.5M (or cash/pre-approved/1031) and reasonable timeframe
+        budget_ok = (self.dossier.budget_max is not None and self.dossier.budget_max >= 1_500_000) or self.dossier.tax_exchange_1031
         time_ok = self.dossier.timeframe != "browsing (6+ months)"
-        self.dossier.qualified = (budget_ok and (self.dossier.pre_approved is True or self.dossier.financing_type == "cash")) or (score >= 70)
+        self.dossier.qualified = (budget_ok and (self.dossier.pre_approved is True or self.dossier.financing_type in ("cash", "private_banking", "pre_approved_jumbo") or self.dossier.tax_exchange_1031)) or (score >= 70)
         self.dossier.qualification_reasons = reasons
 
     def _handle_script_deviation(self, text: str) -> Optional[str]:
@@ -713,7 +921,7 @@ class ConversationEngine:
 
         # 6. Busy right now / In a meeting / Zoom / Conference / Driving / Tied up / With a client / Can't speak
         is_busy_friction = bool(re.search(
-            r"\b(busy(\s*right\s*now)?|in\s*a\s*(?:[\w-]+\s*)*meeting|in\s*a\s*conference|with\s*a\s*client|"
+            r"\b(busy(\s*right\s*now)?|in\s*(?:an?\s+)?(?:[\w-]+\s+){0,2}meeting|in\s*a\s*conference|with\s*a\s*client|"
             r"in\s*the\s*middle\s*of\s*something|tied\s*up|working|at\s*work|driving|on\s*a\s*call|"
             r"can'?t\s*(talk|speak|chat)(\s*right\s*now)?|contact\s*me\s*later|call(\s*me|\s*back)?\s*later|"
             r"not\s*a\s*good\s*time|bad\s*time|slammed)\b",

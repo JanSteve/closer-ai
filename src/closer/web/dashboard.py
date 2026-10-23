@@ -1043,17 +1043,20 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
                 <div class="card-title">
                     <span id="agentConsoleTitle">Autonomous Voice Concierge</span>
                 </div>
-                <!-- Animated Voice Activity Indicator (VAD) -->
-                <div id="vadContainer" class="vad-container listening">
-                    <div class="vad-waves">
-                        <span class="vad-bar"></span>
-                        <span class="vad-bar"></span>
-                        <span class="vad-bar"></span>
-                        <span class="vad-bar"></span>
-                        <span class="vad-bar"></span>
-                        <span class="vad-bar"></span>
+                <!-- Animated Voice Activity Indicator (VAD) & Live Audio Waveform Visualizer -->
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <canvas id="liveAudioWaveform" width="130" height="28" style="border-radius:6px; background:rgba(7,10,18,0.7); border:1px solid var(--border); display:block;"></canvas>
+                    <div id="vadContainer" class="vad-container listening">
+                        <div class="vad-waves">
+                            <span class="vad-bar"></span>
+                            <span class="vad-bar"></span>
+                            <span class="vad-bar"></span>
+                            <span class="vad-bar"></span>
+                            <span class="vad-bar"></span>
+                            <span class="vad-bar"></span>
+                        </div>
+                        <span id="vadLabel" class="vad-label">● CONCIERGE READY</span>
                     </div>
-                    <span id="vadLabel" class="vad-label">● CONCIERGE READY</span>
                 </div>
             </div>
 
@@ -1107,7 +1110,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 
                 <div class="control-group" style="min-width:130px;">
                     <label class="control-label">Pitch: <span id="lblVoicePitch" style="color:var(--gold); font-weight:700;">+0Hz</span></label>
-                    <input type="range" id="voicePitchSlider" min="-6" max="6" value="0" step="1" style="width:100%; accent-color:var(--gold);" oninput="updatePitchLabel(this.value)">
+                    <input type="range" id="voicePitchSlider" min="-5" max="5" value="0" step="1" style="width:100%; accent-color:var(--gold);" oninput="updatePitchLabel(this.value)">
                 </div>
 
                 <div class="control-group">
@@ -1139,7 +1142,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
                 </div>
                 <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                     <button class="chip" onclick="playMarketingHook('usa')" style="background:rgba(59,130,246,0.12); color:#60a5fa; border:1px solid rgba(59,130,246,0.3); font-size:11px; cursor:pointer;">🇺🇸 Play US $15M Luxury Hook</button>
-                    <button class="chip" onclick="playMarketingHook('india')" style="background:rgba(245,158,11,0.12); color:#f59e0b; border:1px solid rgba(245,158,11,0.3); font-size:11px; cursor:pointer;">🇮🇳 Play India CC-8492 SLA Hook</button>
+                    <button class="chip" onclick="playMarketingHook('india')" style="background:rgba(245,158,11,0.12); color:#f59e0b; border:1px solid rgba(245,158,11,0.3); font-size:11px; cursor:pointer;">🇮🇳 Play India CC-84291 SLA Hook</button>
                     <button class="chip" onclick="playMarketingHook('hindi')" style="background:rgba(16,185,129,0.12); color:#10b981; border:1px solid rgba(16,185,129,0.3); font-size:11px; cursor:pointer;">🇮🇳 Play हिन्दी (Hindi) Site Visit Hook</button>
                 </div>
             </div>
@@ -1634,17 +1637,122 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
         }
 
         let currentAudio = null;
+        let audioCtx = null;
+        let activeAudioSource = null;
+        let analyserNode = null;
+        let waveformAnimId = null;
+
+        function initWaveformCanvas() {
+            const canvas = document.getElementById('liveAudioWaveform');
+            if (!canvas) return;
+            const ctx2d = canvas.getContext('2d');
+            drawIdleWaveform(canvas, ctx2d);
+        }
+
+        function drawWaveform(canvas, ctx2d) {
+            canvas = canvas || document.getElementById('liveAudioWaveform');
+            if (!canvas) return;
+            ctx2d = ctx2d || canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+            ctx2d.clearRect(0, 0, w, h);
+            ctx2d.fillStyle = 'rgba(7, 10, 18, 0.7)';
+            ctx2d.fillRect(0, 0, w, h);
+            ctx2d.beginPath();
+            ctx2d.strokeStyle = 'rgba(59, 130, 246, 0.4)';
+            ctx2d.lineWidth = 2;
+            ctx2d.moveTo(0, h / 2);
+            ctx2d.lineTo(w, h / 2);
+            ctx2d.stroke();
+        }
+
+        function drawIdleWaveform(canvas, ctx2d) {
+            drawWaveform(canvas, ctx2d);
+        }
+
+        function startWaveformVisualizer(analyser) {
+            const canvas = document.getElementById('liveAudioWaveform');
+            if (!canvas) return;
+            const ctx2d = canvas.getContext('2d');
+            if (waveformAnimId) {
+                cancelAnimationFrame(waveformAnimId);
+                waveformAnimId = null;
+            }
+
+            analyser.fftSize = 256;
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+
+            function render() {
+                waveformAnimId = requestAnimationFrame(render);
+                analyser.getByteTimeDomainData(dataArray);
+
+                const w = canvas.width;
+                const h = canvas.height;
+                ctx2d.clearRect(0, 0, w, h);
+                ctx2d.fillStyle = 'rgba(7, 10, 18, 0.75)';
+                ctx2d.fillRect(0, 0, w, h);
+
+                ctx2d.lineWidth = 2;
+                const grad = ctx2d.createLinearGradient(0, 0, w, 0);
+                grad.addColorStop(0, '#38bdf8');
+                grad.addColorStop(0.5, '#10b981');
+                grad.addColorStop(1, '#3b82f6');
+                ctx2d.strokeStyle = grad;
+                ctx2d.beginPath();
+
+                const sliceWidth = (w * 1.0) / bufferLength;
+                let x = 0;
+
+                for (let i = 0; i < bufferLength; i++) {
+                    const v = dataArray[i] / 128.0;
+                    const y = (v * h) / 2;
+
+                    if (i === 0) {
+                        ctx2d.moveTo(x, y);
+                    } else {
+                        ctx2d.lineTo(x, y);
+                    }
+                    x += sliceWidth;
+                }
+
+                ctx2d.lineTo(w, h / 2);
+                ctx2d.stroke();
+            }
+
+            render();
+        }
+
+        function stopWaveformVisualizer() {
+            if (waveformAnimId) {
+                cancelAnimationFrame(waveformAnimId);
+                waveformAnimId = null;
+            }
+            const canvas = document.getElementById('liveAudioWaveform');
+            if (canvas) {
+                const ctx2d = canvas.getContext('2d');
+                drawIdleWaveform(canvas, ctx2d);
+            }
+        }
 
         function stopCurrentAudio() {
+            stopWaveformVisualizer();
+            if (activeAudioSource) {
+                try { activeAudioSource.stop(); } catch(e) {}
+                activeAudioSource = null;
+            }
             if (currentAudio) {
-                currentAudio.pause();
-                currentAudio.currentTime = 0;
+                try {
+                    currentAudio.pause();
+                    currentAudio.currentTime = 0;
+                } catch(e) {}
                 currentAudio = null;
             }
         }
 
         function simulateBargeIn() {
             stopCurrentAudio();
+            drawWaveform();
             const vadContainer = document.getElementById('vadContainer');
             const vadLabel = document.getElementById('vadLabel');
             vadContainer.className = 'vad-container listening';
@@ -1674,6 +1782,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
                     utterance: 'PREVIEW_SAMPLE',
                     voice: voice,
                     provider: provider,
+                    sample_rate: 48000,
                     rate: audioSettings.rate,
                     pitch: audioSettings.pitch,
                     elevenlabs_key: elKey,
@@ -1700,11 +1809,11 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
             switchMarket(market);
             const input = document.getElementById('userInput');
             if (market === 'usa') {
-                input.value = "Hi, I just saw the $15M Bel Air estate listing on Bellagio Road. Can we book a private VIP walkthrough this Thursday at 2 PM? We are fully cash verified.";
+                input.value = "Hi, I just saw the $15M Bel Air estate listing on 10484 Bellagio Rd in Bel Air. Can we book a private VIP walkthrough this Thursday at 2 PM? We are fully cash verified.";
             } else if (market === 'india') {
-                input.value = "Namaste, I need an immediate status update on my customer ticket CC-84291 for Sobha Windsor, and I want to book a Saturday site visit for a 3 BHK.";
+                input.value = "Namaste, I need an immediate status update on my customer ticket CC-84291 for Sobha Windsor under our 2-hour priority SLA, and I want to book a Saturday site visit for a 3 BHK.";
             } else if (market === 'hindi') {
-                input.value = "नमस्ते जी, मुझे प्रेस्टीज वाइटफील्ड प्रोजेक्ट में 3 बीएचके का रेट जानना है और इस शनिवार दोपहर 2 बजे फैमिली के साथ साइट विज़िट बुक करनी है।";
+                input.value = "नमस्ते जी, मुझे प्रेस्टिज वाइटफ़ील्ड प्रोजेक्ट में 3 बीएचके का रेट जानना है और इस शनिवार दोपहर 2 बजे फैमिली के साथ साइट विज़िट बुक करनी है।";
             }
             sendTurn();
         }
@@ -1723,7 +1832,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
                 for (let i = 0; i < binaryStr.length; i++) {
                     bytes[i] = binaryStr.charCodeAt(i);
                 }
-                const blob = new Blob([bytes], { type: mimeType });
+                const blob = new Blob([bytes], { type: 'audio/wav' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
@@ -1772,6 +1881,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
                     voice: voice,
                     model_id: llmModel,
                     provider: provider,
+                    sample_rate: 48000,
                     rate: audioSettings.rate,
                     pitch: audioSettings.pitch,
                     elevenlabs_key: elKey,
@@ -1839,9 +1949,6 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
             });
         }
 
-        let audioCtx = null;
-        let activeAudioSource = null;
-
         function getAudioContext() {
             try {
                 if (!audioCtx) {
@@ -1857,20 +1964,6 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
                 console.warn("AudioContext init warning:", e);
             }
             return audioCtx;
-        }
-
-        function stopCurrentAudio() {
-            if (activeAudioSource) {
-                try { activeAudioSource.stop(); } catch(e) {}
-                activeAudioSource = null;
-            }
-            if (currentAudio) {
-                try {
-                    currentAudio.pause();
-                    currentAudio.currentTime = 0;
-                } catch(e) {}
-                currentAudio = null;
-            }
         }
 
         function playAudioBase64(b64) {
@@ -1902,13 +1995,22 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
                         stopCurrentAudio();
                         const source = ctx.createBufferSource();
                         source.buffer = buffer;
-                        source.connect(ctx.destination);
+
+                        audioCtx = audioCtx || ctx;
+                        analyserNode = audioCtx.createAnalyser();
+                        const analyser = analyserNode;
+                        analyser.fftSize = 256;
+                        source.connect(analyserNode);
+                        analyserNode.connect(ctx.destination);
+
                         activeAudioSource = source;
                         setVadState('speaking');
+                        startWaveformVisualizer(analyserNode);
 
                         source.onended = () => {
                             if (activeAudioSource === source) {
                                 activeAudioSource = null;
+                                stopWaveformVisualizer();
                                 setVadState('listening');
                             }
                         };
@@ -1937,7 +2039,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
                 for (let i = 0; i < binaryStr.length; i++) {
                     bytes[i] = binaryStr.charCodeAt(i);
                 }
-                const blob = new Blob([bytes], { type: mimeType });
+                const blob = new Blob([bytes], { type: 'audio/wav' });
                 const blobUrl = URL.createObjectURL(blob);
                 const audio = new Audio(blobUrl);
                 currentAudio = audio;
@@ -1946,12 +2048,14 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
                 audio.onended = () => {
                     URL.revokeObjectURL(blobUrl);
                     currentAudio = null;
+                    stopWaveformVisualizer();
                     setVadState('listening');
                 };
                 audio.onerror = (e) => {
                     console.error("Audio element error:", e);
                     URL.revokeObjectURL(blobUrl);
                     currentAudio = null;
+                    stopWaveformVisualizer();
                     setVadState('listening');
                 };
 
@@ -2279,6 +2383,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
                 const inp = document.getElementById('apilayerKeyInput');
                 if (inp) inp.value = savedApil;
             }
+            initWaveformCanvas();
             updateVoiceEngineBadge();
         });
     </script>
@@ -2497,6 +2602,7 @@ class DashboardHTTPHandler(http.server.BaseHTTPRequestHandler):
             custom_text = data.get("text", "")
             rate = data.get("rate")
             pitch = data.get("pitch")
+            sample_rate = int(data.get("sample_rate", 48000))
             provider = data.get("provider", "studio")
             elevenlabs_key = data.get("elevenlabs_key") or os.environ.get("ELEVENLABS_API_KEY", "")
             sarvam_key = data.get("sarvam_key") or os.environ.get("SARVAM_API_KEY", "")
@@ -2519,6 +2625,7 @@ class DashboardHTTPHandler(http.server.BaseHTTPRequestHandler):
                     voice=voice,
                     rate=rate,
                     pitch=pitch,
+                    sample_rate=sample_rate,
                     provider=provider,
                     elevenlabs_key=elevenlabs_key,
                     sarvam_key=sarvam_key
@@ -2540,6 +2647,7 @@ class DashboardHTTPHandler(http.server.BaseHTTPRequestHandler):
             resp_data = {
                 "reply": reply,
                 "audio_base64": audio_b64,
+                "sample_rate": sample_rate,
                 "voice_provider": voice_provider_label,
                 "voice_latency_ms": round(latency_tts * 1000, 1),
                 "dossier": dossier.model_dump(),

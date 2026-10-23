@@ -157,7 +157,17 @@ class BuyerDossier(_PydanticBaseModel):
     intent_score: int = 50  # 0 to 100
     qualified: bool = False
     qualification_reasons: List[str] = Field(default_factory=list)
-    
+
+    # BANT Lead Qualification & 1031 Tax-Deferred Exchange
+    bant_budget_qualified: bool = False
+    bant_authority_verified: Optional[str] = None
+    bant_need_identified: Optional[str] = None
+    bant_timeline_confirmed: Optional[str] = None
+    tax_exchange_1031: bool = False
+    exchange_deadline_days: Optional[int] = None
+    response_latency_tier: Optional[str] = None  # "reflex_sync", "conversational", "cognitive_paced"
+    disfluency_type: Optional[str] = None        # "acknowledgment", "cognitive_hesitation", "self_correction"
+
     # Objections & Sentiment
     objections_raised: List[str] = Field(default_factory=list)
     objections_handled: List[str] = Field(default_factory=list)
@@ -183,6 +193,38 @@ class BuyerDossier(_PydanticBaseModel):
     total_turns: int = 0
     summary: Optional[str] = None
     speed_to_lead_ms: int = 420
+
+    @property
+    def bant_authority(self) -> Optional[str]:
+        return self.bant_authority_verified
+
+    @bant_authority.setter
+    def bant_authority(self, value: Optional[str]) -> None:
+        self.bant_authority_verified = value
+
+    @property
+    def bant_need(self) -> Optional[str]:
+        return self.bant_need_identified
+
+    @bant_need.setter
+    def bant_need(self, value: Optional[str]) -> None:
+        self.bant_need_identified = value
+
+    @property
+    def bant_budget(self) -> bool:
+        return self.bant_budget_qualified
+
+    @bant_budget.setter
+    def bant_budget(self, value: bool) -> None:
+        self.bant_budget_qualified = value
+
+    @property
+    def bant_timeline(self) -> Optional[str]:
+        return self.bant_timeline_confirmed
+
+    @bant_timeline.setter
+    def bant_timeline(self, value: Optional[str]) -> None:
+        self.bant_timeline_confirmed = value
 
 
 class AppointmentBookingRequest(_PydanticBaseModel):
@@ -211,3 +253,6 @@ class CallSessionState(_PydanticBaseModel):
     average_stt_latency_ms: float = 0.0
     average_llm_latency_ms: float = 0.0
     average_tts_latency_ms: float = 0.0
+    latency_tier: Optional[str] = "conversational"
+    target_latency_ms: Optional[int] = 180
+
