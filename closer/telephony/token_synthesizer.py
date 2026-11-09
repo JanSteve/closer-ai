@@ -61,6 +61,20 @@ class TokenSentenceAccumulator:
             self.buffer = ""
             yield remaining
 
+    def ingest(self, text: str) -> List[str]:
+        """Synchronously breaks a text into natural prosodic clauses for speech synthesis."""
+        if not text:
+            return []
+        parts = self.CLAUSE_SPLIT_PATTERN.split(text)
+        clauses = []
+        for i in range(0, len(parts) - 1, 2):
+            clause = (parts[i] + parts[i+1]).strip()
+            if clause:
+                clauses.append(clause)
+        if len(parts) % 2 == 1 and parts[-1].strip():
+            clauses.append(parts[-1].strip())
+        return clauses or [text]
+
 
 class TokenStreamingSynthesizer:
     """Manages concurrent token ingestion, TTS synthesis, and interruptible playback queue."""

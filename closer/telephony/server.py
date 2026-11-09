@@ -267,6 +267,54 @@ async def run_mirofish_simulation():
     return JSONResponse(report)
 
 
+class OutboundCallRequest(BaseModel):
+    phone_number: str
+    language: str = "tamil"
+    force_pass_trai: bool = False
+
+
+@app.post("/api/carrier/call")
+async def dispatch_carrier_call(req: OutboundCallRequest):
+    """Dispatches carrier SIP call (Jio/Tata/Twilio) with ITU-T G.107 QoS & TRAI validation."""
+    from closer.telephony.carrier_gateway import CarrierGatewayEngine
+    gateway = CarrierGatewayEngine()
+    session = gateway.dispatch_call(
+        recipient_phone=req.phone_number,
+        language=req.language,
+        force_pass_trai=req.force_pass_trai,
+    )
+    return JSONResponse(session.model_dump())
+
+
+@app.get("/api/memory/buyer/{phone_number}")
+async def get_buyer_memory(phone_number: str):
+    """Retrieves Mem0 cross-call episodic memory profile for a lead."""
+    from closer.memory.mem0_engine import Mem0AgenticMemory
+    memory = Mem0AgenticMemory()
+    profile = memory.get_or_create_profile(phone_number)
+    preamble = memory.get_context_preamble(phone_number)
+    return JSONResponse({
+        "profile": profile.model_dump(),
+        "episodic_preamble": preamble,
+    })
+
+
+@app.get("/api/observability/telemetry")
+async def get_observability_telemetry():
+    """Returns Langfuse distributed latency waterfall and unit economics."""
+    from closer.observability.langfuse_tracer import LangfuseObservabilityTracer
+    return JSONResponse(LangfuseObservabilityTracer.get_telemetry_summary())
+
+
+@app.post("/api/evals/deepeval")
+@app.get("/api/evals/deepeval")
+async def run_deepeval_suite():
+    """Runs DeepEval continuous deployment adversarial evaluation gate."""
+    from closer.testing.deepeval_suite import DeepEvalSuite
+    suite = DeepEvalSuite()
+    return JSONResponse(suite.run_enterprise_ci_gate())
+
+
 @app.websocket("/ws/call")
 async def websocket_call(websocket: WebSocket):
     await websocket.accept()
