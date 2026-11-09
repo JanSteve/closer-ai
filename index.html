@@ -54,9 +54,10 @@
       <a href="#how-it-works" class="mobile-nav-link">How It Works</a>
       <a href="#markets" class="mobile-nav-link">USA &amp; India</a>
       <a href="#cases" class="mobile-nav-link">Case Studies</a>
+      <a href="/presentation" class="mobile-nav-link" target="_blank" rel="noopener noreferrer">Investor Deck ↗</a>
       <a href="#contact" class="mobile-nav-link">Contact</a>
     </nav>
-    <a href="/console" class="mobile-signin-btn" id="mobileSignInBtn">Sign in</a>
+    <a href="#voice-studio" class="mobile-signin-btn" id="mobileSignInBtn">Live Demo</a>
   </div>
 
   <!-- Single-Viewport Page Composition (3 Regions: Header, Hero, Stats) -->
@@ -71,10 +72,11 @@
         <a href="#home" class="nav-link active">Home</a>
         <a href="#product" class="nav-link" id="navProductLink">Product</a>
         <a href="#cases" class="nav-link">Case Studies</a>
+        <a href="/presentation" class="nav-link" target="_blank" rel="noopener noreferrer">Investor Deck ↗</a>
         <a href="#contact" class="nav-link">Contact</a>
       </nav>
 
-      <a href="/console" class="btn-signin btn-signin-desktop" id="desktopSignInBtn">Sign in</a>
+      <a href="#voice-studio" class="btn-signin btn-signin-desktop" id="desktopSignInBtn">Live Demo</a>
 
       <button class="burger-btn" id="burgerBtn" aria-label="Toggle navigation menu" aria-expanded="false">
         <span class="burger-bar"></span>
@@ -688,9 +690,9 @@
               <button class="soundboard-play-btn" id="soundboardPlayBtn" onclick="runStudioSimulation()">
                 <i class="fa-solid fa-play"></i> <span>Play Neural Speech Response</span>
               </button>
-              <a href="/console" class="soundboard-demo-btn" target="_blank" rel="noopener noreferrer">
-                <i class="fa-solid fa-headset"></i> <span>Launch Full Live Interactive Console</span>
-              </a>
+              <button class="soundboard-demo-btn" id="openLiveCallFromStudio" onclick="openLiveDemoModal()" type="button">
+                <i class="fa-solid fa-phone"></i> <span>Test Interactive Call</span>
+              </button>
             </div>
           </div>
 
@@ -875,8 +877,8 @@
               </div>
             </div>
 
-            <a href="/console" class="roi-cta-btn" target="_blank" rel="noopener noreferrer">
-              <span>Deploy CLOSER AI to Capture This Pipeline</span>
+            <a href="#contact" class="roi-cta-btn">
+              <span>Book a 48-Hour Pilot &bull; Schedule Investor Briefing</span>
               <i class="fa-solid fa-arrow-right"></i>
             </a>
           </div>
@@ -1083,7 +1085,7 @@
               <li><a href="#markets">USA &amp; India Capacity</a></li>
               <li><a href="#voice-studio">Voice Soundboard</a></li>
               <li><a href="#roi">ROI Calculator</a></li>
-              <li><a href="/console" target="_blank" rel="noopener noreferrer">Executive Live Console ↗</a></li>
+              <li><a href="/presentation" target="_blank" rel="noopener noreferrer">Investor Pitch Deck (12 Slides) ↗</a></li>
             </ul>
           </div>
 
@@ -1094,10 +1096,10 @@
               <li><a href="mailto:contact@closer-ai.com"><i class="fa-solid fa-envelope"></i> contact@closer-ai.com</a></li>
               <li><a href="#voice-studio"><i class="fa-solid fa-phone"></i> Interactive Voice Soundboard</a></li>
             </ul>
-            <div class="console-shortcut-box">
-              <span>Ready for live executive review?</span>
-              <a href="/console" target="_blank" rel="noopener noreferrer" class="footer-console-btn">
-                Open Web Console ↗
+            <div class="investor-shortcut-box">
+              <span>Venture &amp; Angel Inquiries:</span>
+              <a href="/presentation" target="_blank" rel="noopener noreferrer" class="footer-investor-btn">
+                <i class="fa-solid fa-chart-line"></i> View Pitch Deck &amp; Cap Table ↗
               </a>
             </div>
           </div>
@@ -1133,15 +1135,19 @@
         </button>
       </div>
 
-      <!-- Region Switcher -->
+      <!-- Region / Language Switcher (3 Production Voices) -->
       <div class="modal-region-switch">
         <button class="region-btn active" id="btnMarketUSA" type="button">
           <span class="flag">🇺🇸</span>
-          <span class="region-text">USA (Luxury Real Estate ISA)</span>
+          <span class="region-text">English (Maya Closer)</span>
         </button>
-        <button class="region-btn" id="btnMarketIndia" type="button">
+        <button class="region-btn" id="btnMarketTamil" type="button">
           <span class="flag">🇮🇳</span>
-          <span class="region-text">India (Customer Care &amp; Support)</span>
+          <span class="region-text">தமிழ் (Pallavi Closer)</span>
+        </button>
+        <button class="region-btn" id="btnMarketHindi" type="button">
+          <span class="flag">🇮🇳</span>
+          <span class="region-text">हिन्दी (Swati Closer)</span>
         </button>
       </div>
 
@@ -1149,13 +1155,12 @@
         <!-- Left: Interactive Voice Simulation -->
         <div class="demo-left">
           <div class="demo-voice-select-row">
-            <label for="demoVoiceSelect" class="voice-label display-font">// ACTIVE NEURAL VOICE</label>
+            <label for="demoVoiceSelect" class="voice-label display-font">// PRODUCTION CLOSER VOICE</label>
             <div class="voice-select-wrap">
               <select id="demoVoiceSelect" class="voice-dropdown">
-                <option value="en-US-AriaNeural">Sophia (US Female — Luxury Concierge)</option>
-                <option value="en-US-GuyNeural">Guy (US Male — Executive Broker)</option>
-                <option value="en-IN-NeerjaNeural">Priya (India Female — Customer Care)</option>
-                <option value="en-IN-PrabhatNeural">Prabhat (India Male — Enterprise Support)</option>
+                <option value="maya_en" selected>Maya (English — SOTA Kokoro Blend)</option>
+                <option value="pallavi_ta">பல்லவி / Pallavi (Tamil — Indic Neural)</option>
+                <option value="swati_hi">स्वाति / Swati (Hindi — Indic Neural)</option>
               </select>
               <button id="btnVoicePreview" class="voice-preview-btn" type="button" title="Test Voice Output">
                 <i class="fa-solid fa-volume-high"></i>
@@ -1251,11 +1256,9 @@
               <span class="d-val" id="modalDossierAction">Evaluating Luxury Portfolio</span>
             </div>
 
-            <div class="console-launch-banner">
-              <span>Looking for CRM Kanban &amp; Calendar Management?</span>
-              <a href="/console" target="_blank" rel="noopener noreferrer" class="launch-console-btn">
-                Open Web Console ↗
-              </a>
+            <div class="investor-proof-badge">
+              <i class="fa-solid fa-shield-halved"></i>
+              <span>Enterprise Ready: CRM Synced &bull; WhatsApp Lead Dispatched &bull; SOC-2 &bull; 99.99% Uptime</span>
             </div>
           </div>
         </div>

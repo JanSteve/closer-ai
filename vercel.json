@@ -1,4 +1,21 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "cleanUrls": true
+  "cleanUrls": true,
+  "redirects": [
+    {
+      "source": "/console",
+      "destination": "/#voice-studio",
+      "permanent": false
+    },
+    {
+      "source": "/dashboard",
+      "destination": "/#voice-studio",
+      "permanent": false
+    },
+    {
+      "source": "/admin",
+      "destination": "/#voice-studio",
+      "permanent": false
+    }
+  ]
 }

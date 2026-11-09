@@ -2201,38 +2201,46 @@ body.modal-open {
   color: #ffffff;
 }
 
-.console-shortcut-box {
+.console-shortcut-box,
+.investor-shortcut-box {
   margin-top: 20px;
-  padding: 14px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 12px;
+  padding: 16px;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(245, 158, 11, 0.04) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 14px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 }
 
-.console-shortcut-box span {
-  font-size: 11.5px;
+.console-shortcut-box span,
+.investor-shortcut-box span {
+  font-size: 12px;
+  font-weight: 500;
   color: var(--muted);
 }
 
-.footer-console-btn {
+.footer-console-btn,
+.footer-investor-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 8px 14px;
+  gap: 8px;
+  padding: 10px 16px;
   background: #ffffff;
   color: #000000;
-  font-size: 12.5px;
+  font-size: 13px;
   font-weight: 600;
   border-radius: 999px;
   text-decoration: none;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
 }
 
-.footer-console-btn:hover {
-  transform: translateY(-1px);
+.footer-console-btn:hover,
+.footer-investor-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 255, 255, 0.2);
 }
 
 .footer-bottom {
@@ -2786,6 +2794,26 @@ body.modal-open {
 
 .launch-console-btn:hover {
   transform: translateY(-1px);
+}
+
+.investor-proof-badge {
+  margin-top: auto;
+  padding: 12px 14px;
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.25);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #93c5fd;
+  font-size: 11.5px;
+  line-height: 1.45;
+}
+
+.investor-proof-badge i {
+  font-size: 14px;
+  color: #60a5fa;
+  flex-shrink: 0;
 }
 
 .modal-footer-mobile {

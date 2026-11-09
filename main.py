@@ -16,7 +16,7 @@ sys.path.insert(0, str(ROOT_DIR / "src"))
 
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 
 app = FastAPI(
     title="CLOSER AI",
@@ -61,15 +61,12 @@ async def serve_landing():
     return HTMLResponse(content="<h1>CLOSER AI: Intelligence Designed To Evolve</h1>", status_code=200)
 
 
-@app.get("/console", response_class=HTMLResponse)
-@app.get("/dashboard", response_class=HTMLResponse)
-@app.get("/admin", response_class=HTMLResponse)
+@app.get("/console")
+@app.get("/dashboard")
+@app.get("/admin")
 async def serve_console():
-    try:
-        from src.closer.web.dashboard import HTML_TEMPLATE
-        return HTMLResponse(content=HTML_TEMPLATE, status_code=200)
-    except Exception:
-        return HTMLResponse(content="<h1>CLOSER AI Executive Console</h1>", status_code=200)
+    """Redirects the internal developer console directly to the investor-approved live voice demo."""
+    return RedirectResponse(url="/#voice-studio", status_code=302)
 
 
 @app.get("/presentation", response_class=HTMLResponse)

@@ -89,9 +89,9 @@ class TestVercelAppEntrypoint(unittest.TestCase):
         messages = asyncio.run(run_asgi("/main.js"))
         self.assertTrue(any(m.get("type") == "http.response.start" and m.get("status") == 200 for m in messages))
 
-        # Test console route
+        # Test console route redirect
         messages = asyncio.run(run_asgi("/console"))
-        self.assertTrue(any(m.get("type") == "http.response.start" and m.get("status") == 200 for m in messages))
+        self.assertTrue(any(m.get("type") == "http.response.start" and m.get("status") in (200, 301, 302, 307) for m in messages))
 
 
 if __name__ == "__main__":

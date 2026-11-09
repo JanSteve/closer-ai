@@ -260,6 +260,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const ctaBtn = document.getElementById('ctaBtn');
 
   const btnMarketUSA = document.getElementById('btnMarketUSA');
+  const btnMarketTamil = document.getElementById('btnMarketTamil');
+  const btnMarketHindi = document.getElementById('btnMarketHindi');
   const btnMarketIndia = document.getElementById('btnMarketIndia');
   const voiceSelector = document.getElementById('demoVoiceSelect') || document.getElementById('voiceSelector');
   const btnVoicePreview = document.getElementById('btnVoicePreview');
@@ -286,73 +288,105 @@ document.addEventListener('DOMContentLoaded', () => {
   let lastAudioBase64 = null;
   let isModalClosing = false;
 
-  // Scenario presets for both markets
+  // Scenario presets for 3 production voices
   const MARKET_PRESETS = {
     usa: {
-      marketLabel: 'USA (Luxury Real Estate)',
-      defaultVoice: 'en-US-AriaNeural',
+      marketLabel: 'USA (Luxury Real Estate — Maya Closer)',
+      defaultVoice: 'maya_en',
       leadName: 'Harrison & Claire Sterling (+1-310-555-0144)',
-      initialGreeting: 'Hello, this is CLOSER AI luxury real estate concierge. How can I assist you with your estate search today?',
+      initialGreeting: 'Hey, good morning! Maya here from the Grand OMR Penthouse. I noticed you were exploring our private residences online. Quick question — are you looking for an investment or a spacious layout for your family?',
       defaultBudget: '$6,500,000 USD (Bel Air / Beverly Hills)',
       defaultFinancing: 'Cash / Jumbo Pre-Approved',
       initialStatus: 'QUALIFYING',
       initialAction: 'Evaluating Luxury Portfolio',
-      initialIntent: 80,
+      initialIntent: 85,
       prompts: [
-        'Looking for a $6.5M estate in Bel Air, all cash.',
+        'Looking for an estate in Bel Air, all cash.',
+        'Can we book a private showing Thursday at 2:00 PM?',
         'I am in a meeting right now, please call me tomorrow.',
-        'Can we book a private showing Thursday at 2:00 PM PST?',
-        'Today is not good, what about next Monday?'
+        'Why should I pay $6.5M when neighboring units are lower?'
       ],
       offlineReplies: {
         estate: 'Splendid. We have an architectural estate on Bellagio Road in Bel Air listed at $6.85M with panoramic ocean and city views. Would you like to schedule a private walkthrough?',
+        showing: 'Your private VIP tour has been confirmed for Thursday at 2:00 PM. A confirmation packet has been dispatched to your mobile via WhatsApp.',
         meeting: 'I completely respect your busy schedule. I will follow up with you tomorrow afternoon at your convenience. Have a productive day.',
-        showing: 'Your private VIP tour has been confirmed for Thursday at 2:00 PM PST. A confirmation packet has been dispatched to your mobile.',
-        schedule: 'Understood. I have logged your preference for Monday at 2:00 PM. An acquisition specialist will reach out to confirm arrangements.'
+        price: 'Fair question. Unlike neighboring inventory, this penthouse features double-height 22ft ceilings, a private rooftop lap pool, and 4 dedicated basement parking slots with EV supercharging.'
       }
     },
-    india: {
-      marketLabel: 'India (Customer Care & Lead Support)',
-      defaultVoice: 'en-IN-NeerjaNeural',
-      leadName: 'Rohit & Ananya Sharma (+91-98800-12345)',
-      initialGreeting: 'Namaste! Welcome to CLOSER AI client relationship concierge. How may I assist you with your premium residential inquiry today?',
-      defaultBudget: '₹2.5 Crore (Whitefield, Bangalore)',
-      defaultFinancing: 'HDFC / SBI Pre-Sanctioned Home Loan',
+    tamil: {
+      marketLabel: 'Tamil Nadu (Chennai Luxury — Pallavi Closer)',
+      defaultVoice: 'pallavi_ta',
+      leadName: 'கார்த்திக் & திவ்யா சுந்தரம் (+91-98840-23456)',
+      initialGreeting: 'வணக்கம் Sir! OMR கிராண்ட் பென்ட்ஹவுஸ்ல இருந்து பல்லவி பேசுறேங்க. நம்ம luxury 3BHK residences பத்தி enquiry பண்ணியிருந்தீங்க. நீங்க ஃபேமிலியோட stay பண்ண பாக்குறீங்களா, இல்ல investment-க்காகவா Sir?',
+      defaultBudget: '₹2.85 Crore (OMR Waterfront, Chennai)',
+      defaultFinancing: 'HDFC / SBI Pre-Approved Home Loan',
       initialStatus: 'QUALIFYING',
-      initialAction: 'Checking RERA & Unit Inventories',
-      initialIntent: 85,
+      initialAction: 'Checking Penthouse Availability & RERA',
+      initialIntent: 90,
       prompts: [
-        'Looking for 3 BHK in Whitefield around 2.5 Crore.',
-        'Is this project 100% RERA approved with bank tie-ups?',
-        'I am in office right now, please WhatsApp all details.',
-        'Can I book a weekend site visit for this Sunday at 11 AM?'
+        '3BHK பென்ட்ஹவுஸ் விலை என்ன? (Price Details)',
+        'நான் இப்போ மீட்டிங்ல இருக்கேன், நாளைக்கு கூப்பிடுங்க.',
+        'இந்த சனிக்கிழமை சைட் விசிட் புக் பண்ண முடியுமா?',
+        'ப்ராஜெக்ட் RERA அப்ரூவ்டு மற்றும் உடனடி பொஸஷன் உண்டா?'
       ],
       offlineReplies: {
-        bhk: 'Namaste! We have luxury 3 BHK residences in prime Whitefield starting at ₹2.45 Crores with club amenities and possession in 2026. Shall I arrange a site visit this Saturday?',
-        rera: 'Yes, absolutely. The project is 100% RERA registered with pre-approved loans from HDFC, SBI, and ICICI Bank. All legal clearances are verified.',
-        whatsapp: 'Understood. I have dispatched the complete brochure, floor plans, and pricing matrix directly to your WhatsApp. Please review at your convenience.',
-        site_visit: 'Confirmed. Your site visit has been scheduled for this Sunday at 11:00 AM. Our relationship manager will welcome you at the project sales lounge.'
+        estate: 'கிராண்ட் பென்ட்ஹவுஸ் 3BHK ரெசிடென்ஸ் ₹2.85 கோடியில் இருந்து தொடங்குகிறது. இதில் 100% பிரைவேட் டெரஸ் கார்டன் மற்றும் பே-வியூ பால்கனி அடங்கும்.',
+        meeting: 'கண்டிப்பா புரிஞ்சுக்க முடியுதுங்க. நாளைக்கு உங்களுக்கு சௌகரியமான நேரத்துல கூப்பிடுறேன். நல்ல நாளாக அமையட்டும்!',
+        showing: 'நிச்சயமாக! வரும் சனிக்கிழமை காலை 11 மணிக்கு உங்களுக்கான விஐபி சைட் விசிட் ஸ்லாட் உறுதி செய்யப்பட்டுள்ளது. கேட் பாஸ் வாட்ஸ்அப்பில் அனுப்பப்பட்டுள்ளது.',
+        rera: 'ஆமாங்க Sir, இந்த திட்டம் 100% RERA பதிவு செய்யப்பட்டது மற்றும் HDFC, SBI வங்கிகளில் முன்-அங்கீகரிக்கப்பட்ட வீட்டுக் கடன் வசதி உள்ளது.'
+      }
+    },
+    hindi: {
+      marketLabel: 'Pan-India (Luxury Telecaller — Swati Closer)',
+      defaultVoice: 'swati_hi',
+      leadName: 'रोहित & अनन्या शर्मा (+91-98800-12345)',
+      initialGreeting: 'नमस्ते सर! ग्रैंड OMR पेंटहाउस से स्वाति बात कर रही हूँ। आपने हमारी luxury 3BHK residences के लिए enquiry की थी। सर, आप अपने परिवार के साथ रहने के लिए देख रहे हैं या फिर high-yield investment के लिए?',
+      defaultBudget: '₹2.85 Crore (Luxury High-Rise)',
+      defaultFinancing: 'HDFC / ICICI Pre-Sanctioned Home Loan',
+      initialStatus: 'QUALIFYING',
+      initialAction: 'Verifying Buyer Criteria & Site Visit',
+      initialIntent: 88,
+      prompts: [
+        '3 BHK का फाइनल ऑल-इनक्लूसिव प्राइस क्या है?',
+        'मैं अभी ऑफिस में हूँ, मुझे कल 3 बजे कॉल करें।',
+        'क्या इस रविवार सुबह 11 बजे साइट विज़िट बुक हो सकती है?',
+        'क्या प्रोजेक्ट 100% RERA अप्रूव्ड और बैंक टाइ-अप है?'
+      ],
+      offlineReplies: {
+        estate: 'नमस्ते सर! 3 BHK अल्ट्रा-लक्ज़री पेंटहाउस ₹2.85 करोड़ से शुरू होता है, जिसमें क्लब हाउस मेंबरशिप और 2 कवर्ड कार पार्किंग शामिल हैं।',
+        meeting: 'बिल्कुल सर, मैं आपका समय समझती हूँ। मैं कल दोपहर ठीक 3:00 बजे आपको दोबारा संपर्क करूँगी। आपका दिन शुभ हो!',
+        showing: 'बहुत बढ़िया सर! इस रविवार सुबह 11:00 बजे का VIP साइट विज़िट स्लॉट आपके नाम से लॉक कर दिया गया है। गेट पास व्हाट्सएप पर भेज दिया गया है।',
+        rera: 'जी हाँ सर, यह प्रोजेक्ट 100% RERA रजिस्टर्ड है और SBI, HDFC तथा ICICI बैंक से प्री-अप्रूव्ड होम लोन सुविधा उपलब्ध है।'
       }
     }
   };
+  MARKET_PRESETS.india = MARKET_PRESETS.hindi;
 
   function updateMarketUI(market) {
+    if (market === 'india') market = 'hindi';
     currentMarket = market;
-    const config = MARKET_PRESETS[market];
+    const config = MARKET_PRESETS[market] || MARKET_PRESETS.usa;
 
-    if (!btnMarketUSA || !btnMarketIndia) return;
+    [btnMarketUSA, btnMarketTamil, btnMarketHindi, btnMarketIndia].forEach(btn => {
+      if (!btn) return;
+      btn.classList.remove('active');
+      btn.setAttribute('aria-selected', 'false');
+    });
 
-    // Toggle active class and accessibility on market buttons
-    if (market === 'usa') {
+    if (market === 'usa' && btnMarketUSA) {
       btnMarketUSA.classList.add('active');
       btnMarketUSA.setAttribute('aria-selected', 'true');
-      btnMarketIndia.classList.remove('active');
-      btnMarketIndia.setAttribute('aria-selected', 'false');
-    } else {
-      btnMarketIndia.classList.add('active');
-      btnMarketIndia.setAttribute('aria-selected', 'true');
-      btnMarketUSA.classList.remove('active');
-      btnMarketUSA.setAttribute('aria-selected', 'false');
+    } else if (market === 'tamil' && btnMarketTamil) {
+      btnMarketTamil.classList.add('active');
+      btnMarketTamil.setAttribute('aria-selected', 'true');
+    } else if ((market === 'hindi' || market === 'india') && (btnMarketHindi || btnMarketIndia)) {
+      if (btnMarketHindi) {
+        btnMarketHindi.classList.add('active');
+        btnMarketHindi.setAttribute('aria-selected', 'true');
+      } else if (btnMarketIndia) {
+        btnMarketIndia.classList.add('active');
+        btnMarketIndia.setAttribute('aria-selected', 'true');
+      }
     }
 
     // Set voice dropdown
@@ -462,6 +496,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   window.openModalHandler = openDemoModal;
+  window.openLiveDemoModal = openDemoModal;
   window.closeModalHandler = closeDemoModal;
 
   // CTA Button scrolls down to #product without opening intrusive popup modal
@@ -488,8 +523,14 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnMarketUSA) {
     btnMarketUSA.addEventListener('click', () => updateMarketUI('usa'));
   }
+  if (btnMarketTamil) {
+    btnMarketTamil.addEventListener('click', () => updateMarketUI('tamil'));
+  }
+  if (btnMarketHindi) {
+    btnMarketHindi.addEventListener('click', () => updateMarketUI('hindi'));
+  }
   if (btnMarketIndia) {
-    btnMarketIndia.addEventListener('click', () => updateMarketUI('india'));
+    btnMarketIndia.addEventListener('click', () => updateMarketUI('hindi'));
   }
 
   // -------------------------------------------------------------------------
@@ -591,34 +632,38 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Voice Sample Preview Button
+  // Voice Sample Preview Button (Instant Direct Audio for Maya, Pallavi, Swati)
   if (btnVoicePreview) {
     btnVoicePreview.addEventListener('click', async () => {
-      const selectedVoice = voiceSelector ? voiceSelector.value : 'en-US-AriaNeural';
+      const selectedVoice = voiceSelector ? voiceSelector.value : 'maya_en';
       startSpeakingUI();
 
-      try {
-        const res = await fetch('/api/turn', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ utterance: 'PREVIEW_SAMPLE', voice: selectedVoice })
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (modalAIText) modalAIText.textContent = `"${data.reply}"`;
-          playAudioResponse(data.audio_base64, data.reply);
-          return;
-        }
-      } catch {
-        // Fallback to local speech
+      let audioSrc = '/demos/en_opener.wav';
+      let sampleMsg = 'Hey, good morning! Maya here from the Grand OMR Penthouse. Quick question — are you looking for an investment or a spacious layout for your family?';
+
+      if (selectedVoice === 'pallavi_ta' || selectedVoice.includes('ta') || selectedVoice.includes('tamil')) {
+        audioSrc = '/demos/ta_opener.mp3';
+        sampleMsg = 'வணக்கம் Sir! OMR கிராண்ட் பென்ட்ஹவுஸ்ல இருந்து பல்லவி பேசுறேங்க. நம்ம luxury 3BHK residences பத்தி enquiry பண்ணியிருந்தீங்க.';
+      } else if (selectedVoice === 'swati_hi' || selectedVoice.includes('hi') || selectedVoice.includes('hindi')) {
+        audioSrc = '/demos/hi_opener.mp3';
+        sampleMsg = 'नमस्ते सर! ग्रैंड OMR पेंटहाउस से स्वाति बात कर रही हूँ। आपने हमारी luxury 3BHK residences के लिए enquiry की थी।';
       }
 
-      const sampleMsg = selectedVoice.includes('IN')
-        ? 'Namaste. CLOSER AI Indian customer care engine is active and ready to assist you.'
-        : 'Hello. CLOSER AI luxury real estate concierge is active and ready to assist you.';
-
       if (modalAIText) modalAIText.textContent = `"${sampleMsg}"`;
-      speakBrowserTTS(sampleMsg);
+
+      try {
+        const audio = new Audio(audioSrc);
+        audio.onended = () => stopSpeakingUI();
+        audio.onerror = () => {
+          stopSpeakingUI();
+          speakBrowserTTS(sampleMsg);
+        };
+        await audio.play();
+        return;
+      } catch {
+        // Fallback to local speech
+        speakBrowserTTS(sampleMsg);
+      }
     });
   }
 
