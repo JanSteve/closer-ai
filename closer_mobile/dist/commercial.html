@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CLOSER AI — High-Converting Commercial Video (Higgsfield / Motion Graphics Style)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;700;800;900&family=Cinzel:wght@700;900&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background-color: #030712; color: #fff; font-family: 'Plus Jakarta Sans', sans-serif; }
+    .neon-glow { text-shadow: 0 0 25px rgba(16, 185, 129, 0.6), 0 0 50px rgba(6, 182, 212, 0.4); }
+    .gold-glow { text-shadow: 0 0 25px rgba(245, 158, 11, 0.6); }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+
+  <div class="max-w-2xl w-full bg-slate-900/80 border border-slate-800 rounded-3xl p-6 shadow-2xl backdrop-blur-xl flex flex-col items-center">
+    
+    <!-- HEADER -->
+    <div class="w-full flex items-center justify-between pb-4 border-b border-slate-800 mb-4">
+      <div class="flex items-center space-x-2">
+        <span class="w-3 h-3 rounded-full bg-red-500 animate-ping"></span>
+        <h2 class="text-xs font-extrabold uppercase tracking-widest text-emerald-400 font-mono">MOTION GRAPHICS VIDEO AD GENERATOR</h2>
+      </div>
+      <span class="text-xs text-slate-400 font-mono">100% Free • 1080p 60FPS</span>
+    </div>
+
+    <!-- 16:9 / 9:16 VIDEO CANVAS CONTAINER -->
+    <div class="relative w-full aspect-video bg-black rounded-2xl overflow-hidden border border-slate-800 shadow-2xl flex items-center justify-center">
+      <canvas id="video-canvas" width="1280" height="720" class="w-full h-full object-cover"></canvas>
+      
+      <!-- Overlay Play Button -->
+      <button id="btn-play-preview" onclick="togglePlay()" class="absolute w-16 h-16 rounded-full bg-emerald-500/90 text-black flex items-center justify-center font-bold text-xl hover:scale-110 active:scale-95 transition-all shadow-xl shadow-emerald-500/40">
+        ▶
+      </button>
+    </div>
+
+    <!-- CONTROLS & TIMELINE -->
+    <div class="w-full mt-5 flex flex-col space-y-3">
+      <div class="flex items-center justify-between text-xs text-slate-400 font-mono">
+        <span id="scene-label">SCENE 1: THE HOOK</span>
+        <span id="time-label">00:00 / 00:30</span>
+      </div>
+      
+      <!-- Progress Bar -->
+      <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+        <div id="video-progress" class="h-full bg-gradient-to-r from-emerald-500 via-teal-400 to-cyan-500 w-0 transition-all"></div>
+      </div>
+
+      <div class="flex items-center justify-between pt-2">
+        <button onclick="togglePlay()" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-white transition-all flex items-center space-x-2">
+          <span id="btn-play-text">▶ PLAY PREVIEW</span>
+        </button>
+
+        <!-- RECORD & EXPORT VIDEO FILE -->
+        <button id="btn-record" onclick="exportRecordedVideo()" class="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-cyan-500 text-black font-extrabold text-xs shadow-lg shadow-emerald-500/25 hover:opacity-90 active:scale-95 transition-all flex items-center space-x-2">
+          <span>🎬 EXPORT VIDEO (.WEBM / MP4)</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- HIGGSFIELD KATANA SCRIPT BREAKDOWN -->
+    <div class="w-full mt-6 p-4 rounded-2xl bg-black/50 border border-slate-800/80 text-xs space-y-2">
+      <div class="font-bold text-emerald-400 uppercase tracking-wider text-[10px] font-mono">Higgsfield Katana Video Commercial Storyboard:</div>
+      <p class="text-slate-300"><b>0:00 - 0:08 (The Hook):</b> Glitch typography: <i>"94% of Luxury Real Estate Leads are LOST in 5 Minutes."</i></p>
+      <p class="text-slate-300"><b>0:08 - 0:18 (The Solution):</b> 3D Phone reveal with glowing AI Orb: <i>"Meet CLOSER AI — The World's First Tri-Lingual Real Estate Voice Closer."</i></p>
+      <p class="text-slate-300"><b>0:18 - 0:26 (The Proof):</b> Live deflection: Customer asks for 15% discount; CLOSER AI locks in the private walkthrough.</p>
+      <p class="text-slate-300"><b>0:26 - 0:30 (The Call to Action):</b> <i>"Deploy on iOS & Android. Close ₹2 Cr Deals 24/7."</i></p>
+    </div>
+
+  </div>
+
+  <script>
+    const canvas = document.getElementById('video-canvas');
+    const ctx = canvas.getContext('2d');
+    let isPlaying = false;
+    let currentTime = 0;
+    const totalDuration = 30; // 30 seconds commercial
+    let animFrame = null;
+    let mediaRecorder = null;
+    let recordedChunks = [];
+
+    // Scenes definitions
+    const scenes = [
+      {
+        start: 0, end: 7,
+        label: "SCENE 1: THE REAL ESTATE CRISIS",
+        render: (t) => {
+          ctx.fillStyle = '#030712';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+          
+          // Red pulse warning ring
+          const radius = 180 + Math.sin(t * 8) * 20;
+          ctx.strokeStyle = 'rgba(239, 68, 68, 0.3)';
+          ctx.lineWidth = 4;
+          ctx.beginPath();
+          ctx.arc(canvas.width / 2, canvas.height / 2, radius, 0, Math.PI * 2);
+          ctx.stroke();
+
+          ctx.fillStyle = '#EF4444';
+          ctx.font = 'bold 36px "Plus Jakarta Sans"';
+          ctx.textAlign = 'center';
+          ctx.fillText("ATTENTION REAL ESTATE BUILDERS", canvas.width / 2, canvas.height / 2 - 80);
+
+          ctx.fillStyle = '#FFFFFF';
+          ctx.font = '900 68px "Plus Jakarta Sans"';
+          ctx.fillText("94% OF BUYER LEADS", canvas.width / 2, canvas.height / 2);
+
+          ctx.fillStyle = '#94A3B8';
+          ctx.font = 'bold 38px "Plus Jakarta Sans"';
+          ctx.fillText("ARE LOST IN THE FIRST 5 MINUTES.", canvas.width / 2, canvas.height / 2 + 70);
+        }
+      },
+      {
+        start: 7, end: 16,
+        label: "SCENE 2: INTRODUCING CLOSER AI",
+        render: (t) => {
+          ctx.fillStyle = '#030712';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          // Glowing Emerald Orb
+          const pulse = Math.sin(t * 6) * 25;
+          const grad = ctx.createRadialGradient(canvas.width / 2, canvas.height / 2, 20, canvas.width / 2, canvas.height / 2, 160 + pulse);
+          grad.addColorStop(0, '#10B981');
+          grad.addColorStop(0.5, '#06B6D4');
+          grad.addColorStop(1, 'transparent');
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.arc(canvas.width / 2, canvas.height / 2, 160 + pulse, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = '#10B981';
+          ctx.font = 'bold 32px "Cinzel"';
+          ctx.textAlign = 'center';
+          ctx.fillText("THE TELECALLER REVOLUTION", canvas.width / 2, canvas.height / 2 - 120);
+
+          ctx.fillStyle = '#FFFFFF';
+          ctx.font = '900 80px "Cinzel"';
+          ctx.fillText("CLOSER AI", canvas.width / 2, canvas.height / 2);
+
+          ctx.fillStyle = '#38BDF8';
+          ctx.font = '600 34px "Plus Jakarta Sans"';
+          ctx.fillText("Tri-Lingual • Instant <64ms Barge-In • Sub-350ms Audio", canvas.width / 2, canvas.height / 2 + 100);
+        }
+      },
+      {
+        start: 16, end: 24,
+        label: "SCENE 3: LIVE OBJECTION DEFLECTION",
+        render: (t) => {
+          ctx.fillStyle = '#070C18';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          // Customer Box
+          ctx.fillStyle = '#1E293B';
+          ctx.roundRect(140, 160, 1000, 120, 24);
+          ctx.fill();
+          ctx.fillStyle = '#F87171';
+          ctx.font = 'bold 24px "Plus Jakarta Sans"';
+          ctx.textAlign = 'left';
+          ctx.fillText("CUSTOMER (AGGRESSIVE BARGAINER):", 180, 205);
+          ctx.fillStyle = '#FFFFFF';
+          ctx.font = '500 28px "Plus Jakarta Sans"';
+          ctx.fillText('"ஃபுல் கேஷ் பேமெண்ட் பண்ணா 15 பர்சன்ட் டிஸ்கவுண்ட் கிடைக்குமா?"', 180, 250);
+
+          // Closer AI Reply Box
+          ctx.fillStyle = 'rgba(16, 185, 129, 0.15)';
+          ctx.strokeStyle = '#10B981';
+          ctx.lineWidth = 2;
+          ctx.roundRect(140, 320, 1000, 160, 24);
+          ctx.fill();
+          ctx.stroke();
+
+          ctx.fillStyle = '#34D399';
+          ctx.font = 'bold 24px "Plus Jakarta Sans"';
+          ctx.fillText("CLOSER AI (SWEET TANGLISH TELECALLER):", 180, 365);
+          ctx.fillStyle = '#FFFFFF';
+          ctx.font = '500 26px "Plus Jakarta Sans"';
+          ctx.fillText('"Sir, pricing மற்றும் special discount பத்தி நம்ம நேரடியா site visit வரும்போது', 180, 410);
+          ctx.fillText('பேசிக்கலாமுங்க. இந்த சனிக்கிழமை morning பார்க்கலாமா Sir?"', 180, 450);
+
+          // Status Badge
+          ctx.fillStyle = '#10B981';
+          ctx.font = 'bold 28px "Plus Jakarta Sans"';
+          ctx.textAlign = 'center';
+          ctx.fillText("🎯 RESULT: ₹1.85 Cr Penthouse Walkthrough Confirmed!", canvas.width / 2, 560);
+        }
+      },
+      {
+        start: 24, end: 30,
+        label: "SCENE 4: CALL TO ACTION",
+        render: (t) => {
+          ctx.fillStyle = '#030712';
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+          ctx.fillStyle = '#F59E0B';
+          ctx.font = 'bold 36px "Cinzel"';
+          ctx.textAlign = 'center';
+          ctx.fillText("DEPLOY YOUR TELEPHONY EMPIRE TODAY", canvas.width / 2, canvas.height / 2 - 90);
+
+          ctx.fillStyle = '#FFFFFF';
+          ctx.font = '900 70px "Plus Jakarta Sans"';
+          ctx.fillText("GET CLOSER AI NOW", canvas.width / 2, canvas.height / 2);
+
+          ctx.fillStyle = '#10B981';
+          ctx.font = 'bold 32px "Plus Jakarta Sans"';
+          ctx.fillText("iOS App Store • Google Play • On-Prem Local Cloud", canvas.width / 2, canvas.height / 2 + 80);
+        }
+      }
+    ];
+
+    function renderCurrentFrame() {
+      const activeScene = scenes.find(s => currentTime >= s.start && currentTime < s.end) || scenes[scenes.length - 1];
+      document.getElementById('scene-label').innerText = activeScene.label;
+      activeScene.render(currentTime);
+
+      // Update timeline
+      const pct = (currentTime / totalDuration) * 100;
+      document.getElementById('video-progress').style.width = `${pct}%`;
+      
+      const secs = String(Math.floor(currentTime) % 60).padStart(2, '0');
+      document.getElementById('time-label').innerText = `00:${secs} / 00:30`;
+    }
+
+    function togglePlay() {
+      if (!isPlaying) {
+        isPlaying = true;
+        document.getElementById('btn-play-preview').style.display = 'none';
+        document.getElementById('btn-play-text').innerText = '⏸ PAUSE';
+        let lastTimestamp = performance.now();
+
+        function step(now) {
+          if (!isPlaying) return;
+          const dt = (now - lastTimestamp) / 1000;
+          lastTimestamp = now;
+          currentTime += dt;
+
+          if (currentTime >= totalDuration) {
+            currentTime = 0;
+          }
+          renderCurrentFrame();
+          animFrame = requestAnimationFrame(step);
+        }
+        animFrame = requestAnimationFrame(step);
+      } else {
+        isPlaying = false;
+        cancelAnimationFrame(animFrame);
+        document.getElementById('btn-play-preview').style.display = 'flex';
+        document.getElementById('btn-play-text').innerText = '▶ PLAY PREVIEW';
+      }
+    }
+
+    // Export Recorded Video File (.webm / mp4)
+    function exportRecordedVideo() {
+      const stream = canvas.captureStream(60); // 60 FPS video stream
+      recordedChunks = [];
+      mediaRecorder = new MediaRecorder(stream, { mimeType: 'video/webm;codecs=vp9' });
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) recordedChunks.push(e.data);
+      };
+
+      mediaRecorder.onstop = () => {
+        const blob = new Blob(recordedChunks, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'CLOSER_AI_Commercial_Higgsfield.webm';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        alert("🎉 Video Exported Successfully! File saved to your downloads.");
+      };
+
+      // Play through from start and record
+      currentTime = 0;
+      if (!isPlaying) togglePlay();
+      mediaRecorder.start();
+      document.getElementById('btn-record').innerText = "🔴 RECORDING AD (30s)...";
+
+      setTimeout(() => {
+        mediaRecorder.stop();
+        if (isPlaying) togglePlay();
+        document.getElementById('btn-record').innerText = "🎬 EXPORT VIDEO (.WEBM / MP4)";
+      }, totalDuration * 1000);
+    }
+
+    // Initial Frame
+    renderCurrentFrame();
+  </script>
+</body>
+</html>

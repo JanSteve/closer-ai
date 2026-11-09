@@ -1,0 +1,22 @@
+{
+  "name": "closer-ai-mobile",
+  "version": "2.0.0",
+  "description": "Enterprise Voice AI Telephony Closer for High-Ticket Real Estate",
+  "main": "dist/index.html",
+  "scripts": {
+    "start": "python3 -m closer.telephony.server",
+    "cap:sync": "npx cap sync",
+    "cap:ios": "npx cap open ios",
+    "cap:android": "npx cap open android",
+    "build:ios": "npx cap sync ios && npx cap build ios",
+    "build:android": "npx cap sync android && npx cap build android"
+  },
+  "dependencies": {
+    "@capacitor/core": "^6.2.0",
+    "@capacitor/cli": "^6.2.0",
+    "@capacitor/ios": "^6.2.0",
+    "@capacitor/android": "^6.2.0"
+  },
+  "author": "CLOSER AI Team",
+  "license": "MIT"
+}

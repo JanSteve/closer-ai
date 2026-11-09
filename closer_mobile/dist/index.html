@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>CLOSER AI — High-Ticket Real Estate Voice Telephony Closer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Cinzel:wght@600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            display: ['"Cinzel"', 'serif'],
+          },
+          colors: {
+            obsidian: { 950: '#030712', 900: '#070C18', 800: '#0D152A', 700: '#152244' },
+            emerald: { 400: '#34D399', 500: '#10B981', 600: '#059669' },
+            cyan: { 400: '#22D3EE', 500: '#06B6D4', 600: '#0891B2' },
+            champagne: { 400: '#FDE68A', 500: '#F59E0B' },
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #030712; -webkit-tap-highlight-color: transparent; }
+    .glass-card {
+      background: rgba(13, 21, 42, 0.78);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glass-pill {
+      background: rgba(13, 21, 42, 0.6);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .orb-glow {
+      box-shadow: 0 0 60px 20px rgba(16, 185, 129, 0.3), 0 0 100px 35px rgba(6, 182, 212, 0.2);
+    }
+    .orb-speaking {
+      animation: pulse-ring 1.5s cubic-bezier(0.24, 0, 0.38, 1) infinite;
+    }
+    .orb-listening {
+      animation: pulse-listen 2.2s ease-in-out infinite;
+    }
+    @keyframes pulse-ring {
+      0% { transform: scale(0.96); box-shadow: 0 0 45px 15px rgba(16, 185, 129, 0.35); }
+      50% { transform: scale(1.08); box-shadow: 0 0 95px 40px rgba(6, 182, 212, 0.55); }
+      100% { transform: scale(0.96); box-shadow: 0 0 45px 15px rgba(16, 185, 129, 0.35); }
+    }
+    @keyframes pulse-listen {
+      0%, 100% { transform: scale(1); box-shadow: 0 0 35px 10px rgba(16, 185, 129, 0.2); }
+      50% { transform: scale(1.03); box-shadow: 0 0 65px 25px rgba(16, 185, 129, 0.4); }
+    }
+    .soundbar-active {
+      animation: soundbar-jump 0.8s ease-in-out infinite alternate;
+    }
+    @keyframes soundbar-jump {
+      0% { height: 4px; }
+      100% { height: 20px; }
+    }
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 4px; }
+  </style>
+</head>
+<body class="text-slate-100 font-sans min-h-screen flex flex-col justify-between selection:bg-emerald-500 selection:text-black antialiased">
+
+  <!-- TOP APP BAR -->
+  <header class="px-5 py-3 border-b border-white/[0.08] glass-card sticky top-0 z-50 flex items-center justify-between">
+    <!-- Brand Info -->
+    <div class="flex items-center space-x-3">
+      <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-emerald-500 via-teal-400 to-cyan-500 p-[1.5px] shadow-lg shadow-emerald-500/25">
+        <div class="w-full h-full bg-obsidian-950 rounded-[14px] flex items-center justify-center">
+          <span class="font-display font-bold text-lg text-emerald-400">C</span>
+        </div>
+      </div>
+      <div>
+        <div class="flex items-center space-x-2">
+          <h1 class="text-base font-bold tracking-tight text-white font-display">CLOSER AI</h1>
+          <span class="text-[9px] uppercase font-bold tracking-widest px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">PRO SOTA</span>
+        </div>
+        <p class="text-[11px] text-slate-400">High-Ticket Voice Telephony Closer</p>
+      </div>
+    </div>
+
+    <!-- Language Selector -->
+    <div class="flex items-center bg-obsidian-900/90 rounded-full p-1 border border-white/10 shadow-inner">
+      <button onclick="switchLanguage('english')" id="btn-lang-en" class="px-2.5 py-1 text-xs font-semibold rounded-full transition-all text-slate-400 hover:text-white">🇺🇸 EN</button>
+      <button onclick="switchLanguage('tamil')" id="btn-lang-ta" class="px-2.5 py-1 text-xs font-bold rounded-full transition-all bg-emerald-500 text-black shadow-md shadow-emerald-500/30">🇮🇳 தமிழ்</button>
+      <button onclick="switchLanguage('hindi')" id="btn-lang-hi" class="px-2.5 py-1 text-xs font-semibold rounded-full transition-all text-slate-400 hover:text-white">🇮🇳 हिंदी</button>
+    </div>
+  </header>
+
+  <!-- NAVIGATION TABS -->
+  <div class="border-b border-white/[0.08] bg-obsidian-950/90 px-4 py-2 sticky top-[61px] z-40 flex items-center justify-center">
+    <div class="grid grid-cols-4 gap-1.5 w-full max-w-lg bg-obsidian-900/90 p-1 rounded-2xl border border-white/10 text-xs font-semibold">
+      <button onclick="switchTab('call')" id="tab-btn-call" class="py-2 rounded-xl transition-all flex items-center justify-center space-x-1.5 bg-emerald-500 text-black font-bold shadow-md shadow-emerald-500/30">
+        <span>📞</span>
+        <span>Live Call</span>
+      </button>
+      <button onclick="switchTab('demos')" id="tab-btn-demos" class="py-2 rounded-xl transition-all flex items-center justify-center space-x-1.5 text-slate-400 hover:text-white">
+        <span>🎙️</span>
+        <span>Voice Demos</span>
+      </button>
+      <button onclick="switchTab('custom')" id="tab-btn-custom" class="py-2 rounded-xl transition-all flex items-center justify-center space-x-1.5 text-slate-400 hover:text-white">
+        <span>⚡</span>
+        <span>Custom TTS</span>
+      </button>
+      <a href="/commercial" target="_blank" class="py-2 rounded-xl transition-all flex items-center justify-center space-x-1.5 text-slate-400 hover:text-white">
+        <span>🎬</span>
+        <span>Video Ad</span>
+      </a>
+    </div>
+  </div>
+
+  <!-- MAIN CONTAINER -->
+  <main class="flex-1 max-w-xl mx-auto w-full px-4 py-3 flex flex-col justify-start space-y-4">
+
+    <!-- ========================================== -->
+    <!-- SECTION 1: LIVE INTERACTIVE CALL ROOM       -->
+    <!-- ========================================== -->
+    <div id="section-call" class="space-y-3.5 flex flex-col">
+
+      <!-- FLOATING DYNAMIC CALL ISLAND -->
+      <div class="flex items-center justify-between text-[11px] px-4 py-2.5 rounded-2xl glass-card shadow-lg">
+        <div class="flex items-center space-x-2">
+          <span id="call-indicator-dot" class="w-2.5 h-2.5 rounded-full bg-slate-500 transition-all"></span>
+          <span id="call-state-badge" class="font-bold text-slate-300">ONE TAP TO CALL</span>
+        </div>
+        <div class="flex items-center space-x-2.5 text-slate-400">
+          <span id="call-duration" class="font-mono text-cyan-400 font-bold">00:00</span>
+          <span>•</span>
+          <span class="text-emerald-400 font-bold flex items-center space-x-1">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span>Barge-In ON</span>
+          </span>
+        </div>
+      </div>
+
+      <!-- LUXURY REAL ESTATE TARGET CARD -->
+      <div class="glass-card rounded-2xl p-3 flex items-center justify-between shadow-md">
+        <div class="flex items-center space-x-3">
+          <div class="w-10 h-10 rounded-xl bg-champagne-500/10 border border-champagne-500/30 flex items-center justify-center text-champagne-400 font-display font-bold text-sm">
+            3B
+          </div>
+          <div>
+            <span class="text-xs font-bold text-white block">The Grand OMR Penthouse</span>
+            <span class="text-[10px] text-slate-400">3 BHK Luxury • 2,150 Sq.Ft • ₹1.85 Cr</span>
+          </div>
+        </div>
+        <span class="px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold">Exclusive</span>
+      </div>
+
+      <!-- INTERACTIVE 3D VOICE ORB & FLUID AUDIO SPECTRUM -->
+      <div class="flex flex-col items-center justify-center py-2 relative">
+        <div class="relative flex items-center justify-center w-full">
+          <!-- 60FPS Reactive Sound Spectrum Canvas -->
+          <canvas id="waveform-canvas" class="w-full h-28 absolute top-1/2 -translate-y-1/2 z-0 opacity-45 pointer-events-none" width="400" height="120"></canvas>
+
+          <!-- Tap-To-Talk Voice Orb -->
+          <div id="voice-orb" onclick="toggleCall()" class="w-32 h-32 rounded-full bg-gradient-to-tr from-emerald-500 via-teal-400 to-cyan-500 p-[2px] flex items-center justify-center orb-glow cursor-pointer transition-all duration-300 z-10 hover:scale-105 active:scale-95 shadow-2xl">
+            <div class="w-full h-full bg-obsidian-950 rounded-full flex flex-col items-center justify-center p-3 text-center">
+              <svg id="icon-orb" class="w-10 h-10 text-emerald-400 transition-all duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 100-6 3 3 0 000 6z" />
+              </svg>
+              <span id="active-voice-name" class="text-[11px] font-bold text-slate-200 mt-1">பல்லவி (Pallavi)</span>
+              <span id="orb-status-text" class="text-[9px] text-emerald-400 uppercase tracking-widest font-bold">TAP TO CALL</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Real-Time Barge-In Lightning Badge -->
+        <div id="barge-in-pill" class="mt-2 px-3 py-1 rounded-full bg-obsidian-900 border border-white/10 text-[11px] text-slate-300 flex items-center space-x-1.5 shadow-sm transition-all">
+          <svg class="w-3.5 h-3.5 text-amber-400" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd" />
+          </svg>
+          <span id="barge-status-text">Speak anytime to Interrupt (&lt;64ms)</span>
+        </div>
+      </div>
+
+      <!-- REAL-TIME LEAD QUALIFICATION DOSSIER & DEAL METER -->
+      <div class="glass-card rounded-2xl p-3.5 shadow-xl">
+        <div class="flex items-center justify-between pb-2 border-b border-white/[0.08] mb-2.5">
+          <div class="flex items-center space-x-2">
+            <span class="text-[11px] font-bold uppercase tracking-wider text-slate-300 font-display">Live Qualification Dossier</span>
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+          </div>
+          <div class="flex items-center space-x-1.5 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full">
+            <span class="text-[10px] text-slate-400">Deal Probability:</span>
+            <span id="dos-score" class="text-xs font-bold text-emerald-400">75%</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2 text-xs">
+          <div class="p-2 rounded-xl bg-obsidian-950/80 border border-white/[0.06]">
+            <span class="text-slate-400 text-[10px] block">Buyer Intent</span>
+            <span id="dos-intent" class="font-bold text-white">Family End-User</span>
+          </div>
+          <div class="p-2 rounded-xl bg-obsidian-950/80 border border-white/[0.06]">
+            <span class="text-slate-400 text-[10px] block">Budget Bracket</span>
+            <span id="dos-budget" class="font-bold text-emerald-400">₹1.5 Cr — ₹2.5 Cr</span>
+          </div>
+          <div class="p-2 rounded-xl bg-obsidian-950/80 border border-white/[0.06]">
+            <span class="text-slate-400 text-[10px] block">Unit Required</span>
+            <span id="dos-unit" class="font-bold text-white">3 BHK Luxury (OMR)</span>
+          </div>
+          <div class="p-2 rounded-xl bg-obsidian-950/80 border border-white/[0.06]">
+            <span class="text-slate-400 text-[10px] block">Site Visit Walkthrough</span>
+            <span id="dos-slot" class="font-bold text-cyan-400">Pending Slot</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- LIVE CONVERSATION TRANSCRIPT STREAM -->
+      <div id="transcript-container" class="glass-card rounded-2xl p-3 h-40 overflow-y-auto space-y-2 text-xs">
+        <div class="flex items-start space-x-2">
+          <div class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center text-[10px] font-bold">AI</div>
+          <div id="initial-ai-greeting" class="bg-obsidian-900/90 border border-white/10 rounded-2xl rounded-tl-none p-2.5 leading-relaxed max-w-[85%] text-slate-200">
+            வணக்கம் Sir! நீங்க ஃபேமிலியோட stay பண்ண 3 BHK பாக்குறீங்களா, இல்ல investment-க்காக பாக்குறீங்களா Sir?
+          </div>
+        </div>
+      </div>
+
+      <!-- QUICK NEGOTIATION CHIPS -->
+      <div class="flex items-center space-x-2 overflow-x-auto pb-1 text-[11px]">
+        <button onclick="sendUtterance('ஃபுல் கேஷ் பேமெண்ட் பண்ணா 15 பர்சன்ட் டிஸ்கவுண்ட் கிடைக்குமா?')" class="px-3 py-1.5 rounded-full bg-obsidian-900 hover:bg-slate-800 border border-white/10 whitespace-nowrap text-slate-300 active:scale-95 transition-all">
+          🏷️ "15% Discount கிடைக்குமா?"
+        </button>
+        <button onclick="sendUtterance('என் பட்ஜெட் 1.5 Crores, OMR-ல 3BHK பார்க்கலாமா?')" class="px-3 py-1.5 rounded-full bg-obsidian-900 hover:bg-slate-800 border border-white/10 whitespace-nowrap text-slate-300 active:scale-95 transition-all">
+          💰 "1.5 Cr Budget (OMR 3BHK)"
+        </button>
+        <button onclick="sendUtterance('நாங்க முதலீட்டுக்காக வாடகைக்கு விட பாக்குறோம்.')" class="px-3 py-1.5 rounded-full bg-obsidian-900 hover:bg-slate-800 border border-white/10 whitespace-nowrap text-slate-300 active:scale-95 transition-all">
+          📈 "High Rental Yield"
+        </button>
+      </div>
+
+      <!-- PRIMARY ACTION BAR -->
+      <div class="glass-card rounded-2xl p-3 flex items-center justify-around shadow-2xl">
+        <!-- Live Microphone Toggle -->
+        <button id="btn-mic" onclick="toggleMicrophone()" class="w-12 h-12 rounded-2xl bg-obsidian-900 hover:bg-slate-800 border border-white/10 flex items-center justify-center transition-all active:scale-95" title="Mute/Unmute Mic">
+          <svg id="mic-icon" class="w-5 h-5 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 100-6 3 3 0 000 6z" />
+          </svg>
+        </button>
+
+        <!-- Instant Barge-In Action Button -->
+        <button onclick="triggerBargeIn()" class="px-5 py-3 rounded-2xl bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-400 font-bold text-xs flex items-center space-x-2 transition-all active:scale-95 shadow-lg shadow-amber-500/10">
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd" />
+          </svg>
+          <span>BARGE IN</span>
+        </button>
+
+        <!-- Big Call / Hangup Button -->
+        <button id="btn-call" onclick="toggleCall()" class="w-14 h-14 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-obsidian-950 flex items-center justify-center font-bold transition-all shadow-xl shadow-emerald-500/35 active:scale-95" title="Start Telecaller">
+          <svg class="w-6 h-6 text-obsidian-950" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+          </svg>
+        </button>
+      </div>
+
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- SECTION 2: STUDIO VOICE DEMOS SHOWCASE     -->
+    <!-- ========================================== -->
+    <div id="section-demos" class="space-y-4 hidden flex-col">
+
+      <div class="glass-card rounded-2xl p-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-sm font-bold text-white font-display">Production Voice Models</h2>
+            <p class="text-xs text-slate-400">Exactly 1 Dedicated Female Voice per Language (English, Tamil, Hindi)</p>
+          </div>
+          <span class="px-2.5 py-1 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold">100% Studio Tested</span>
+        </div>
+      </div>
+
+      <!-- VOICE CARD 1: ENGLISH SIGNATURE -->
+      <div class="glass-card rounded-2xl p-4 space-y-3 border-emerald-500/30 shadow-lg">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-2.5">
+            <span class="text-xl">🇺🇸</span>
+            <div>
+              <h3 class="text-xs font-bold text-white">Maya — Signature CLOSER AI</h3>
+              <p class="text-[10px] text-emerald-400 font-semibold">Kokoro 3-Way SOTA Blend (55% Heart + 30% Nicole + 15% Bella)</p>
+            </div>
+          </div>
+          <span class="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[9px] uppercase font-bold tracking-wider">Locked-In SOTA</span>
+        </div>
+        <p class="text-[11px] text-slate-300 leading-relaxed">
+          Warm consultative authority with natural micro-breaths. Designed for high-net-worth real estate buyers and NRI investors.
+        </p>
+
+        <!-- Scenarios -->
+        <div class="space-y-2 pt-1">
+          <!-- Clip 1 -->
+          <div class="p-2.5 rounded-xl bg-obsidian-900/90 border border-white/5 flex items-center justify-between">
+            <div class="pr-2 flex-1">
+              <span class="text-[11px] font-bold text-slate-200 block">1. Lead Opener & Qualification</span>
+              <p class="text-[10px] text-slate-400 italic truncate max-w-xs">"Hey, good morning! Maya here from the Grand OMR Penthouse..."</p>
+            </div>
+            <button onclick="playStudioClip('/static/demos/en_opener.wav', this)" class="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs flex items-center space-x-1.5 transition-all shadow-md active:scale-95">
+              <span>▶ Play</span>
+            </button>
+          </div>
+          <!-- Clip 2 -->
+          <div class="p-2.5 rounded-xl bg-obsidian-900/90 border border-white/5 flex items-center justify-between">
+            <div class="pr-2 flex-1">
+              <span class="text-[11px] font-bold text-amber-400 block">2. 15% Discount Objection Deflection</span>
+              <p class="text-[10px] text-slate-400 italic truncate max-w-xs">"Look, I totally get where you are coming from on the pricing..."</p>
+            </div>
+            <button onclick="playStudioClip('/static/demos/en_objection.wav', this)" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs flex items-center space-x-1.5 transition-all shadow-md active:scale-95">
+              <span>▶ Play</span>
+            </button>
+          </div>
+          <!-- Clip 3 -->
+          <div class="p-2.5 rounded-xl bg-obsidian-900/90 border border-white/5 flex items-center justify-between">
+            <div class="pr-2 flex-1">
+              <span class="text-[11px] font-bold text-cyan-400 block">3. VIP Penthouse Walkthrough Scheduled</span>
+              <p class="text-[10px] text-slate-400 italic truncate max-w-xs">"Terrific! I have reserved the exclusive sunrise penthouse preview..."</p>
+            </div>
+            <button onclick="playStudioClip('/static/demos/en_closing.wav', this)" class="px-3 py-1.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs flex items-center space-x-1.5 transition-all shadow-md active:scale-95">
+              <span>▶ Play</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- VOICE CARD 2: TAMIL PALLAVI -->
+      <div class="glass-card rounded-2xl p-4 space-y-3 border-teal-500/30 shadow-lg">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-2.5">
+            <span class="text-xl">🇮🇳</span>
+            <div>
+              <h3 class="text-xs font-bold text-white">பல்லவி (Pallavi — Sweet Tanglish Closer)</h3>
+              <p class="text-[10px] text-teal-400 font-semibold">Sarvam Bulbul v3 • Authentic Chennai Conversational Dialect</p>
+            </div>
+          </div>
+          <span class="px-2 py-0.5 rounded bg-teal-500/20 text-teal-300 text-[9px] uppercase font-bold tracking-wider">No "Saar" • Pure Sir</span>
+        </div>
+        <p class="text-[11px] text-slate-300 leading-relaxed">
+          Sweet Chennai telecaller cadence. Perfect pronunciation of English real estate loanwords (3BHK, Penthouse, Amenities, OMR, Site Visit).
+        </p>
+
+        <!-- Scenarios -->
+        <div class="space-y-2 pt-1">
+          <!-- Clip 1 -->
+          <div class="p-2.5 rounded-xl bg-obsidian-900/90 border border-white/5 flex items-center justify-between">
+            <div class="pr-2 flex-1">
+              <span class="text-[11px] font-bold text-slate-200 block">1. சென்னை லீட் வரவேற்பு (Opener)</span>
+              <p class="text-[10px] text-slate-400 italic truncate max-w-xs">"வணக்கம் Sir! OMR கிராண்ட் பென்ட்ஹவுஸ்ல இருந்து பல்லவி பேசுறேங்க..."</p>
+            </div>
+            <button onclick="playStudioClip('/static/demos/ta_opener.mp3', this)" class="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs flex items-center space-x-1.5 transition-all shadow-md active:scale-95">
+              <span>▶ Play</span>
+            </button>
+          </div>
+          <!-- Clip 2 -->
+          <div class="p-2.5 rounded-xl bg-obsidian-900/90 border border-white/5 flex items-center justify-between">
+            <div class="pr-2 flex-1">
+              <span class="text-[11px] font-bold text-amber-400 block">2. 15% டிஸ்கவுண்ட் தடுப்பு (Objection Handling)</span>
+              <p class="text-[10px] text-slate-400 italic truncate max-w-xs">"Sir, pricing மற்றும் special discount பத்தி நம்ம நேரடியா site visit..."</p>
+            </div>
+            <button onclick="playStudioClip('/static/demos/ta_objection.mp3', this)" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs flex items-center space-x-1.5 transition-all shadow-md active:scale-95">
+              <span>▶ Play</span>
+            </button>
+          </div>
+          <!-- Clip 3 -->
+          <div class="p-2.5 rounded-xl bg-obsidian-900/90 border border-white/5 flex items-center justify-between">
+            <div class="pr-2 flex-1">
+              <span class="text-[11px] font-bold text-cyan-400 block">3. விஐபி சைட் விசிட் உறுதி (Site Visit Closed)</span>
+              <p class="text-[10px] text-slate-400 italic truncate max-w-xs">"ரொம்ப சந்தோஷம் Sir! இந்த சனிக்கிழமை காலைல 11 மணிக்கு..."</p>
+            </div>
+            <button onclick="playStudioClip('/static/demos/ta_closing.mp3', this)" class="px-3 py-1.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs flex items-center space-x-1.5 transition-all shadow-md active:scale-95">
+              <span>▶ Play</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- VOICE CARD 3: HINDI SWATI -->
+      <div class="glass-card rounded-2xl p-4 space-y-3 border-cyan-500/30 shadow-lg">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-2.5">
+            <span class="text-xl">🇮🇳</span>
+            <div>
+              <h3 class="text-xs font-bold text-white">स्वाति (Swati — Sweet Hinglish Closer)</h3>
+              <p class="text-[10px] text-cyan-400 font-semibold">Sarvam Bulbul v3 • Conversational North Indian Hinglish</p>
+            </div>
+          </div>
+          <span class="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 text-[9px] uppercase font-bold tracking-wider">Sweet Telecaller</span>
+        </div>
+        <p class="text-[11px] text-slate-300 leading-relaxed">
+          Warm, sweet, and highly convincing consultative tone. Sounds like a top-performing relationship manager speaking directly.
+        </p>
+
+        <!-- Scenarios -->
+        <div class="space-y-2 pt-1">
+          <!-- Clip 1 -->
+          <div class="p-2.5 rounded-xl bg-obsidian-900/90 border border-white/5 flex items-center justify-between">
+            <div class="pr-2 flex-1">
+              <span class="text-[11px] font-bold text-slate-200 block">1. लीड स्वागत व परिचय (Opener)</span>
+              <p class="text-[10px] text-slate-400 italic truncate max-w-xs">"नमस्ते सर! ग्रैंड OMR पेंटहाउस से स्वाति बात कर रही हूँ..."</p>
+            </div>
+            <button onclick="playStudioClip('/static/demos/hi_opener.mp3', this)" class="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-black font-bold text-xs flex items-center space-x-1.5 transition-all shadow-md active:scale-95">
+              <span>▶ Play</span>
+            </button>
+          </div>
+          <!-- Clip 2 -->
+          <div class="p-2.5 rounded-xl bg-obsidian-900/90 border border-white/5 flex items-center justify-between">
+            <div class="pr-2 flex-1">
+              <span class="text-[11px] font-bold text-amber-400 block">2. 15% डिस्काउंट डिफ्लेक्शन (Objection Handling)</span>
+              <p class="text-[10px] text-slate-400 italic truncate max-w-xs">"हाँजी बिल्कुल सर! डिस्काउंट और exclusive payment plan के बारे में..."</p>
+            </div>
+            <button onclick="playStudioClip('/static/demos/hi_objection.mp3', this)" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-bold text-xs flex items-center space-x-1.5 transition-all shadow-md active:scale-95">
+              <span>▶ Play</span>
+            </button>
+          </div>
+          <!-- Clip 3 -->
+          <div class="p-2.5 rounded-xl bg-obsidian-900/90 border border-white/5 flex items-center justify-between">
+            <div class="pr-2 flex-1">
+              <span class="text-[11px] font-bold text-cyan-400 block">3. वीआईपी साइट विज़िट फाइनल (Site Visit Closed)</span>
+              <p class="text-[10px] text-slate-400 italic truncate max-w-xs">"बहुत बढ़िया सर! मैंने इस शनिवार सुबह 11 बजे आपका VIP private walkthrough..."</p>
+            </div>
+            <button onclick="playStudioClip('/static/demos/hi_closing.mp3', this)" class="px-3 py-1.5 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black font-bold text-xs flex items-center space-x-1.5 transition-all shadow-md active:scale-95">
+              <span>▶ Play</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+
+    <!-- ========================================== -->
+    <!-- SECTION 3: CUSTOM LIVE TTS SYNTHESIS       -->
+    <!-- ========================================== -->
+    <div id="section-custom" class="space-y-4 hidden flex-col">
+
+      <div class="glass-card rounded-2xl p-4 space-y-3 shadow-xl">
+        <div class="flex items-center justify-between">
+          <div>
+            <h2 class="text-sm font-bold text-white font-display">Live Neural Voice Playground</h2>
+            <p class="text-xs text-slate-400">Type any sentence to hear real-time AI speech synthesis</p>
+          </div>
+          <span class="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 text-[9px] uppercase font-bold tracking-wider">Instant API</span>
+        </div>
+
+        <!-- Language Picker -->
+        <div class="flex items-center space-x-2 pt-1">
+          <span class="text-xs text-slate-400">Voice:</span>
+          <button onclick="setCustomLang('tamil')" id="custom-ta" class="px-3 py-1 text-xs font-bold rounded-lg bg-emerald-500 text-black transition-all">🇮🇳 தமிழ் (பல்லவி)</button>
+          <button onclick="setCustomLang('english')" id="custom-en" class="px-3 py-1 text-xs font-semibold rounded-lg bg-obsidian-900 text-slate-400 hover:text-white border border-white/10 transition-all">🇺🇸 English (Maya)</button>
+          <button onclick="setCustomLang('hindi')" id="custom-hi" class="px-3 py-1 text-xs font-semibold rounded-lg bg-obsidian-900 text-slate-400 hover:text-white border border-white/10 transition-all">🇮🇳 हिंदी (स्वाति)</button>
+        </div>
+
+        <!-- Quick Presets -->
+        <div class="space-y-1.5 pt-1">
+          <span class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">Quick Real Estate Presets:</span>
+          <div class="flex items-center space-x-2 overflow-x-auto pb-1 text-[11px]">
+            <button onclick="fillCustomPreset(1)" class="px-2.5 py-1 rounded-lg bg-obsidian-900 border border-white/10 text-slate-300 hover:text-white whitespace-nowrap">
+              🏠 RERA Approval
+            </button>
+            <button onclick="fillCustomPreset(2)" class="px-2.5 py-1 rounded-lg bg-obsidian-900 border border-white/10 text-slate-300 hover:text-white whitespace-nowrap">
+              🚆 OMR Metro Connectivity
+            </button>
+            <button onclick="fillCustomPreset(3)" class="px-2.5 py-1 rounded-lg bg-obsidian-900 border border-white/10 text-slate-300 hover:text-white whitespace-nowrap">
+              💼 Payment Milestones
+            </button>
+          </div>
+        </div>
+
+        <!-- Text Input -->
+        <div class="space-y-1.5">
+          <textarea id="custom-text-input" rows="3" class="w-full bg-obsidian-950/90 border border-white/10 rounded-xl p-3 text-xs text-slate-100 focus:outline-none focus:border-emerald-500 transition-colors leading-relaxed" placeholder="Type what you want CLOSER AI to say in Tamil, Hindi, or English..."></textarea>
+        </div>
+
+        <!-- Action Button -->
+        <div class="flex items-center justify-between pt-1">
+          <span id="custom-synth-status" class="text-xs text-slate-400">Ready to speak</span>
+          <button id="btn-synthesize" onclick="synthesizeCustomText()" class="px-5 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-black font-bold text-xs flex items-center space-x-2 transition-all shadow-lg shadow-emerald-500/20 active:scale-95">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span>⚡ Synthesize & Speak</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <script>
+    let currentLanguage = 'tamil';
+    let customLang = 'tamil';
+    let isCallActive = false;
+    let isMicRecording = false;
+    let ws = null;
+    let audioContext = null;
+    let analyser = null;
+    let micStream = null;
+    let speechRecognition = null;
+    let currentAudioSource = null;
+    let callTimerInterval = null;
+    let callSeconds = 0;
+    let activeStudioAudio = null;
+
+    // Tab Switching
+    function switchTab(tab) {
+      document.getElementById('section-call').classList.toggle('hidden', tab !== 'call');
+      document.getElementById('section-demos').classList.toggle('hidden', tab !== 'demos');
+      document.getElementById('section-custom').classList.toggle('hidden', tab !== 'custom');
+
+      const tabs = ['call', 'demos', 'custom'];
+      tabs.forEach(t => {
+        const btn = document.getElementById(`tab-btn-${t}`);
+        if (t === tab) {
+          btn.className = "py-2 rounded-xl transition-all flex items-center justify-center space-x-1.5 bg-emerald-500 text-black font-bold shadow-md shadow-emerald-500/30";
+        } else {
+          btn.className = "py-2 rounded-xl transition-all flex items-center justify-center space-x-1.5 text-slate-400 hover:text-white";
+        }
+      });
+    }
+
+    // Realistic Sound Synthesizer (Dial tone & Connect chime)
+    function playTelephoneTone(type = 'connect') {
+      try {
+        const ctx = audioContext || new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        if (type === 'ring') {
+          osc.frequency.setValueAtTime(440, ctx.currentTime);
+          gain.gain.setValueAtTime(0.08, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.4);
+        } else {
+          osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+          osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1);
+          gain.gain.setValueAtTime(0.06, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.35);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.35);
+        }
+      } catch (e) {}
+    }
+
+    function initAudioContext() {
+      if (!audioContext) {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioContext.createAnalyser();
+        analyser.fftSize = 64;
+        startCanvasVisualizer();
+      }
+      if (audioContext.state === 'suspended') {
+        audioContext.resume();
+      }
+    }
+
+    // 60FPS Reactive Soundwave Visualizer on Canvas
+    function startCanvasVisualizer() {
+      const canvas = document.getElementById('waveform-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+      function draw() {
+        requestAnimationFrame(draw);
+        analyser.getByteFrequencyData(dataArray);
+
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const barWidth = (canvas.width / dataArray.length) * 1.5;
+        let x = 0;
+
+        for (let i = 0; i < dataArray.length; i++) {
+          const barHeight = (dataArray[i] / 255) * canvas.height * 0.75;
+          const gradient = ctx.createLinearGradient(0, canvas.height, 0, 0);
+          gradient.addColorStop(0, 'rgba(16, 185, 129, 0.05)');
+          gradient.addColorStop(1, 'rgba(6, 182, 212, 0.7)');
+
+          ctx.fillStyle = gradient;
+          ctx.fillRect(x, (canvas.height - barHeight) / 2, barWidth - 2, barHeight);
+          x += barWidth;
+        }
+      }
+      draw();
+    }
+
+    function switchLanguage(lang) {
+      currentLanguage = lang;
+      document.getElementById('btn-lang-en').className = "px-2.5 py-1 text-xs font-semibold rounded-full transition-all text-slate-400 hover:text-white";
+      document.getElementById('btn-lang-ta').className = "px-2.5 py-1 text-xs font-semibold rounded-full transition-all text-slate-400 hover:text-white";
+      document.getElementById('btn-lang-hi').className = "px-2.5 py-1 text-xs font-semibold rounded-full transition-all text-slate-400 hover:text-white";
+
+      const activeBtn = document.getElementById(lang === 'english' ? 'btn-lang-en' : (lang === 'tamil' ? 'btn-lang-ta' : 'btn-lang-hi'));
+      activeBtn.className = "px-2.5 py-1 text-xs font-bold rounded-full transition-all bg-emerald-500 text-black shadow-md shadow-emerald-500/30";
+
+      const labels = {
+        'english': 'Signature Closer (English)',
+        'tamil': 'பல்லவி (Pallavi — Tamil)',
+        'hindi': 'स्वाति (Swati — Hindi)'
+      };
+      document.getElementById('active-voice-name').innerText = labels[lang];
+
+      const initialGreetings = {
+        'tamil': "வணக்கம் Sir! நீங்க ஃபேமிலியோட stay பண்ண 3 BHK பாக்குறீங்களா, இல்ல investment-க்காக பாக்குறீங்களா Sir?",
+        'hindi': "नमस्ते सर! आप अपने परिवार के साथ रहने के लिए 3 BHK फ्लैट देख रहे हैं या फिर investment के लिए?",
+        'english': "Hey, good morning! Thanks for reaching out. Are you looking for a luxury two-bedroom or three-bedroom layout for your family?"
+      };
+      document.getElementById('initial-ai-greeting').innerText = initialGreetings[lang];
+
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'set_agent', agent: lang }));
+      }
+    }
+
+    // ==========================================
+    // STUDIO AUDIO CLIPS PLAYBACK
+    // ==========================================
+    function playStudioClip(url, btnElement) {
+      initAudioContext();
+      if (activeStudioAudio) {
+        activeStudioAudio.pause();
+        activeStudioAudio.currentTime = 0;
+        activeStudioAudio = null;
+        document.querySelectorAll('#section-demos button').forEach(b => {
+          if (b.innerText.includes('⏹')) b.innerHTML = '<span>▶ Play</span>';
+        });
+      }
+
+      const audio = new Audio(url);
+      activeStudioAudio = audio;
+      btnElement.innerHTML = '<span>⏹ Stop</span>';
+      btnElement.classList.add('animate-pulse');
+
+      audio.onended = () => {
+        btnElement.innerHTML = '<span>▶ Play</span>';
+        btnElement.classList.remove('animate-pulse');
+        activeStudioAudio = null;
+      };
+      audio.onerror = () => {
+        btnElement.innerHTML = '<span>▶ Play</span>';
+        btnElement.classList.remove('animate-pulse');
+        activeStudioAudio = null;
+      };
+
+      audio.play().catch(e => {
+        console.warn("Playback error:", e);
+        btnElement.innerHTML = '<span>▶ Play</span>';
+        btnElement.classList.remove('animate-pulse');
+      });
+    }
+
+    // ==========================================
+    // CUSTOM TTS SYNTHESIZER
+    // ==========================================
+    function setCustomLang(lang) {
+      customLang = lang;
+      ['tamil', 'english', 'hindi'].forEach(l => {
+        const b = document.getElementById(`custom-${l === 'tamil' ? 'ta' : (l === 'english' ? 'en' : 'hi')}`);
+        if (l === lang) {
+          b.className = "px-3 py-1 text-xs font-bold rounded-lg bg-emerald-500 text-black transition-all";
+        } else {
+          b.className = "px-3 py-1 text-xs font-semibold rounded-lg bg-obsidian-900 text-slate-400 hover:text-white border border-white/10 transition-all";
+        }
+      });
+    }
+
+    function fillCustomPreset(idx) {
+      const presets = {
+        'tamil': [
+          "Sir, நம்ம ப்ராஜெக்ட் 100% CMDA மற்றும் RERA approved. எந்த வில்லங்கமும் இல்லாம நிம்மதியா வாங்கலாம் Sir.",
+          "OMR Metro Phase 2 ஸ்டேஷன் நம்ம கேட்ல இருந்து வெறும் 3 நிமிட தூரத்துல இருக்குங்க Sir. டிராவல் ரொம்ப ஈஸி.",
+          "Construction-linked milestone payment plan இருக்குங்க Sir. வீடு கட்ட கட்ட நீங்க instalment-ஆ பணம் கட்டலாம்."
+        ],
+        'english': [
+          "Sir, our project is 100% CMDA and RERA approved with bank pre-approvals from SBI and HDFC.",
+          "The upcoming OMR Metro Phase 2 station is barely 3 minutes from our main entrance.",
+          "We offer a developer-backed milestone payment schedule linked strictly to construction stages."
+        ],
+        'hindi': [
+          "सर, हमारा प्रोजेक्ट 100% RERA और CMDA अप्रूव्ड है और बैंक लोन भी बहुत आसानी से हो जाता है जी।",
+          "OMR मेट्रो स्टेशन हमारे मेन गेट से मात्र 3 मिनट की दूरी पर है सर। आवागमन बहुत ही आसान है।",
+          "हमारे पास कंस्ट्रक्शन-लिंक्ड माइलस्टोन पेमेंट प्लान है सर, जिससे आपका पैसा 100% सुरक्षित रहता है।"
+        ]
+      };
+      const arr = presets[customLang] || presets['tamil'];
+      document.getElementById('custom-text-input').value = arr[idx - 1] || "";
+    }
+
+    async function synthesizeCustomText() {
+      const text = document.getElementById('custom-text-input').value.trim();
+      if (!text) {
+        alert("Please enter some text to speak!");
+        return;
+      }
+
+      const statusEl = document.getElementById('custom-synth-status');
+      const btn = document.getElementById('btn-synthesize');
+      statusEl.innerText = "Synthesizing neural voice...";
+      btn.disabled = true;
+
+      try {
+        const resp = await fetch('/api/voice/synthesize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: text, language: customLang })
+        });
+        const data = await resp.json();
+        if (data.status === 'success' && data.audio_base64) {
+          statusEl.innerText = `Speaking (${data.voice_label})...`;
+          playBase64Audio(data.audio_base64);
+        } else {
+          statusEl.innerText = "Synthesis failed: " + (data.error || "Unknown error");
+        }
+      } catch (err) {
+        statusEl.innerText = "Network error: " + err.message;
+      } finally {
+        btn.disabled = false;
+        setTimeout(() => { statusEl.innerText = "Ready to speak"; }, 5000);
+      }
+    }
+
+    // ==========================================
+    // CALL LOGIC & WEBRTC
+    // ==========================================
+    function toggleCall() {
+      initAudioContext();
+      if (!isCallActive) {
+        startRealCall();
+      } else {
+        endRealCall();
+      }
+    }
+
+    function startRealCall() {
+      isCallActive = true;
+      playTelephoneTone('connect');
+
+      document.getElementById('call-indicator-dot').className = "w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping";
+      document.getElementById('call-state-badge').innerText = "LIVE CALL • FULL DUPLEX";
+      document.getElementById('call-state-badge').className = "font-bold text-emerald-400";
+      document.getElementById('btn-call').className = "w-14 h-14 rounded-2xl bg-red-500 hover:bg-red-600 text-white flex items-center justify-center font-bold transition-all shadow-xl shadow-red-500/35 active:scale-95";
+      document.getElementById('orb-status-text').innerText = "AI CLOSER SPEAKING";
+
+      // Call Timer
+      callSeconds = 0;
+      clearInterval(callTimerInterval);
+      callTimerInterval = setInterval(() => {
+        callSeconds++;
+        const mins = String(Math.floor(callSeconds / 60)).padStart(2, '0');
+        const secs = String(callSeconds % 60).padStart(2, '0');
+        document.getElementById('call-duration').innerText = `${mins}:${secs}`;
+      }, 1000);
+
+      connectWebSocket();
+
+      // Play authentic studio greeting clip directly for highest fidelity!
+      const demoClipMap = {
+        'tamil': '/static/demos/ta_opener.mp3',
+        'english': '/static/demos/en_opener.wav',
+        'hindi': '/static/demos/hi_opener.mp3'
+      };
+
+      const clipUrl = demoClipMap[currentLanguage] || demoClipMap['tamil'];
+      playStudioClipOnCall(clipUrl, () => {
+        startLiveMicrophone();
+      });
+    }
+
+    function playStudioClipOnCall(url, onEnd) {
+      initAudioContext();
+      setOrbSpeaking(true);
+      const audio = new Audio(url);
+      currentAudioSource = audio;
+
+      audio.onended = () => {
+        setOrbSpeaking(false);
+        currentAudioSource = null;
+        if (onEnd) onEnd();
+      };
+      audio.onerror = () => {
+        setOrbSpeaking(false);
+        currentAudioSource = null;
+        if (onEnd) onEnd();
+      };
+      audio.play().catch(e => {
+        setOrbSpeaking(false);
+        if (onEnd) onEnd();
+      });
+    }
+
+    function endRealCall() {
+      isCallActive = false;
+      clearInterval(callTimerInterval);
+      document.getElementById('call-indicator-dot').className = "w-2.5 h-2.5 rounded-full bg-slate-500";
+      document.getElementById('call-state-badge').innerText = "CALL ENDED • STANDBY";
+      document.getElementById('call-state-badge').className = "font-bold text-slate-300";
+      document.getElementById('btn-call').className = "w-14 h-14 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-obsidian-950 flex items-center justify-center font-bold transition-all shadow-xl shadow-emerald-500/35 active:scale-95";
+      document.getElementById('orb-status-text').innerText = "TAP TO CALL";
+
+      stopLiveMicrophone();
+      if (ws) { ws.close(); ws = null; }
+      if (currentAudioSource) {
+        if (currentAudioSource.pause) currentAudioSource.pause();
+        else if (currentAudioSource.stop) currentAudioSource.stop();
+        currentAudioSource = null;
+      }
+      setOrbSpeaking(false);
+    }
+
+    function connectWebSocket() {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const host = window.location.host || 'localhost:8000';
+      try {
+        ws = new WebSocket(`${protocol}//${host}/ws/call`);
+        ws.onopen = () => {
+          ws.send(JSON.stringify({ type: 'set_agent', agent: currentLanguage }));
+        };
+        ws.onmessage = (event) => {
+          const data = JSON.parse(event.data);
+          handleServerMessage(data);
+        };
+      } catch (e) {
+        console.warn("[WebSocket] Local fallback mode.");
+      }
+    }
+
+    async function startLiveMicrophone() {
+      try {
+        micStream = await navigator.mediaDevices.getUserMedia({
+          audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+        });
+        const source = audioContext.createMediaStreamSource(micStream);
+        source.connect(analyser);
+
+        isMicRecording = true;
+        document.getElementById('btn-mic').className = "w-12 h-12 rounded-2xl bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 flex items-center justify-center transition-all shadow-lg shadow-emerald-500/20";
+        document.getElementById('orb-status-text').innerText = "LISTENING TO YOU";
+        document.getElementById('voice-orb').classList.add('orb-listening');
+
+        const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (SpeechRec) {
+          speechRecognition = new SpeechRec();
+          speechRecognition.continuous = true;
+          speechRecognition.interimResults = false;
+          speechRecognition.lang = currentLanguage === 'tamil' ? 'ta-IN' : (currentLanguage === 'hindi' ? 'hi-IN' : 'en-US');
+
+          speechRecognition.onresult = (event) => {
+            const last = event.results.length - 1;
+            const text = event.results[last][0].transcript.trim();
+            if (text) {
+              triggerBargeIn();
+              sendUtterance(text);
+            }
+          };
+          speechRecognition.start();
+        }
+      } catch (err) {
+        console.warn("[Microphone] Permission needed:", err);
+      }
+    }
+
+    function stopLiveMicrophone() {
+      isMicRecording = false;
+      document.getElementById('voice-orb').classList.remove('orb-listening');
+      if (micStream) {
+        micStream.getTracks().forEach(track => track.stop());
+        micStream = null;
+      }
+      if (speechRecognition) {
+        try { speechRecognition.stop(); } catch(e){}
+        speechRecognition = null;
+      }
+      document.getElementById('btn-mic').className = "w-12 h-12 rounded-2xl bg-obsidian-900 hover:bg-slate-800 border border-white/10 flex items-center justify-center transition-all";
+    }
+
+    function toggleMicrophone() {
+      if (!isMicRecording) {
+        startLiveMicrophone();
+      } else {
+        stopLiveMicrophone();
+      }
+    }
+
+    function triggerBargeIn() {
+      if (currentAudioSource) {
+        if (currentAudioSource.pause) currentAudioSource.pause();
+        else if (currentAudioSource.stop) currentAudioSource.stop();
+        currentAudioSource = null;
+      }
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+      setOrbSpeaking(false);
+      document.getElementById('barge-status-text').innerText = "⚡ BARGE-IN TRIGGERED (<64ms)";
+      document.getElementById('barge-in-pill').className = "mt-2 px-3 py-1 rounded-full bg-amber-500/20 border border-amber-500 text-[11px] text-amber-300 flex items-center space-x-1.5 shadow-md shadow-amber-500/20 transition-all";
+
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'barge_in_manual' }));
+      }
+
+      setTimeout(() => {
+        document.getElementById('barge-status-text').innerText = "Speak anytime to Interrupt (<64ms)";
+        document.getElementById('barge-in-pill').className = "mt-2 px-3 py-1 rounded-full bg-obsidian-900 border border-white/10 text-[11px] text-slate-300 flex items-center space-x-1.5 shadow-sm transition-all";
+      }, 2500);
+    }
+
+    function handleServerMessage(data) {
+      if (data.type === 'transcript') {
+        appendTranscript(data.role, data.text);
+      } else if (data.type === 'dossier_update') {
+        const d = data.dossier;
+        if (d.buyer_type) document.getElementById('dos-intent').innerText = d.buyer_type;
+        if (d.budget) document.getElementById('dos-budget').innerText = d.budget;
+        if (d.property_type) document.getElementById('dos-unit').innerText = d.property_type;
+        if (d.site_visit_interest) document.getElementById('dos-slot').innerText = d.site_visit_interest;
+        if (data.deal_score) document.getElementById('dos-score').innerText = `${data.deal_score}%`;
+      } else if (data.type === 'barge_in') {
+        triggerBargeIn();
+      } else if (data.type === 'audio_payload') {
+        playBase64Audio(data.audio_base64);
+      } else if (data.state_change) {
+        setOrbSpeaking(data.state === 'AGENT_SPEAKING');
+      }
+    }
+
+    function playBase64Audio(base64Str) {
+      initAudioContext();
+      try {
+        const binary = atob(base64Str);
+        const len = binary.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+          bytes[i] = binary.charCodeAt(i);
+        }
+        audioContext.decodeAudioData(bytes.buffer, (buffer) => {
+          if (currentAudioSource) {
+            try { currentAudioSource.stop(); } catch (e) {}
+          }
+          currentAudioSource = audioContext.createBufferSource();
+          currentAudioSource.buffer = buffer;
+          currentAudioSource.connect(analyser);
+          analyser.connect(audioContext.destination);
+          currentAudioSource.onended = () => {
+            setOrbSpeaking(false);
+            if (isCallActive) startLiveMicrophone();
+          };
+          currentAudioSource.start(0);
+          setOrbSpeaking(true);
+        });
+      } catch (e) {
+        console.warn("[WebAudio] Playback error:", e);
+      }
+    }
+
+    function setOrbSpeaking(isSpeaking) {
+      const orb = document.getElementById('voice-orb');
+      if (!orb) return;
+      if (isSpeaking) {
+        orb.classList.remove('orb-listening');
+        orb.classList.add('orb-speaking');
+        document.getElementById('orb-status-text').innerText = "CLOSER TALKING";
+      } else {
+        orb.classList.remove('orb-speaking');
+        document.getElementById('orb-status-text').innerText = isCallActive ? "LISTENING TO YOU" : "TAP TO CALL";
+        if (isCallActive) orb.classList.add('orb-listening');
+      }
+    }
+
+    function sendUtterance(text) {
+      initAudioContext();
+      appendTranscript('user', text);
+
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'user_utterance_text', text: text }));
+      } else {
+        simulateOfflineResponse(text);
+      }
+    }
+
+    function simulateOfflineResponse(text) {
+      const lower = text.toLowerCase();
+      let reply = "";
+
+      const isPrice = lower.includes("discount") || lower.includes("டிஸ்கவுண்ட்") || lower.includes("ரேட்") || lower.includes("rate") || lower.includes("விலை");
+
+      if (isPrice) {
+        reply = currentLanguage === 'tamil'
+          ? "Sir, pricing மற்றும் special discount பத்தி நம்ம நேரடியா site visit வரும்போது பேசிக்கலாமுங்க. இந்த வியாழக்கிழமை சாயங்காலம் 4 மணிக்கு பார்க்கலாமா, இல்ல சனிக்கிழமை காலைல பார்க்கலாமா Sir?"
+          : (currentLanguage === 'hindi'
+            ? "हाँजी बिल्कुल! डिस्काउंट और final pricing के बारे में हम site visit पर बैठकर आराम से बात कर सकते हैं जी। क्या गुरुवार शाम 4 बजे या शनिवार सुबह का समय सही रहेगा सर?"
+            : "Look, I totally get where you are coming from on the pricing. The developer authorizes custom payment milestones during the private walkthrough. Would Thursday at 4 PM or Saturday morning work better for you?");
+        document.getElementById('dos-slot').innerText = "Confirmed (Site Visit)";
+        document.getElementById('dos-score').innerText = "88%";
+      } else if (lower.includes("1.5") || lower.includes("budget") || lower.includes("பட்ஜெட்")) {
+        reply = currentLanguage === 'tamil'
+          ? "கண்டிப்பா Sir! உங்க budget-க்கு ஏத்த மாதிரி OMR-ல ரொம்பவே அழகான 3 BHK luxury projects இருக்குங்க. இந்த weekend நேர்ல வந்து site visit பார்க்கலாமா Sir?"
+          : (currentLanguage === 'hindi'
+            ? "जी बिल्कुल सर! अगर आपका budget डेढ़ करोड़ के आस-पास है, तो हमारे पास बहुत ही शानदार 3 BHK luxury options हैं। क्या इस weekend एक बार site visit plan करें?"
+            : "Got it! That fits our luxury inventory perfectly. Would you like to schedule a private walkthrough this weekend?");
+        document.getElementById('dos-budget').innerText = "₹1.50 Crores";
+        document.getElementById('dos-score').innerText = "75%";
+      } else {
+        reply = currentLanguage === 'tamil'
+          ? "ரொம்ப நல்ல choice Sir! High rental yield தரக்கூடிய சூப்பரான investment options எங்ககிட்ட இருக்குங்க. இந்த சனிக்கிழமை நேர்ல வந்து பார்க்கலாமா Sir?"
+          : (currentLanguage === 'hindi'
+            ? "शानदार सर! हमारे पास high rental yield देने वाले बहुत ही बेहतरीन investment options हैं जी। क्या मैं आपके लिए कल का slot confirm करूँ?"
+            : "Understood. We have strong high-yield options. Would you prefer a morning or afternoon walkthrough?");
+        document.getElementById('dos-intent').innerText = "High-Yield Investor";
+        document.getElementById('dos-score').innerText = "82%";
+      }
+
+      setTimeout(() => {
+        appendTranscript('agent', reply);
+        speakAloud(reply, () => {
+          if (isCallActive) startLiveMicrophone();
+        });
+      }, 400);
+    }
+
+    function speakAloud(text, onEnd) {
+      initAudioContext();
+      setOrbSpeaking(true);
+
+      // Call API synthesizer for studio neural quality
+      fetch('/api/voice/synthesize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: text, language: currentLanguage })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'success' && data.audio_base64) {
+          playBase64Audio(data.audio_base64);
+        } else {
+          fallbackSpeechSynth(text, onEnd);
+        }
+      })
+      .catch(() => {
+        fallbackSpeechSynth(text, onEnd);
+      });
+    }
+
+    function fallbackSpeechSynth(text, onEnd) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = currentLanguage === 'tamil' ? 'ta-IN' : (currentLanguage === 'hindi' ? 'hi-IN' : 'en-US');
+        utter.rate = 0.95;
+        utter.onend = () => {
+          setOrbSpeaking(false);
+          if (onEnd) onEnd();
+        };
+        utter.onerror = () => {
+          setOrbSpeaking(false);
+          if (onEnd) onEnd();
+        };
+        window.speechSynthesis.speak(utter);
+      } else {
+        setTimeout(() => {
+          setOrbSpeaking(false);
+          if (onEnd) onEnd();
+        }, 1500);
+      }
+    }
+
+    function appendTranscript(role, text) {
+      const container = document.getElementById('transcript-container');
+      const isAI = role === 'agent';
+      const div = document.createElement('div');
+      div.className = isAI ? "flex items-start space-x-2" : "flex items-start space-x-2 justify-end";
+      
+      div.innerHTML = isAI 
+        ? `<div class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center text-[10px] font-bold">AI</div>
+           <div class="bg-obsidian-900/90 border border-white/10 rounded-2xl rounded-tl-none p-2.5 text-xs leading-relaxed max-w-[85%] text-slate-200 shadow-md">${text}</div>`
+        : `<div class="bg-emerald-500 text-black font-semibold rounded-2xl rounded-tr-none p-2.5 text-xs leading-relaxed max-w-[85%] shadow-md">${text}</div>
+           <div class="w-6 h-6 rounded-full bg-slate-700 text-white flex items-center justify-center text-[10px] font-bold">YOU</div>`;
+      
+      container.appendChild(div);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    // Default to filling first preset
+    fillCustomPreset(1);
+  </script>
+</body>
+</html>

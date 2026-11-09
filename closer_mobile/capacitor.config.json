@@ -1,0 +1,22 @@
+{
+  "appId": "ai.closer.telecaller",
+  "appName": "CLOSER AI",
+  "webDir": "dist",
+  "bundledWebRuntime": false,
+  "server": {
+    "cleartext": true,
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "CapacitorHttp": {
+      "enabled": true
+    }
+  },
+  "ios": {
+    "scheme": "CLOSER AI",
+    "microphoneUsageDescription": "CLOSER AI requires real-time microphone access to enable high-ticket voice sales calls and instant human interruption."
+  },
+  "android": {
+    "allowMixedContent": true
+  }
+}
