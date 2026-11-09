@@ -3,6 +3,8 @@
 *.mp3
 !closer_mobile/dist/demos/*.wav
 !closer_mobile/dist/demos/*.mp3
+!demos/*.wav
+!demos/*.mp3
 __pycache__/
 *.pyc
 .pytest_cache/

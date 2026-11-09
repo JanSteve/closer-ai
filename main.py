@@ -100,6 +100,15 @@ async def serve_js():
     return Response(status_code=404)
 
 
+@app.get("/demos/{filename}")
+async def serve_demo_audio(filename: str):
+    file_path = ROOT_DIR / "demos" / filename
+    if file_path.exists() and file_path.is_file():
+        media_type = "audio/wav" if filename.endswith(".wav") else "audio/mpeg"
+        return FileResponse(file_path, media_type=media_type)
+    return Response(status_code=404)
+
+
 @app.get("/assets/{filename}")
 async def serve_asset(filename: str):
     file_path = ROOT_DIR / "assets" / filename
@@ -220,21 +229,46 @@ async def process_turn(request: Request):
     if utterance in ("PREVIEW_SAMPLE", "STUDIO_SAMPLE"):
         if custom_text:
             reply = custom_text
-        elif "hi-in" in voice.lower() or "swara" in voice.lower() or "madhur" in voice.lower():
-            reply = "नमस्ते! क्लोज़र एआई कस्टमर सपोर्ट में आपका स्वागत है। मैं आपकी प्रॉपर्टी सर्च और साइट विज़िट में किस प्रकार सहायता कर सकती हूँ?"
-        elif "en-in" in voice.lower() or "neerja" in voice.lower() or "prabhat" in voice.lower():
-            reply = "Namaste! This is CLOSER AI client relationship concierge. How may I assist you with your premium residential inquiry today?"
+        elif "tam" in voice.lower() or "pallavi" in voice.lower():
+            reply = "வணக்கம் Sir! OMR கிராண்ட் பென்ட்ஹவுஸ்ல இருந்து பல்லவி பேசுறேங்க. நம்ம luxury 3BHK residences பத்தி தெரிஞ்சுக்க enquiry பண்ணியிருந்தீங்க. நீங்க ஃபேமிலியோட stay பண்ண பாக்குறீங்களா, இல்ல investment-க்காகவா Sir?"
+        elif "hi" in voice.lower() or "swati" in voice.lower() or "swara" in voice.lower():
+            reply = "नमस्ते सर! ग्रैंड OMR पेंटहाउस से स्वाति बात कर रही हूँ। आपने हमारी luxury 3BHK residences के लिए enquiry की थी। सर, आप अपने परिवार के साथ रहने के लिए देख रहे हैं या फिर high-yield investment के लिए?"
         else:
-            reply = "Hello, this is CLOSER AI luxury real estate concierge. How can I assist you with your estate search today?"
+            reply = "Hey, good morning! Maya here from the Grand OMR Penthouse. I noticed you were exploring our private residences online. Quick question — are you looking for an investment or a spacious layout for your family?"
     elif _app_conversation_engine:
         reply = _app_conversation_engine.process_user_turn(utterance)
     else:
         reply = f"Thank you for your inquiry. CLOSER AI is processing: {utterance}"
 
+    # Map voice aliases to the 3 production models
+    v_lower = voice.lower()
+    if "tam" in v_lower or "pallavi" in v_lower:
+        actual_voice = "ta-IN-PallaviNeural"
+        rate = rate or "-3%"
+        pitch = pitch or "+1Hz"
+        try:
+            from closer.telephony.phonetic_normalizer import IndicPhoneticNormalizer
+            reply = IndicPhoneticNormalizer.normalize(reply, "tamil")
+        except Exception:
+            pass
+    elif "hi" in v_lower or "swati" in v_lower or "swara" in v_lower:
+        actual_voice = "hi-IN-SwaraNeural"
+        rate = rate or "-4%"
+        pitch = pitch or "+1Hz"
+        try:
+            from closer.telephony.phonetic_normalizer import IndicPhoneticNormalizer
+            reply = IndicPhoneticNormalizer.normalize(reply, "hindi")
+        except Exception:
+            pass
+    else:
+        actual_voice = "en-US-AriaNeural"
+        rate = rate or "-3%"
+        pitch = pitch or "+0Hz"
+
     audio_b64 = ""
     if _app_tts_engine:
         try:
-            audio_bytes, _ = _app_tts_engine.synthesize_sync(reply, voice=voice, rate=rate, pitch=pitch)
+            audio_bytes, _ = _app_tts_engine.synthesize_sync(reply, voice=actual_voice, rate=rate, pitch=pitch)
             audio_b64 = base64.b64encode(audio_bytes).decode("utf-8")
         except Exception:
             audio_b64 = ""

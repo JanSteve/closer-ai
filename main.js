@@ -842,12 +842,54 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
+  window.showMarketTab = function (market) {
+    const tabUSA = document.getElementById('tabUSA');
+    const tabTamil = document.getElementById('tabTamil');
+    const tabHindi = document.getElementById('tabHindi');
+    const panelUSA = document.getElementById('panelUSA');
+    const panelTamil = document.getElementById('panelTamil');
+    const panelHindi = document.getElementById('panelHindi');
+
+    [tabUSA, tabTamil, tabHindi].forEach(t => t && t.classList.remove('active'));
+    [panelUSA, panelTamil, panelHindi].forEach(p => p && p.classList.remove('active'));
+
+    if (market === 'usa' || market === 'english') {
+      if (tabUSA) tabUSA.classList.add('active');
+      if (panelUSA) panelUSA.classList.add('active');
+    } else if (market === 'tamil') {
+      if (tabTamil) tabTamil.classList.add('active');
+      if (panelTamil) panelTamil.classList.add('active');
+    } else if (market === 'hindi') {
+      if (tabHindi) tabHindi.classList.add('active');
+      if (panelHindi) panelHindi.classList.add('active');
+    }
+  };
+
   window.playVoiceSample = async function (market) {
-    const isIndia = market === 'india';
-    const text = isIndia
-      ? "Namaste! This is Priya from Customer Care. I would be delighted to assist you with your 3 BHK enquiry in Whitefield. The project is 100% RERA approved. May I send the brochure directly to your WhatsApp?"
-      : "Good morning! This is Sophia with CLOSER Luxury Concierge. I have the private dossier ready for the 10484 Bellagio Road estate in Bel Air. Are you currently looking to tour this Thursday?";
-    const voice = isIndia ? 'en-IN-NeerjaNeural' : 'en-US-AriaNeural';
+    const audioMap = {
+      'english': '/demos/en_opener.wav',
+      'usa': '/demos/en_opener.wav',
+      'tamil': '/demos/ta_opener.mp3',
+      'hindi': '/demos/hi_opener.mp3'
+    };
+    const audioSrc = audioMap[market] || '/demos/en_opener.wav';
+
+    try {
+      const audio = new Audio(audioSrc);
+      audio.play();
+      return;
+    } catch (e) {
+      console.warn("Direct audio playback failed, falling back to API", e);
+    }
+
+    const textMap = {
+      'english': "Hey, good morning! Maya here from the Grand OMR Penthouse. I noticed you were exploring our private residences online. Quick question — are you looking for an investment or a spacious layout for your family?",
+      'usa': "Hey, good morning! Maya here from the Grand OMR Penthouse. I noticed you were exploring our private residences online. Quick question — are you looking for an investment or a spacious layout for your family?",
+      'tamil': "வணக்கம் Sir! OMR கிராண்ட் பென்ட்ஹவுஸ்ல இருந்து பல்லவி பேசுறேங்க. நம்ம luxury 3BHK residences பத்தி தெரிஞ்சுக்க enquiry பண்ணியிருந்தீங்க. நீங்க ஃபேமிலியோட stay பண்ண பாக்குறீங்களா, இல்ல investment-க்காகவா Sir?",
+      'hindi': "नमस्ते सर! ग्रैंड OMR पेंटहाउस से स्वाति बात कर रही हूँ। आपने हमारी luxury 3BHK residences के लिए enquiry की थी। सर, आप अपने परिवार के साथ रहने के लिए देख रहे हैं या फिर high-yield investment के लिए?"
+    };
+    const text = textMap[market] || textMap['english'];
+    const voice = market === 'tamil' ? 'tamil' : (market === 'hindi' ? 'hindi' : 'english');
 
     try {
       const res = await fetch('/api/turn', {
@@ -862,9 +904,7 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
       }
-    } catch {
-      // Fallback to local speech
-    }
+    } catch {}
 
     speakBrowserTTS(text);
   };
@@ -872,121 +912,96 @@ document.addEventListener('DOMContentLoaded', () => {
   // -------------------------------------------------------------------------
   // 7. Interactive Voice Soundboard Studio (#voice-studio)
   // -------------------------------------------------------------------------
-  let studioSelectedVoice = 'en-US-AriaNeural';
-  let studioSelectedScenario = 'friction_busy';
+  let studioSelectedVoice = 'english';
+  let studioSelectedScenario = 'en_opener';
   let studioSelectedRate = '-3%';
   let studioSelectedSpeed = '1.0';
   let studioSelectedLLM = 'llama-3.3-70b';
   let isAcousticCellular = false;
 
   const STUDIO_SCENARIOS = {
-    friction_busy: {
-      speaker: 'CLOSER AI (Sophia / Guy):',
-      text: "I completely understand and respect your schedule. I will make a priority note to ring you back tomorrow afternoon. Would 2:00 PM work best for you?"
+    // English Scenarios (Maya - Kokoro SOTA 3-Way Blend)
+    en_opener: {
+      voice: 'english',
+      audio_url: '/demos/en_opener.wav',
+      speaker: 'CLOSER AI (Maya — Signature English Closer):',
+      text: "Hey, good morning! Maya here from the Grand OMR Penthouse. I noticed you were exploring our private residences online. Quick question — are you looking for an investment or a spacious layout for your family?"
     },
-    just_browsing: {
-      speaker: 'CLOSER AI (Sophia):',
-      text: "Gotcha, totally understand... Browsing is the most exciting part! Many of our private clients start looking a few months out. If a quiet off-market property with skyline views opened up at the right number, what would be your ideal timeline?"
+    en_objection: {
+      voice: 'english',
+      audio_url: '/demos/en_objection.wav',
+      speaker: 'CLOSER AI (Maya — Signature English Closer):',
+      text: "Look, I totally get where you are coming from on the pricing. The developer only authorizes custom payment milestones and private concessions in-person during the private walkthrough. Would Thursday at 4 PM or Saturday morning work better for you?"
     },
-    luxury_cash: {
-      speaker: 'CLOSER AI (Sophia):',
-      text: "Excellent. For an all-cash acquisition in Bel Air at $8.5M, we coordinate direct proof-of-funds with private escrow. Would you prefer a Thursday private walkthrough?"
+    en_closing: {
+      voice: 'english',
+      audio_url: '/demos/en_closing.wav',
+      speaker: 'CLOSER AI (Maya — Signature English Closer):',
+      text: "Terrific! I have reserved the exclusive sunrise penthouse preview for you this Saturday at 11 AM. I am texting you the VIP gate pass right now. Looking forward to welcoming you, Sir."
     },
-    us_1031_exchange: {
-      speaker: 'CLOSER AI (Sophia • DeepSeek 671B MoE):',
-      text: "Understood! We coordinate 1031 tax-deferred exchanges with qualified intermediaries for our private clients. We currently have three off-market replacement properties in Bel Air and Beverly Hills that satisfy strict 45-day identification rules. Are you currently in your exchange period?"
-    },
-    exclusive_listing: {
-      speaker: 'CLOSER AI (Guy):',
-      text: "That's wonderful — having great representation is crucial! Are you officially committed with an exclusive agreement, or are you open to seeing private pocket listings before they hit the MLS?"
-    },
-    india_greeting: {
-      speaker: 'CLOSER AI (Priya):',
-      text: "Namaste sir... This is Priya from Customer Care and Client Relations. Thank you for reaching out to us regarding your residential inquiry in Bangalore. How may I assist you today?"
-    },
-    india_bhk_rera: {
-      speaker: 'CLOSER AI (Priya):',
-      text: "Namaste! The 3 BHK residences in Whitefield priced at ₹2.45 Crores are 100% RERA approved with Karnataka registration PRM/KA/RERA/1251. I have dispatched the floor plan to your WhatsApp."
-    },
-    india_rera_carpet: {
-      speaker: 'CLOSER AI (Priya • BLOOMZ 176B Multilingual):',
-      text: "Namaste! All our listed configurations offer 100% RERA carpet area transparency without misleading super built-up inflation. For the Whitefield 3 BHK, the net carpet area is 1,640 square feet with full occupancy certification. Shall I send the official RERA sanction layout to your WhatsApp?"
-    },
-    india_ticket: {
-      speaker: 'CLOSER AI (Prabhat):',
-      text: "I completely understand your concern regarding possession timelines. I have logged official priority grievance ticket #CC-84291 with our project engineering directorate. You will receive an SMS and WhatsApp update within 2 hours."
-    },
-    india_office_hours: {
-      speaker: 'CLOSER AI (Priya / Prabhat):',
-      text: "I completely understand and respect your busy office hours, sir! I won't disturb you right now. I will ring you back after 6:00 PM today, and I have already forwarded all property photos and cost sheets to your WhatsApp."
-    }
-  };
 
-  window.setStudioLLM = async function (el, modelId) {
-    document.querySelectorAll('.llm-pill').forEach((btn) => btn.classList.remove('active'));
-    el.classList.add('active');
-    studioSelectedLLM = modelId || 'llama-3.3-70b';
+    // Tamil Scenarios (பல்லவி — Sarvam Bulbul v3 Tanglish)
+    ta_opener: {
+      voice: 'tamil',
+      audio_url: '/demos/ta_opener.mp3',
+      speaker: 'CLOSER AI (பல்லவி — Sweet Tanglish Closer):',
+      text: "வணக்கம் Sir! OMR கிராண்ட் பென்ட்ஹவுஸ்ல இருந்து பல்லவி பேசுறேங்க. நம்ம luxury 3BHK residences பத்தி தெரிஞ்சுக்க enquiry பண்ணியிருந்தீங்க. நீங்க ஃபேமிலியோட stay பண்ண பாக்குறீங்களா, இல்ல investment-க்காகவா Sir?"
+    },
+    ta_objection: {
+      voice: 'tamil',
+      audio_url: '/demos/ta_objection.mp3',
+      speaker: 'CLOSER AI (பல்லவி — Sweet Tanglish Closer):',
+      text: "Sir, pricing மற்றும் special discount பத்தி நம்ம நேரடியா site visit வரும்போது developer approval-ஓட பேசிக்கலாமுங்க. இந்த வியாழக்கிழமை சாயங்காலம் 4 மணிக்கு பார்க்கலாமா, இல்ல சனிக்கிழமை காலைல பார்க்கலாமா Sir?"
+    },
+    ta_closing: {
+      voice: 'tamil',
+      audio_url: '/demos/ta_closing.mp3',
+      speaker: 'CLOSER AI (பல்லவி — Sweet Tanglish Closer):',
+      text: "ரொம்ப சந்தோஷம் Sir! இந்த சனிக்கிழமை காலைல 11 மணிக்கு உங்க VIP walkthrough slot book பண்ணிட்டேங்க. உங்க WhatsApp-க்கு location map மற்றும் gate pass உடனே அனுப்பிடுறேன் Sir. நன்றி!"
+    },
 
-    const llmTag = document.getElementById('studioLLMTag');
-    const latencyTag = document.getElementById('studioLatency');
-
-    try {
-      const res = await fetch('/api/llm_select', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model_id: studioSelectedLLM })
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const m = data.model;
-        if (llmTag && m) {
-          llmTag.innerHTML = `ENGINE: <strong>${m.parameter_scale || '175B+'}</strong>`;
-        }
-        if (latencyTag && m) {
-          latencyTag.textContent = `${m.target_latency_ms || 88} ms`;
-        }
-      }
-    } catch {
-      // Offline fallback indicator
-      if (latencyTag) {
-        const latMap = { 'llama-3.3-70b': '88 ms', 'bloomz-176b': '280 ms', 'deepseek-v3': '195 ms', 'command-r-plus': '175 ms', 'qwen-2.5-72b': '115 ms' };
-        latencyTag.textContent = latMap[studioSelectedLLM] || '120 ms';
-      }
+    // Hindi Scenarios (स्वाति — Sarvam Bulbul v3 Hinglish)
+    hi_opener: {
+      voice: 'hindi',
+      audio_url: '/demos/hi_opener.mp3',
+      speaker: 'CLOSER AI (स्वाति — Sweet Hinglish Closer):',
+      text: "नमस्ते सर! ग्रैंड OMR पेंटहाउस से स्वाति बात कर रही हूँ। आपने हमारी luxury 3BHK residences के लिए enquiry की थी। सर, आप अपने परिवार के साथ रहने के लिए देख रहे हैं या फिर high-yield investment के लिए?"
+    },
+    hi_objection: {
+      voice: 'hindi',
+      audio_url: '/demos/hi_objection.mp3',
+      speaker: 'CLOSER AI (स्वाति — Sweet Hinglish Closer):',
+      text: "हाँजी बिल्कुल सर! डिस्काउंट और exclusive payment plan के बारे में हम site visit पर बैठकर developer के साथ final कर सकते हैं जी। क्या गुरुवार शाम 4 बजे या शनिवार सुबह का समय आपके लिए सुविधाजनक रहेगा?"
+    },
+    hi_closing: {
+      voice: 'hindi',
+      audio_url: '/demos/hi_closing.mp3',
+      speaker: 'CLOSER AI (स्वाति — Sweet Hinglish Closer):',
+      text: "बहुत बढ़िया सर! मैंने इस शनिवार सुबह 11 बजे आपका VIP private walkthrough confirm कर दिया है। लोकेशन और गेट पास आपके WhatsApp पर भेज रही हूँ जी। थैंक यू सो मच सर!"
     }
   };
 
   window.selectStudioVoice = function (el) {
     document.querySelectorAll('.voice-pill').forEach((btn) => btn.classList.remove('active'));
     el.classList.add('active');
-    studioSelectedVoice = el.getAttribute('data-voice') || 'en-US-AriaNeural';
-  };
+    studioSelectedVoice = el.getAttribute('data-voice') || 'english';
 
-  window.setStudioCadence = function (el, rate, speed) {
-    document.querySelectorAll('.cadence-pill').forEach((btn) => btn.classList.remove('active'));
-    el.classList.add('active');
-    studioSelectedRate = rate || '-3%';
-    studioSelectedSpeed = speed || '1.0';
-  };
-
-  window.setAcousticMode = function (isCellular) {
-    isAcousticCellular = !!isCellular;
-    const btnStudio = document.getElementById('btnAcousticStudio');
-    const btnCell = document.getElementById('btnAcousticCellular');
-    if (btnStudio && btnCell) {
-      if (isCellular) {
-        btnStudio.classList.remove('active');
-        btnCell.classList.add('active');
-      } else {
-        btnStudio.classList.add('active');
-        btnCell.classList.remove('active');
-      }
+    const firstScenarioMap = {
+      'english': 'en_opener',
+      'tamil': 'ta_opener',
+      'hindi': 'hi_opener'
+    };
+    const targetScen = firstScenarioMap[studioSelectedVoice] || 'en_opener';
+    const targetBtn = document.querySelector(`.scenario-btn[data-scenario="${targetScen}"]`);
+    if (targetBtn) {
+      window.selectStudioScenario(targetBtn);
     }
   };
 
   window.selectStudioScenario = function (el) {
     document.querySelectorAll('.scenario-btn').forEach((btn) => btn.classList.remove('active'));
     el.classList.add('active');
-    studioSelectedScenario = el.getAttribute('data-scenario') || 'friction_busy';
+    studioSelectedScenario = el.getAttribute('data-scenario') || 'en_opener';
 
     const item = STUDIO_SCENARIOS[studioSelectedScenario];
     const speakerEl = document.getElementById('studioSpeakerName');
@@ -994,16 +1009,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (speakerEl && item) speakerEl.innerHTML = `<i class="fa-solid fa-robot"></i> ${item.speaker}`;
     if (textEl && item) textEl.textContent = `"${item.text}"`;
+
+    if (item && item.voice && item.voice !== studioSelectedVoice) {
+      studioSelectedVoice = item.voice;
+      document.querySelectorAll('.voice-pill').forEach((btn) => {
+        if (btn.getAttribute('data-voice') === item.voice) btn.classList.add('active');
+        else btn.classList.remove('active');
+      });
+    }
   };
 
   window.runStudioSimulation = async function () {
-    const item = STUDIO_SCENARIOS[studioSelectedScenario] || STUDIO_SCENARIOS['friction_busy'];
+    const item = STUDIO_SCENARIOS[studioSelectedScenario] || STUDIO_SCENARIOS['en_opener'];
     const waveform = document.getElementById('studioWaveform');
     const statusEl = document.getElementById('studioStatus');
 
     if (waveform) waveform.classList.add('is-playing');
     if (statusEl) {
-      statusEl.textContent = isAcousticCellular ? '● CELLULAR IVR STREAMING (8kHz)' : '● TRANSMITTING NEURAL AUDIO';
+      statusEl.textContent = '● TRANSMITTING NEURAL AUDIO';
       statusEl.style.color = '#38bdf8';
     }
 
@@ -1015,55 +1038,54 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     };
 
-    // 1. Try backend high-fidelity synthesis first
-    try {
-      const res = await fetch('/api/turn', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          utterance: 'STUDIO_SAMPLE',
-          text: item.text,
-          voice: studioSelectedVoice,
-          rate: studioSelectedRate,
-          model_id: studioSelectedLLM
-        })
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.audio_base64) {
-          playAudioResponse(data.audio_base64, data.reply, resetStudioUI);
-          return;
-        }
+    if (item.audio_url) {
+      try {
+        const audio = new Audio(item.audio_url);
+        audio.onended = resetStudioUI;
+        audio.onerror = () => { fallbackToTurn(); };
+        audio.play();
+        return;
+      } catch (e) {
+        console.warn("Direct audio play error:", e);
       }
-    } catch {
-      // Backend unavailable; fallback to browser speech
     }
 
-    // 2. Browser speech synthesis fallback
-    if (!('speechSynthesis' in window)) {
-      setTimeout(resetStudioUI, 2500);
-      return;
+    fallbackToTurn();
+
+    async function fallbackToTurn() {
+      try {
+        const res = await fetch('/api/turn', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            utterance: 'STUDIO_SAMPLE',
+            text: item.text,
+            voice: studioSelectedVoice,
+            rate: studioSelectedRate,
+            model_id: studioSelectedLLM
+          })
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.audio_base64) {
+            playAudioResponse(data.audio_base64, data.reply, resetStudioUI);
+            return;
+          }
+        }
+      } catch {}
+
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utter = new SpeechSynthesisUtterance(item.text);
+        utter.lang = studioSelectedVoice === 'tamil' ? 'ta-IN' : (studioSelectedVoice === 'hindi' ? 'hi-IN' : 'en-US');
+        utter.onend = resetStudioUI;
+        utter.onerror = resetStudioUI;
+        window.speechSynthesis.speak(utter);
+      } else {
+        setTimeout(resetStudioUI, 2500);
+      }
     }
-
-    window.speechSynthesis.cancel();
-    const cleanText = item.text.replace(/₹/g, 'Rupees ').replace(/\$/g, 'Dollars ');
-    const utter = new SpeechSynthesisUtterance(cleanText);
-
-    const isIndia = studioSelectedVoice.includes('IN');
-    const voices = window.speechSynthesis.getVoices();
-    const voice = voices.find((v) => {
-      if (isIndia) return v.lang.includes('IN') || v.lang.includes('en-GB');
-      return v.lang.includes('US') || v.lang.includes('en');
-    });
-
-    if (voice) utter.voice = voice;
-    utter.rate = parseFloat(studioSelectedSpeed) || 1.0;
-
-    utter.onend = resetStudioUI;
-    utter.onerror = resetStudioUI;
-
-    window.speechSynthesis.speak(utter);
   };
 
   // -------------------------------------------------------------------------

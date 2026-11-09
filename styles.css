@@ -1174,7 +1174,7 @@ body.modal-open {
   border: 1px solid var(--trust-border);
   border-radius: 999px;
   padding: 4px;
-  max-width: 580px;
+  max-width: 680px;
   margin-bottom: 32px;
   box-shadow: var(--nav-shadow);
 }

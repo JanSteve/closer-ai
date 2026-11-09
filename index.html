@@ -396,40 +396,44 @@
         </p>
 
         <!-- Market Tabs Switcher -->
-        <div class="market-tabs reveal">
+        <div class="market-tabs reveal" style="max-width: 680px;">
           <button class="market-tab-btn active" id="tabUSA" onclick="showMarketTab('usa')">
             <span class="flag">🇺🇸</span>
-            <span>USA: Luxury Real Estate ISA</span>
+            <span>English (Maya Closer)</span>
           </button>
-          <button class="market-tab-btn" id="tabIndia" onclick="showMarketTab('india')">
+          <button class="market-tab-btn" id="tabTamil" onclick="showMarketTab('tamil')">
             <span class="flag">🇮🇳</span>
-            <span>India: Customer Care &amp; Support</span>
+            <span>தமிழ் (பல்லவி Closer)</span>
+          </button>
+          <button class="market-tab-btn" id="tabHindi" onclick="showMarketTab('hindi')">
+            <span class="flag">🇮🇳</span>
+            <span>हिंदी (स्वाति Closer)</span>
           </button>
         </div>
 
-        <!-- USA Market Card -->
+        <!-- USA / English Market Card -->
         <div class="market-detail-panel active" id="panelUSA">
           <div class="market-panel-grid">
             <div class="market-info reveal">
               <div class="market-badge-row">
-                <span class="market-tag-pill">Beverly Hills &amp; Bel Air</span>
-                <span class="market-tag-pill">$5,000,000+ Estates</span>
-                <span class="market-tag-pill">Sophia &amp; Guy Personas</span>
+                <span class="market-tag-pill">Signature CLOSER AI</span>
+                <span class="market-tag-pill">Kokoro 3-Way SOTA Blend</span>
+                <span class="market-tag-pill">Locked-In Female Closer</span>
               </div>
-              <h3 class="market-headline">Ultra-Luxury Inside Sales Agent (ISA)</h3>
+              <h3 class="market-headline">Maya — High-Ticket Luxury Voice Closer</h3>
               <p class="market-copy">
-                Designed for top-tier brokerages managing ultra-high-net-worth buyers. CLOSER AI identifies all-cash liquidity, verifies jumbo mortgage pre-approvals, accommodates private showing requests, and locks VIP slots directly into Google Calendar.
+                Engineered for ultra-high-net-worth buyers and international NRI investors. Maya conducts fluent, human conversations with natural breath micro-inflections, calmly handles aggressive price pushback, and books private penthouse walkthroughs.
               </p>
               <ul class="market-features-list">
-                <li><i class="fa-solid fa-check"></i> <strong>Proof-of-Funds Verification:</strong> Tactfully qualifies liquid cash vs. jumbo financing.</li>
-                <li><i class="fa-solid fa-check"></i> <strong>Schedule Friction Intelligence:</strong> Handles "In a meeting, call tomorrow" with immediate courteous callbacks.</li>
-                <li><i class="fa-solid fa-check"></i> <strong>VIP Tour Booking:</strong> Deterministic Google Calendar sync with zero double-booking.</li>
+                <li><i class="fa-solid fa-check"></i> <strong>SOTA 3-Way Neural Blend:</strong> 55% Heart + 30% Nicole + 15% Bella for unmatched human warmth.</li>
+                <li><i class="fa-solid fa-check"></i> <strong>Price Objection Deflection:</strong> Never leaks discounts over the phone; redirects to in-person VIP walkthroughs.</li>
+                <li><i class="fa-solid fa-check"></i> <strong>Instant Calendar Lock:</strong> Deterministic booking synchronization with zero double-booking.</li>
               </ul>
               <div class="sample-utterance-box">
                 <div class="sample-label display-font">// LIVE AGENT SAMPLE</div>
-                <div class="sample-text">"Good morning! This is Sophia with CLOSER Luxury Concierge. I have the private dossier ready for the 10484 Bellagio Road estate in Bel Air. Are you currently looking to tour this Thursday?"</div>
-                <button class="sample-play-btn" onclick="playVoiceSample('usa')">
-                  <i class="fa-solid fa-play"></i> <span>Listen to Sophia (USA)</span>
+                <div class="sample-text">"Hey, good morning! Maya here from the Grand OMR Penthouse. I noticed you were exploring our private residences online. Quick question — are you looking for an investment or a spacious layout for your family?"</div>
+                <button class="sample-play-btn" onclick="playVoiceSample('english')">
+                  <i class="fa-solid fa-play"></i> <span>Listen to Maya (English)</span>
                 </button>
               </div>
             </div>
@@ -439,23 +443,23 @@
                 <div class="window-dots">
                   <span></span><span></span><span></span>
                 </div>
-                <span class="window-title display-font">// USA LUXURY DOSSIER</span>
+                <span class="window-title display-font">// LUXURY DOSSIER</span>
               </div>
               <div class="preview-metric-row">
                 <span class="p-label">Target Property</span>
-                <span class="p-val">10484 Bellagio Rd, Bel Air</span>
+                <span class="p-val">The Grand OMR Penthouse</span>
               </div>
               <div class="preview-metric-row">
                 <span class="p-label">Buyer Budget</span>
-                <span class="p-val display-font">$6,850,000 USD (All Cash)</span>
+                <span class="p-val display-font">$1,850,000 USD / ₹1.85 Cr</span>
               </div>
               <div class="preview-metric-row">
-                <span class="p-label">Pre-Approval</span>
-                <span class="p-val glow-white">Verified J.P. Morgan Private</span>
+                <span class="p-label">Layout Request</span>
+                <span class="p-val glow-white">3 BHK Luxury Duplex (2,150 Sq.Ft)</span>
               </div>
               <div class="preview-metric-row">
                 <span class="p-label">Showing Reserved</span>
-                <span class="p-val display-font">Thursday @ 2:00 PM PST</span>
+                <span class="p-val display-font">Saturday @ 11:00 AM</span>
               </div>
               <div class="preview-metric-row">
                 <span class="p-label">Calendar Sync</span>
@@ -465,29 +469,29 @@
           </div>
         </div>
 
-        <!-- India Market Card -->
-        <div class="market-detail-panel" id="panelIndia">
+        <!-- Tamil Market Card -->
+        <div class="market-detail-panel" id="panelTamil">
           <div class="market-panel-grid">
             <div class="market-info">
               <div class="market-badge-row">
-                <span class="market-tag-pill">Bengaluru, Mumbai &amp; NCR</span>
-                <span class="market-tag-pill">₹ Lakhs to ₹ Crores</span>
-                <span class="market-tag-pill">Priya &amp; Prabhat Personas</span>
+                <span class="market-tag-pill">Sarvam Bulbul v3</span>
+                <span class="market-tag-pill">Sweet Tanglish Closer</span>
+                <span class="market-tag-pill">No "Saar" • Pure Sir</span>
               </div>
-              <h3 class="market-headline">Enterprise Customer Care &amp; High-Ticket Support</h3>
+              <h3 class="market-headline">பல்லவி (Pallavi) — சென்னை சொகுசு ரியல் எஸ்டேட் க்ளோசர்</h3>
               <p class="market-copy">
-                Tailored for top Indian real estate developers and enterprise customer care centers. CLOSER AI greets callers with polite warmth ("Namaste"), qualifies 2/3/4 BHK configurations in Crores, verifies 100% RERA compliance, logs grievance tickets (#CC-84291), and dispatches WhatsApp brochures.
+                உண்மையான சென்னை பேச்சுத் தமிழ் (Tanglish) மற்றும் கனிவான பெண் குரல். 3BHK, Penthouse, OMR, Amenities போன்ற ஆங்கில வார்த்தைகளை துல்லியமாக உச்சரிக்கும் திறன். போனில் விலை குறைக்காமல், நேரில் சைட் விசிட் வரவைக்கும் உத்தி.
               </p>
               <ul class="market-features-list">
-                <li><i class="fa-solid fa-check"></i> <strong>Lakhs &amp; Crores Pricing:</strong> Seamlessly parses ₹75 Lakhs to ₹15+ Crores pricing and BHK formats.</li>
-                <li><i class="fa-solid fa-check"></i> <strong>RERA Legal Compliance:</strong> Instantly answers builder credentials and RERA registration queries.</li>
-                <li><i class="fa-solid fa-check"></i> <strong>WhatsApp Dispatch:</strong> Automatically sends floor plans, payment schedules, and site visit invites.</li>
+                <li><i class="fa-solid fa-check"></i> <strong>இயற்கையான Tanglish நடை:</strong> கொச்சை தமிழ் இல்லாமல், கனிவான மரியாதை சார்ந்த telecaller cadence.</li>
+                <li><i class="fa-solid fa-check"></i> <strong>100% CMDA &amp; RERA சான்றுகள்:</strong> மழைநீர் வடிகால் மற்றும் சட்ட ஒப்புதல்கள் பற்றிய உடனடி விளக்கம்.</li>
+                <li><i class="fa-solid fa-check"></i> <strong>உடனடி WhatsApp கேட் பாஸ்:</strong> சைட் விசிட் நேரம் முடிவானதும் நொடியில் லொகேஷன் மேப் அனுப்புதல்.</li>
               </ul>
               <div class="sample-utterance-box">
                 <div class="sample-label display-font">// LIVE AGENT SAMPLE</div>
-                <div class="sample-text">"Namaste! This is Priya from Customer Care. I would be delighted to assist you with your 3 BHK enquiry in Whitefield. The project is 100% RERA approved. May I send the brochure directly to your WhatsApp?"</div>
-                <button class="sample-play-btn" onclick="playVoiceSample('india')">
-                  <i class="fa-solid fa-play"></i> <span>Listen to Priya (India)</span>
+                <div class="sample-text">"வணக்கம் Sir! OMR கிராண்ட் பென்ட்ஹவுஸ்ல இருந்து பல்லவி பேசுறேங்க. நம்ம luxury 3BHK residences பத்தி தெரிஞ்சுக்க enquiry பண்ணியிருந்தீங்க. நீங்க ஃபேமிலியோட stay பண்ண பாக்குறீங்களா, இல்ல investment-க்காகவா Sir?"</div>
+                <button class="sample-play-btn" onclick="playVoiceSample('tamil')">
+                  <i class="fa-solid fa-play"></i> <span>Listen to பல்லவி (Tamil)</span>
                 </button>
               </div>
             </div>
@@ -497,27 +501,85 @@
                 <div class="window-dots">
                   <span></span><span></span><span></span>
                 </div>
-                <span class="window-title display-font">// INDIA CUSTOMER CARE DOSSIER</span>
+                <span class="window-title display-font">// TAMIL LEAD DOSSIER</span>
               </div>
               <div class="preview-metric-row">
-                <span class="p-label">Configuration</span>
-                <span class="p-val">3 BHK Premium (Whitefield)</span>
+                <span class="p-label">ப்ராஜெக்ட்</span>
+                <span class="p-val">The Grand OMR Penthouse</span>
               </div>
               <div class="preview-metric-row">
-                <span class="p-label">Budget</span>
-                <span class="p-val display-font">₹ 2.45 Crores</span>
+                <span class="p-label">பட்ஜெட்</span>
+                <span class="p-val display-font">₹ 1.85 Crores</span>
               </div>
               <div class="preview-metric-row">
-                <span class="p-label">RERA Status</span>
-                <span class="p-val glow-white">PRM/KA/RERA/1251/446/PR/200123</span>
+                <span class="p-label">CMDA / RERA</span>
+                <span class="p-val glow-white">100% Approved &amp; Bank Verified</span>
               </div>
               <div class="preview-metric-row">
-                <span class="p-label">Support Ticket</span>
-                <span class="p-val display-font">#CC-84291 (Logged)</span>
+                <span class="p-label">சைட் விசிட்</span>
+                <span class="p-val display-font">சனிக்கிழமை காலை 11:00 AM</span>
               </div>
               <div class="preview-metric-row">
                 <span class="p-label">WhatsApp Channel</span>
-                <span class="p-val"><i class="fa-brands fa-whatsapp"></i> Brochure Dispatched</span>
+                <span class="p-val"><i class="fa-brands fa-whatsapp"></i> VIP Gate Pass Sent</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hindi Market Card -->
+        <div class="market-detail-panel" id="panelHindi">
+          <div class="market-panel-grid">
+            <div class="market-info">
+              <div class="market-badge-row">
+                <span class="market-tag-pill">Sarvam Bulbul v3</span>
+                <span class="market-tag-pill">Sweet Hinglish Closer</span>
+                <span class="market-tag-pill">Respect Particles (जी, सर)</span>
+              </div>
+              <h3 class="market-headline">स्वाति (Swati) — लग्जरी रियल एस्टेट टेलीकॉलर क्लोज़र</h3>
+              <p class="market-copy">
+                अत्यंत मधुर, आश्वस्त और पेशेवर हिंग्लिश शैली। उत्तर भारतीय और एनआरआई ग्राहकों के साथ सहज संवाद, डिस्काउंट की मांग को सीधे साइट विज़िट में बदलने की रणनीतिक क्षमता।
+              </p>
+              <ul class="market-features-list">
+                <li><i class="fa-solid fa-check"></i> <strong>प्राकृतिक हिंग्लिश प्रवाह:</strong> विनम्र आदर सूचक शब्दों ('जी', 'सर') के साथ विश्वास पैदा करने वाली बोली।</li>
+                <li><i class="fa-solid fa-check"></i> <strong>15% डिस्काउंट डिफ्लेक्शन:</strong> कॉल पर दाम घटाने के बजाय डेवलपर के साथ आमने-सामने बैठक तय करना।</li>
+                <li><i class="fa-solid fa-check"></i> <strong>तुरंत व्हाट्सएप गेट पास:</strong> शनिवार स्लॉट पक्का होते ही लोकेशन और विवरण तुरंत प्रेषित।</li>
+              </ul>
+              <div class="sample-utterance-box">
+                <div class="sample-label display-font">// LIVE AGENT SAMPLE</div>
+                <div class="sample-text">"नमस्ते सर! ग्रैंड OMR पेंटहाउस से स्वाति बात कर रही हूँ। आपने हमारी luxury 3BHK residences के लिए enquiry की थी। सर, आप अपने परिवार के साथ रहने के लिए देख रहे हैं या फिर high-yield investment के लिए?"</div>
+                <button class="sample-play-btn" onclick="playVoiceSample('hindi')">
+                  <i class="fa-solid fa-play"></i> <span>Listen to स्वाति (Hindi)</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="market-preview-card">
+              <div class="card-glass-header">
+                <div class="window-dots">
+                  <span></span><span></span><span></span>
+                </div>
+                <span class="window-title display-font">// HINDI LEAD DOSSIER</span>
+              </div>
+              <div class="preview-metric-row">
+                <span class="p-label">प्रॉपर्टी</span>
+                <span class="p-val">Grand OMR Penthouse</span>
+              </div>
+              <div class="preview-metric-row">
+                <span class="p-label">बजट</span>
+                <span class="p-val display-font">₹ 1.85 Crores</span>
+              </div>
+              <div class="preview-metric-row">
+                <span class="p-label">RERA स्थिति</span>
+                <span class="p-val glow-white">100% RERA &amp; बैंक लोन स्वीकृत</span>
+              </div>
+              <div class="preview-metric-row">
+                <span class="p-label">साइट विज़िट</span>
+                <span class="p-val display-font">शनिवार सुबह 11:00 AM</span>
+              </div>
+              <div class="preview-metric-row">
+                <span class="p-label">व्हाट्सएप चैनल</span>
+                <span class="p-val"><i class="fa-brands fa-whatsapp"></i> VIP गेट पास प्रेषित</span>
               </div>
             </div>
           </div>
@@ -542,25 +604,16 @@
         <div class="soundboard-container reveal">
           <div class="soundboard-controls">
             <div class="control-group">
-              <label class="display-font">// SELECT NEURAL VOICE &amp; ACCENT</label>
+              <label class="display-font">// DEDICATED PRODUCTION VOICES (EXACTLY 1 PER LANGUAGE)</label>
               <div class="voice-pills">
-                <button class="voice-pill active" data-voice="en-US-AriaNeural" onclick="selectStudioVoice(this)">
-                  <span>Sophia (USA Luxury Concierge)</span>
+                <button class="voice-pill active" data-voice="english" onclick="selectStudioVoice(this)">
+                  <span>🇺🇸 Maya — Signature CLOSER AI (English)</span>
                 </button>
-                <button class="voice-pill" data-voice="en-US-GuyNeural" onclick="selectStudioVoice(this)">
-                  <span>Guy (USA Wall St Closer)</span>
+                <button class="voice-pill" data-voice="tamil" onclick="selectStudioVoice(this)">
+                  <span>🇮🇳 பல்லவி — Pallavi (Tamil Closer)</span>
                 </button>
-                <button class="voice-pill" data-voice="en-IN-NeerjaNeural" onclick="selectStudioVoice(this)">
-                  <span>Priya (India Relationship Manager)</span>
-                </button>
-                <button class="voice-pill" data-voice="en-IN-PrabhatNeural" onclick="selectStudioVoice(this)">
-                  <span>Prabhat (India Enterprise Care)</span>
-                </button>
-                <button class="voice-pill" data-voice="en-US-AvaNeural" onclick="selectStudioVoice(this)">
-                  <span>Ava (USA Expressive Closer)</span>
-                </button>
-                <button class="voice-pill" data-voice="en-US-AndrewMultilingualNeural" onclick="selectStudioVoice(this)">
-                  <span>Andrew (USA Wealth Advisor)</span>
+                <button class="voice-pill" data-voice="hindi" onclick="selectStudioVoice(this)">
+                  <span>🇮🇳 स्वाति — Swati (Hindi Closer)</span>
                 </button>
               </div>
             </div>
@@ -584,60 +637,49 @@
               </div>
             </div>
 
-            <!-- Open-Source Foundation LLM Intelligence (Awesome-Open-Source-LLMs 175B+ Catalog) -->
-            <div class="studio-meta-controls" style="margin-top: 10px;">
-              <div class="studio-meta-group" style="flex-wrap: wrap;">
-                <span class="studio-meta-label display-font">// OPEN FOUNDATION ENGINE:</span>
-                <button class="llm-pill active" data-model="llama-3.3-70b" onclick="setStudioLLM(this, 'llama-3.3-70b')">⚡ Llama 3.3 70B (88ms Edge Reflex)</button>
-                <button class="llm-pill" data-model="bloomz-176b" onclick="setStudioLLM(this, 'bloomz-176b')">🌐 BLOOMZ 176B (Multilingual 46 Langs)</button>
-                <button class="llm-pill" data-model="deepseek-v3" onclick="setStudioLLM(this, 'deepseek-v3')">🧠 DeepSeek-V3 / R1 (671B MoE Frontier)</button>
-                <button class="llm-pill" data-model="command-r-plus" onclick="setStudioLLM(this, 'command-r-plus')">🛡️ Command R+ (104B Cohere Enterprise)</button>
-                <button class="llm-pill" data-model="qwen-2.5-72b" onclick="setStudioLLM(this, 'qwen-2.5-72b')">🌏 Qwen 2.5 72B (Hinglish Vernacular &amp; Math)</button>
-              </div>
-            </div>
-
             <div class="control-group">
-              <label class="display-font">// SELECT OBJECTION &amp; CONVERSATIONAL SLANG SCENARIO</label>
+              <label class="display-font">// HIGH-TICKET REAL ESTATE OBJECTION &amp; CLOSING SCENARIOS</label>
               <div class="scenario-grid">
-                <button class="scenario-btn active" data-scenario="friction_busy" onclick="selectStudioScenario(this)">
-                  <span class="scen-title">🇺🇸 "I'm in a meeting right now, call tomorrow"</span>
-                  <span class="scen-desc">Empathetic schedule friction handling, respects client time, offers 2:00 PM PST callback</span>
+                <!-- English Scenarios -->
+                <button class="scenario-btn active scen-voice-english" data-scenario="en_opener" onclick="selectStudioScenario(this)">
+                  <span class="scen-title">🇺🇸 "Lead Opener &amp; Luxury Layout Qualification"</span>
+                  <span class="scen-desc">Maya qualifies investment vs family end-use for The Grand OMR Penthouse</span>
                 </button>
-                <button class="scenario-btn" data-scenario="just_browsing" onclick="selectStudioScenario(this)">
-                  <span class="scen-title">🇺🇸 "I'm just browsing online, don't have financing yet"</span>
-                  <span class="scen-desc">Validates early browsing, qualifies dream timeline &amp; offers private banking partner</span>
+                <button class="scenario-btn scen-voice-english" data-scenario="en_objection" onclick="selectStudioScenario(this)">
+                  <span class="scen-title">🇺🇸 "15% Discount Objection Deflection"</span>
+                  <span class="scen-desc">Never leaks price over phone; pivots to developer private walkthrough milestones</span>
                 </button>
-                <button class="scenario-btn" data-scenario="luxury_cash" onclick="selectStudioScenario(this)">
-                  <span class="scen-title">🇺🇸 "$8.5M Cash Buyer looking for Bel Air Estate"</span>
-                  <span class="scen-desc">Ultra-luxury turnkey qualification, proof-of-funds escrow &amp; off-market walkthrough</span>
+                <button class="scenario-btn scen-voice-english" data-scenario="en_closing" onclick="selectStudioScenario(this)">
+                  <span class="scen-title">🇺🇸 "VIP Penthouse Walkthrough Scheduled"</span>
+                  <span class="scen-desc">Confirms Saturday 11 AM sunrise slot &amp; dispatches instant VIP gate pass</span>
                 </button>
-                <button class="scenario-btn" data-scenario="us_1031_exchange" onclick="selectStudioScenario(this)">
-                  <span class="scen-title">🇺🇸 "1031 Exchange with 45-day deadline: need Bel Air replacement asset"</span>
-                  <span class="scen-desc">DeepSeek 671B MoE deep reasoning on tax-deferred deadlines, escrow &amp; pocket listings</span>
+
+                <!-- Tamil Scenarios -->
+                <button class="scenario-btn scen-voice-tamil" data-scenario="ta_opener" onclick="selectStudioScenario(this)">
+                  <span class="scen-title">🇮🇳 "சென்னை லீட் வரவேற்பு (Opener &amp; Qualification)"</span>
+                  <span class="scen-desc">பல்லவி கனிவான Tanglish-ல் OMR 3BHK சொகுசு அடுக்குமாடி தேவை அறிதல்</span>
                 </button>
-                <button class="scenario-btn" data-scenario="exclusive_listing" onclick="selectStudioScenario(this)">
-                  <span class="scen-title">🇺🇸 "I already have an agent, what pocket listings do you have?"</span>
-                  <span class="scen-desc">Respects buyer representation &amp; pivots to pre-MLS private off-market access</span>
+                <button class="scenario-btn scen-voice-tamil" data-scenario="ta_objection" onclick="selectStudioScenario(this)">
+                  <span class="scen-title">🇮🇳 "15% டிஸ்கவுண்ட் தடுப்பு (Objection Handling)"</span>
+                  <span class="scen-desc">போனில் விலை குறைக்காமல், நேரில் சைட் விசிட் வரவைக்கும் பலமான தந்திரம்</span>
                 </button>
-                <button class="scenario-btn" data-scenario="india_greeting" onclick="selectStudioScenario(this)">
-                  <span class="scen-title">🇮🇳 "Namaste, need assistance regarding residential inquiry"</span>
-                  <span class="scen-desc">Polite Indian customer care greeting with active listening and immediate discovery</span>
+                <button class="scenario-btn scen-voice-tamil" data-scenario="ta_closing" onclick="selectStudioScenario(this)">
+                  <span class="scen-title">🇮🇳 "விஐபி சைட் விசிட் உறுதி (VIP Site Visit Closed)"</span>
+                  <span class="scen-desc">சனிக்கிழமை காலை 11 மணி விசிட்டை உறுதிசெய்து வாட்ஸ்அப் கேட் பாஸ் அனுப்புதல்</span>
                 </button>
-                <button class="scenario-btn" data-scenario="india_bhk_rera" onclick="selectStudioScenario(this)">
-                  <span class="scen-title">🇮🇳 "Looking for 3 BHK in Whitefield, is RERA approved?"</span>
-                  <span class="scen-desc">Natural ₹1.65 Cr pricing, RERA clearance, SBI/HDFC approval &amp; WhatsApp floor plans</span>
+
+                <!-- Hindi Scenarios -->
+                <button class="scenario-btn scen-voice-hindi" data-scenario="hi_opener" onclick="selectStudioScenario(this)">
+                  <span class="scen-title">🇮🇳 "लीड स्वागत व परिचय (Lead Opener &amp; Qualification)"</span>
+                  <span class="scen-desc">स्वाति द्वारा OMR पेंटहाउस हेतु परिवार या इन्वेस्टमेंट का सही वर्गीकरण</span>
                 </button>
-                <button class="scenario-btn" data-scenario="india_rera_carpet" onclick="selectStudioScenario(this)">
-                  <span class="scen-title">🇮🇳 "RERA carpet area vs super built-up transparency query"</span>
-                  <span class="scen-desc">BLOOMZ 176B multilingual precision: 1,640 sq ft net carpet area &amp; occupancy certificate</span>
+                <button class="scenario-btn scen-voice-hindi" data-scenario="hi_objection" onclick="selectStudioScenario(this)">
+                  <span class="scen-title">🇮🇳 "15% डिस्काउंट डिफ्लेक्शन (Objection Handling)"</span>
+                  <span class="scen-desc">कॉल पर रेट कम किए बिना ग्राहक को सीधे साइट विज़िट के लिए तैयार करना</span>
                 </button>
-                <button class="scenario-btn" data-scenario="india_ticket" onclick="selectStudioScenario(this)">
-                  <span class="scen-title">🇮🇳 "Possession is delayed, I want to log an urgent complaint"</span>
-                  <span class="scen-desc">Empathetic grievance resolution, logs Ticket #CC-84291 &amp; WhatsApp manager follow-up</span>
-                </button>
-                <button class="scenario-btn" data-scenario="india_office_hours" onclick="selectStudioScenario(this)">
-                  <span class="scen-title">🇮🇳 "In office right now, call after 6 PM or message WhatsApp"</span>
-                  <span class="scen-desc">Indian corporate hours respect, schedules evening callback &amp; instant WhatsApp pack</span>
+                <button class="scenario-btn scen-voice-hindi" data-scenario="hi_closing" onclick="selectStudioScenario(this)">
+                  <span class="scen-title">🇮🇳 "वीआईपी साइट विज़िट फाइनल (Site Visit Closed)"</span>
+                  <span class="scen-desc">शनिवार 11 बजे का स्लॉट फाइनल कर तुरंत व्हाट्सएप पर गेट पास भेजना</span>
                 </button>
               </div>
             </div>
