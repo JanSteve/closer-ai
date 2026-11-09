@@ -257,6 +257,16 @@ async def get_intelligence():
     }
 
 
+@app.get("/api/mirofish/report")
+@app.post("/api/mirofish/simulate")
+async def run_mirofish_simulation():
+    """Runs on-demand MiroFish Swarm Simulation across all 12 adversarial personas."""
+    from closer.testing.mirofish_simulator import MiroFishSwarmSimulator
+    sim = MiroFishSwarmSimulator()
+    report = sim.run_full_simulation()
+    return JSONResponse(report)
+
+
 @app.websocket("/ws/call")
 async def websocket_call(websocket: WebSocket):
     await websocket.accept()
