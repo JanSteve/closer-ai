@@ -1,0 +1,74 @@
+[
+  {
+    "id": "l1",
+    "text": "At 11:42 PM, a multi-crore real estate lead arrives.",
+    "say": "At eleven forty-two PM, a multi-crore real estate lead arrives.",
+    "voice": "en-US-ChristopherNeural",
+    "rate": "-3%",
+    "pitch": "-2Hz"
+  },
+  {
+    "id": "l2",
+    "text": "While traditional sales floors sleep, your commission evaporates.",
+    "say": "While traditional sales floors sleep, your commission evaporates.",
+    "voice": "en-US-ChristopherNeural",
+    "rate": "-2%",
+    "pitch": "-1Hz"
+  },
+  {
+    "id": "l3",
+    "text": "Meet CLOSER AI. The autonomous neural closing engine.",
+    "say": "Meet Closer A I. The autonomous neural closing engine.",
+    "voice": "en-US-ChristopherNeural",
+    "rate": "-1%",
+    "pitch": "+0Hz"
+  },
+  {
+    "id": "l4",
+    "text": "Sub-250 millisecond response. Carrier-grade SIP. Zero dropped calls.",
+    "say": "Sub two-hundred and fifty millisecond response. Carrier-grade S I P. Zero dropped calls.",
+    "voice": "en-US-ChristopherNeural",
+    "rate": "+0%",
+    "pitch": "+0Hz"
+  },
+  {
+    "id": "v_maya",
+    "text": "Good evening, Mr. Daniels. Regarding the Sea-Facing Penthouse, projected rental yield is 8.4%.",
+    "say": "Good evening, Mr. Daniels. Regarding the Sea-Facing Penthouse, projected rental yield is eight point four percent.",
+    "voice": "en-US-AriaNeural",
+    "rate": "+2%",
+    "pitch": "+1Hz"
+  },
+  {
+    "id": "v_pallavi",
+    "text": "வணக்கம் சார், சென்னை ECR வில்லாவின் RERA அப்ரூவல் மற்றும் சைட் விசிட் விவரங்கள் தயார்.",
+    "say": "வணக்கம் சார், சென்னை ECR வில்லாவின் ரேரா அப்ரூவல் மற்றும் சைட் விசிட் விவரங்கள் தயார்.",
+    "voice": "ta-IN-PallaviNeural",
+    "rate": "+3%",
+    "pitch": "+0Hz"
+  },
+  {
+    "id": "v_swati",
+    "text": "नमस्ते सर, गोल्फ कोर्स रोड पेंटहाउस के लिए रविवार सुबह ग्यारह बजे आपकी फैमिली विज़िट बुक कर दी है।",
+    "say": "नमस्ते सर, गोल्फ कोर्स रोड पेंटहाउस के लिए रविवार सुबह ग्यारह बजे आपकी फैमिली विज़िट बुक कर दी है।",
+    "voice": "hi-IN-SwaraNeural",
+    "rate": "+2%",
+    "pitch": "+0Hz"
+  },
+  {
+    "id": "l5",
+    "text": "₹1.55 per qualified call. 99.3% margin uplift.",
+    "say": "One rupee fifty-five paise per qualified call. Ninety-nine point three percent margin uplift.",
+    "voice": "en-US-ChristopherNeural",
+    "rate": "-2%",
+    "pitch": "-1Hz"
+  },
+  {
+    "id": "l6",
+    "text": "CLOSER AI. Intelligence Designed To Evolve. Launching Soon.",
+    "say": "Closer A I. Intelligence Designed To Evolve. Launching Soon.",
+    "voice": "en-US-ChristopherNeural",
+    "rate": "-4%",
+    "pitch": "-2Hz"
+  }
+]

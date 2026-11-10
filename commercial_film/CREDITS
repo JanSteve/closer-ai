@@ -1,0 +1,27 @@
+CLOSER AI — "The 11:42 PM Lead" (Commercial Film)
+
+DIRECTING & PRODUCTION
+Directed and rendered with the Lemo-Opuscar cinematic framework.
+Style: Dark Tech Keynote (styles/dark-keynote)
+Canvas: 1920x1080 @ 24 fps
+Master Loudness: -14.1 LUFS (EBU R128 compliance)
+
+VOICE CAST
+- Keynote Narrator: Christopher (Authoritative Cinematic Lead)
+- Voice 01 (English): Maya (Senior NRI Portfolio Director)
+- Voice 02 (Tamil): Pallavi (Chennai & Coastal ECR Luxury Estate Specialist)
+- Voice 03 (Hindi): Swati (Gurugram & Delhi NCR Ultra-Luxury Closer)
+
+ORIGINAL SCORE & SOUND DESIGN
+- Original Score composed in C minor / Eb major at 120 BPM
+- Sampled acoustic instruments from the Versilian Community Sample Library (VCSL) by Sam Gossner / Versilian Studios — CC0 1.0 (https://github.com/sgossner/VCSL). Attribution not required, credited with gratitude.
+- Synthesized in Python / NumPy / SciPy: Detuned supersaw pads, logarithmic frequency risers, sub-bass drops, precision UI clicks, and telemetry carrier accents.
+- Foley & Audio Mastering: Adaptive dynamic ducking (-8.5 dB music duck under speech), 48kHz AAC 256kbps master.
+
+TYPOGRAPHY
+- Inter: Rasmus Andersson (SIL Open Font License 1.1)
+- Inter Tight: Rasmus Andersson (SIL Open Font License 1.1)
+- JetBrains Mono: JetBrains (SIL Open Font License 1.1)
+
+All rights reserved © 2026 CLOSER AI.
+Intelligence Designed To Evolve.
