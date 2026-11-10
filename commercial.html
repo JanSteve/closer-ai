@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CLOSER AI — Official Launch Film | "The 11:42 PM Lead"</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      background-color: #04060A;
+      color: #F8FAFC;
+      font-family: 'Inter', sans-serif;
+    }
+    .font-mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .cyan-glow {
+      text-shadow: 0 0 35px rgba(0, 229, 255, 0.6), 0 0 70px rgba(0, 229, 255, 0.25);
+    }
+    .lime-glow {
+      text-shadow: 0 0 35px rgba(183, 243, 74, 0.6);
+    }
+    .bg-stage-gradient {
+      background: radial-gradient(circle at 50% 25%, #0F131D 0%, #04060A 80%);
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-stage-gradient flex flex-col items-center justify-between p-4 sm:p-8">
+
+  <!-- TOP NAVIGATION / BRAND HEADER -->
+  <header class="w-full max-w-5xl flex items-center justify-between py-4 border-b border-white/10">
+    <div class="flex items-center space-x-3">
+      <div class="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-400 flex items-center justify-center font-bold text-cyan-400 text-sm">
+        C
+      </div>
+      <div>
+        <h1 class="text-base font-bold tracking-tight text-white flex items-center gap-2">
+          CLOSER AI
+          <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">Official Film</span>
+        </h1>
+      </div>
+    </div>
+    
+    <div class="flex items-center space-x-4">
+      <a href="/" class="text-xs font-mono text-slate-400 hover:text-white transition-all flex items-center gap-1.5">
+        ← BACK TO CONSOLE
+      </a>
+      <a href="/demos/closer_ad.mp4" download class="px-4 py-2 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black font-semibold text-xs tracking-wide transition-all shadow-lg shadow-cyan-500/20">
+        DOWNLOAD MP4 (1080P)
+      </a>
+    </div>
+  </header>
+
+  <!-- MAIN FILM SHOWCASE -->
+  <main class="w-full max-w-5xl my-8 flex flex-col items-center">
+
+    <!-- SUBTITLE TITLE CARD -->
+    <div class="text-center mb-6">
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-mono mb-3">
+        <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+        PROBLEM 01: THE 11:42 PM NOCTURNAL LEAD
+      </div>
+      <h2 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-white mb-2">
+        "The 11:42 PM Lead"
+      </h2>
+      <p class="text-sm sm:text-base text-slate-400 max-w-xl mx-auto">
+        Directed with Lemo-Opuscar in Dark Tech Keynote aesthetic. Sub-250ms glass-to-glass turn latency across English, Tamil & Hindi.
+      </p>
+    </div>
+
+    <!-- 16:9 VIDEO CONTAINER -->
+    <div class="relative w-full aspect-video bg-black rounded-3xl overflow-hidden border border-white/10 shadow-2xl shadow-cyan-950/40">
+      <video id="film-player" controls preload="metadata" poster="/demos/closer_ad_poster.jpg" class="w-full h-full object-cover">
+        <source src="/demos/closer_ad.mp4" type="video/mp4">
+        <track label="English" kind="subtitles" srclang="en" src="/demos/closer_ad.srt" default>
+        Your browser does not support the video tag.
+      </video>
+    </div>
+
+    <!-- SPECIFICATIONS & METRICS GRID -->
+    <div class="w-full grid grid-cols-1 sm:grid-cols-3 gap-4 mt-8">
+      
+      <!-- CARD 1 -->
+      <div class="p-5 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur flex flex-col justify-between">
+        <div class="text-xs font-mono text-cyan-400 font-semibold mb-1">LATENCY BENCHMARK</div>
+        <div class="text-3xl font-extrabold text-white tracking-tight">&lt; 250ms</div>
+        <div class="text-xs text-slate-400 mt-2">
+          Glass-to-glass neural turn-taking matching human conversational cadence with zero awkward lag.
+        </div>
+      </div>
+
+      <!-- CARD 2 -->
+      <div class="p-5 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur flex flex-col justify-between">
+        <div class="text-xs font-mono text-lime-400 font-semibold mb-1">UNIT ECONOMICS</div>
+        <div class="text-3xl font-extrabold text-lime-400 tracking-tight">₹1.55 <span class="text-sm font-normal text-slate-400">/ lead</span></div>
+        <div class="text-xs text-slate-400 mt-2">
+          Vs ₹220 ($2.60) human telecaller benchmark. 99.3% gross cost reduction with 100% CRM verification.
+        </div>
+      </div>
+
+      <!-- CARD 3 -->
+      <div class="p-5 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur flex flex-col justify-between">
+        <div class="text-xs font-mono text-purple-400 font-semibold mb-1">TRI-LINGUAL CLOSERS</div>
+        <div class="text-3xl font-extrabold text-white tracking-tight">3 Languages</div>
+        <div class="text-xs text-slate-400 mt-2">
+          Maya (English NRI Desk), Pallavi (Tamil ECR Coastal Specialist), Swati (Hindi NCR Luxury Closer).
+        </div>
+      </div>
+
+    </div>
+
+    <!-- LAUNCH STATUS & CALL TO ACTION -->
+    <div class="w-full mt-6 p-6 rounded-2xl bg-cyan-950/20 border border-cyan-500/30 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div>
+        <div class="flex items-center gap-2 text-cyan-400 font-mono text-xs font-bold uppercase tracking-wider mb-1">
+          <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+          DUAL-MARKET CAPACITY (USA & INDIA)
+        </div>
+        <div class="text-lg font-bold text-white">Launching Soon — Private Enterprise Deployments Now Open</div>
+        <div class="text-xs text-slate-400">Join the waiting list for tier-1 real estate developers and brokers.</div>
+      </div>
+      <a href="/#voice-studio" class="whitespace-nowrap px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-400 to-lime-400 text-black font-extrabold text-xs tracking-wider transition-all hover:opacity-95 shadow-lg shadow-cyan-500/20">
+        TEST LIVE VOICES →
+      </a>
+    </div>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="w-full max-w-5xl py-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 font-mono">
+    <div>CLOSER AI © 2026 · Intelligence Designed To Evolve</div>
+    <div class="flex gap-4 mt-2 sm:mt-0">
+      <a href="/demos/closer_ad.srt" download class="hover:text-slate-300">SUBTITLES (.SRT)</a>
+      <a href="/demos/closer_ad_poster.jpg" download class="hover:text-slate-300">POSTER (.JPG)</a>
+      <a href="/commercial_film/CREDITS" class="hover:text-slate-300">CREDITS</a>
+    </div>
+  </footer>
+
+</body>
+</html>

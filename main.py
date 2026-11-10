@@ -81,6 +81,17 @@ async def serve_presentation():
     return HTMLResponse(content="<h1>CLOSER AI Presentation Deck</h1>", status_code=200)
 
 
+@app.get("/commercial", response_class=HTMLResponse)
+@app.get("/commercial.html", response_class=HTMLResponse)
+@app.get("/film", response_class=HTMLResponse)
+@app.get("/ad", response_class=HTMLResponse)
+async def serve_commercial():
+    comm_file = ROOT_DIR / "commercial.html"
+    if comm_file.exists():
+        return HTMLResponse(content=comm_file.read_text(encoding="utf-8"), status_code=200)
+    return HTMLResponse(content="<h1>CLOSER AI Official Launch Film</h1>", status_code=200)
+
+
 @app.get("/styles.css")
 async def serve_css():
     css_file = ROOT_DIR / "styles.css"
@@ -101,7 +112,16 @@ async def serve_js():
 async def serve_demo_audio(filename: str):
     file_path = ROOT_DIR / "demos" / filename
     if file_path.exists() and file_path.is_file():
-        media_type = "audio/wav" if filename.endswith(".wav") else "audio/mpeg"
+        if filename.endswith(".mp4"):
+            media_type = "video/mp4"
+        elif filename.endswith(".jpg") or filename.endswith(".jpeg"):
+            media_type = "image/jpeg"
+        elif filename.endswith(".srt"):
+            media_type = "text/plain; charset=utf-8"
+        elif filename.endswith(".wav"):
+            media_type = "audio/wav"
+        else:
+            media_type = "audio/mpeg"
         return FileResponse(file_path, media_type=media_type)
     return Response(status_code=404)
 
