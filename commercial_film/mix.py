@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""mix.py — Foley + Voice + Music Ducking for CLOSER AI Commercial Film → mix.wav
+"""mix.py — Foley + Female Voice + Music Ducking for CLOSER AI Commercial Film → mix.wav
 Follows DIRECTOR.md and STYLE.md standards for the Dark Tech Keynote style.
 Mastered to -14 LUFS target.
 """
@@ -20,13 +20,13 @@ N = int(DUR * SR)
 VOICE_SCHEDULE = {
     "l1": 0.5,
     "l2": 5.4,
-    "l3": 10.0,
-    "l4": 15.3,
-    "v_maya": 22.3,
-    "v_pallavi": 30.3,
-    "v_swati": 37.0,
-    "l5": 45.0,
-    "l6": 52.6
+    "l3": 9.8,
+    "l4": 14.0,
+    "v_maya": 20.8,
+    "v_pallavi": 28.8,
+    "v_swati": 35.4,
+    "l5": 43.5,
+    "l6": 50.5
 }
 
 fol = np.zeros((N, 2), np.float32)
@@ -80,34 +80,34 @@ print("Generating Foley and UI audio cues...")
 add(fol, alert_ping(0.7), 0.5, 0.4, pan=0.0)
 add(fol, alert_ping(0.5), 0.7, 0.3, pan=0.1)
 
-# 9.8s: Autonomous turn / Keynote sweep
-add(fol, light_sweep(1.8, 0.8), 9.2, 0.55, pan=-0.2)
-add(fol, sub_drop(0.9), 9.8, 0.8, pan=0.0)
+# 9.6s: Autonomous turn / Keynote shockwave & sweep
+add(fol, light_sweep(1.8, 0.85), 9.2, 0.6, pan=-0.2)
+add(fol, sub_drop(0.95), 9.6, 0.85, pan=0.0)
 
-# 15.0s: SIP activation clicks
+# 14.0s: SIP activation clicks
 for i in range(4):
-    add(fol, digit_tick(0.4), 14.8 + i * 0.12, 0.25, pan=((i - 1.5) * 0.3))
+    add(fol, digit_tick(0.4), 13.8 + i * 0.12, 0.25, pan=((i - 1.5) * 0.3))
 
-# 22.0s: Maya card
-add(fol, glass_chime(1320, 0.6), 22.0, 0.35, pan=-0.2)
+# 20.8s: Maya card
+add(fol, glass_chime(1320, 0.6), 20.8, 0.35, pan=-0.2)
 
-# 30.0s: Pallavi card
-add(fol, glass_chime(1480, 0.6), 30.0, 0.35, pan=0.2)
+# 28.8s: Pallavi card
+add(fol, glass_chime(1480, 0.6), 28.8, 0.35, pan=0.2)
 
-# 36.8s: Swati card
-add(fol, glass_chime(1650, 0.6), 36.8, 0.35, pan=0.0)
+# 35.4s: Swati card
+add(fol, glass_chime(1650, 0.6), 35.4, 0.35, pan=0.0)
 
-# 44.8s: Big number impact
-add(fol, sub_drop(1.0), 44.8, 0.9, pan=0.0)
-add(fol, light_sweep(1.2, 0.7), 44.5, 0.5, pan=0.0)
+# 43.0s: Big number impact
+add(fol, sub_drop(1.0), 43.0, 0.9, pan=0.0)
+add(fol, light_sweep(1.2, 0.7), 42.8, 0.5, pan=0.0)
 
-# Digit ticks during 45.6s to 48.0s
+# Digit ticks during 43.8s to 46.5s
 for i in range(8):
-    add(fol, digit_tick(0.5), 45.6 + i * 0.3, 0.3, pan=0.1 * (i % 3 - 1))
+    add(fol, digit_tick(0.5), 43.8 + i * 0.3, 0.3, pan=0.1 * (i % 3 - 1))
 
-# 52.4s: Hero logo reveal
-add(fol, light_sweep(2.0, 0.8), 51.8, 0.6, pan=0.0)
-add(fol, glass_chime(1760, 0.7, 1.2), 52.4, 0.4, pan=0.0)
+# 50.5s: Hero logo reveal
+add(fol, light_sweep(2.0, 0.8), 50.0, 0.6, pan=0.0)
+add(fol, glass_chime(1760, 0.7, 1.2), 50.5, 0.4, pan=0.0)
 
 # 2. Voice Assembly & Ducking intervals
 print("Assembling Voice Lines...")
@@ -122,9 +122,9 @@ for lid, t_start in VOICE_SCHEDULE.items():
         y = y.mean(1)
     if sr != SR:
         y = resample_poly(y, SR, sr)
-    # Apply broadcast voice compression
+    # Broadcast voice compression
     y = compress(y / (np.max(np.abs(y)) + 1e-9) * 0.95, 0.3, 3.0)
-    add(vox, y, t_start, 0.75, pan=0.0)
+    add(vox, y, t_start, 0.80, pan=0.0)
     vo_intervals.append((t_start, t_start + len(y) / SR))
 
 # 3. Score Loading & Voice-Ducking

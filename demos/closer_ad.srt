@@ -1,35 +1,35 @@
 1
-00:00:00,500 --> 00:00:04,750
+00:00:00,500 --> 00:00:05,000
 At 11:42 PM, a multi-crore real estate lead arrives.
 
 2
-00:00:05,400 --> 00:00:09,050
+00:00:05,400 --> 00:00:09,000
 While traditional sales floors sleep, your commission evaporates.
 
 3
-00:00:10,000 --> 00:00:14,420
+00:00:09,800 --> 00:00:13,500
 Meet CLOSER AI. The autonomous neural closing engine.
 
 4
-00:00:15,300 --> 00:00:21,750
+00:00:14,000 --> 00:00:20,200
 Sub-250 millisecond response. Carrier-grade SIP. Zero dropped calls.
 
 5
-00:00:22,300 --> 00:00:29,800
+00:00:20,800 --> 00:00:28,200
 Maya: "Good evening, Mr. Daniels. Regarding the Sea-Facing Penthouse, projected rental yield is 8.4%."
 
 6
-00:00:30,300 --> 00:00:36,200
+00:00:28,800 --> 00:00:34,800
 Pallavi: "வணக்கம் சார், சென்னை ECR வில்லாவின் RERA அப்ரூவல் மற்றும் சைட் விசிட் விவரங்கள் தயார்."
 
 7
-00:00:37,000 --> 00:00:44,300
+00:00:35,400 --> 00:00:42,800
 Swati: "नमस्ते सर, गोल्फ कोर्स रोड पेंटहाउस के लिए रविवार सुबह ग्यारह बजे आपकी फैमिली विज़िट बुक कर दी है।"
 
 8
-00:00:45,000 --> 00:00:51,570
+00:00:43,500 --> 00:00:49,800
 ₹1.55 per qualified call. 99.3% margin uplift.
 
 9
-00:00:52,600 --> 00:00:58,000
+00:00:50,500 --> 00:00:55,000
 CLOSER AI. Intelligence Designed To Evolve. Launching Soon.
