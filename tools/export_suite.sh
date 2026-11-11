@@ -37,13 +37,8 @@ echo "[3/4] Extracting 320 kbps Master Broadcast Audio MP3..."
   -vn -c:a libmp3lame -b:a 320k \
   "$DEMOS/closer_reel_audio.mp3"
 
-echo "[4/4] Packaging Production Assets ZIP Bundle..."
-cd "$DEMOS"
-zip -9 -q -u closer_production_bundle.zip \
-  closer_reel.mp4 closer_reel_720p.mp4 closer_reel_square.mp4 closer_reel_audio.mp3 closer_reel_poster.jpg closer_reel.srt closer_reel.vtt CAPTION.txt daily_reel.json
-
-# Sync to closer_mobile/dist/demos
+echo "[4/4] Syncing metadata & captions to mobile dist..."
 mkdir -p "$D/closer_mobile/dist/demos"
-cp -f "$DEMOS"/closer_reel* "$DEMOS"/CAPTION.txt "$DEMOS"/daily_reel.json "$D/closer_mobile/dist/demos/"
+cp -f "$DEMOS"/*.srt "$DEMOS"/*.vtt "$DEMOS"/CAPTION.txt "$DEMOS"/daily_reel.json "$DEMOS"/*poster.jpg "$D/closer_mobile/dist/demos/"
 
-echo "✓ Video Engine Export Suite complete! All formats ready in demos/ and closer_mobile/dist/demos/"
+echo "✓ Video Engine Export Suite complete! All formats ready in demos/"
