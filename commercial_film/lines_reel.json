@@ -1,0 +1,50 @@
+[
+  {
+    "id": "r1",
+    "text": "At 11:42 PM, you're asleep. A fifteen crore luxury buyer just submitted an inquiry.",
+    "voice": "af_heart",
+    "speed": 1.08
+  },
+  {
+    "id": "r2",
+    "text": "Your sales team is dark for eight hours. By morning, your commission is gone.",
+    "voice": "af_heart",
+    "speed": 1.08
+  },
+  {
+    "id": "r3",
+    "text": "Meet CLOSER AI. It calls the lead in zero point zero eight seconds.",
+    "voice": "af_heart",
+    "speed": 1.10
+  },
+  {
+    "id": "r_maya",
+    "text": "Good evening, Mr. Daniels. Sea-Facing Penthouse projected rental yield is 8.4%. Sunday eleven AM is reserved for your visit.",
+    "voice": "af_bella",
+    "speed": 1.06
+  },
+  {
+    "id": "r_pallavi",
+    "text": "வணக்கம் சார், சென்னை ECR வில்லாவின் RERA அப்ரூவல் மற்றும் சைட் விசிட் விவரங்கள் தயார்.",
+    "voice": "ta-IN-PallaviNeural",
+    "rate": "+5%"
+  },
+  {
+    "id": "r_swati",
+    "text": "नमस्ते सर, गोल्फ कोर्स रोड पेंटहाउस के लिए रविवार सुबह ग्यारह बजे आपकी फैमिली विज़िट बुक कर दी है।",
+    "voice": "hi-IN-SwaraNeural",
+    "rate": "+5%"
+  },
+  {
+    "id": "r4",
+    "text": "One rupee and fifty-five paise per call. Ninety-nine percent margin uplift.",
+    "voice": "af_heart",
+    "speed": 1.08
+  },
+  {
+    "id": "r5",
+    "text": "CLOSER AI. Launching soon. Tap the link in bio to test live.",
+    "voice": "af_heart",
+    "speed": 1.08
+  }
+]

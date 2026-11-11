@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CLOSER AI — Official Launch Film | "The 11:42 PM Lead"</title>
+  <title>CLOSER AI — Official Film & Instagram Reel | "The 11:42 PM Lead"</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -39,7 +39,7 @@
       <div>
         <h1 class="text-base font-bold tracking-tight text-white flex items-center gap-2">
           CLOSER AI
-          <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">Official Film</span>
+          <span class="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/30">Official Launch Media</span>
         </h1>
       </div>
     </div>
@@ -48,8 +48,8 @@
       <a href="/" class="text-xs font-mono text-slate-400 hover:text-white transition-all flex items-center gap-1.5">
         ← BACK TO CONSOLE
       </a>
-      <a href="/demos/closer_ad.mp4" download class="px-4 py-2 rounded-xl bg-cyan-400 hover:bg-cyan-300 text-black font-semibold text-xs tracking-wide transition-all shadow-lg shadow-cyan-500/20">
-        DOWNLOAD MP4 (1080P)
+      <a id="download-btn" href="/demos/closer_reel.mp4" download class="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-400 to-lime-400 hover:opacity-90 text-black font-semibold text-xs tracking-wide transition-all shadow-lg shadow-cyan-500/20">
+        DOWNLOAD MP4
       </a>
     </div>
   </header>
@@ -61,19 +61,37 @@
     <div class="text-center mb-6">
       <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-red-500/10 border border-red-500/30 text-red-400 text-xs font-mono mb-3">
         <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
-        PROBLEM 01: THE 11:42 PM NOCTURNAL LEAD
+        HIGH-CONVERSION CAMPAIGN: "THE 11:42 PM LEAD"
       </div>
       <h2 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-white mb-2">
-        "The 11:42 PM Lead"
+        "While They Sleep, CLOSER AI Closes."
       </h2>
       <p class="text-sm sm:text-base text-slate-400 max-w-xl mx-auto">
-        Directed with Lemo-Opuscar in Dark Tech Keynote aesthetic. Sub-250ms glass-to-glass turn latency across English, Tamil & Hindi.
+        Directed in Lemo-Opuscar. Sub-250ms glass-to-glass turn latency across English, Tamil & Hindi.
       </p>
+
+      <!-- FORMAT SWITCHER (INSTAGRAM REEL vs KEYNOTE FILM) -->
+      <div class="inline-flex items-center p-1.5 rounded-2xl bg-white/[0.05] border border-white/10 mt-6 gap-2">
+        <button id="tab-reel" onclick="switchFormat('reel')" class="px-5 py-2.5 rounded-xl font-mono text-xs font-bold transition-all bg-cyan-400 text-black shadow-lg shadow-cyan-500/30">
+          📱 INSTAGRAM REEL (9:16)
+        </button>
+        <button id="tab-cinema" onclick="switchFormat('cinema')" class="px-5 py-2.5 rounded-xl font-mono text-xs font-bold transition-all text-slate-400 hover:text-white">
+          💻 KEYNOTE FILM (16:9)
+        </button>
+      </div>
     </div>
 
-    <!-- 16:9 VIDEO CONTAINER -->
-    <div class="relative w-full aspect-video bg-black rounded-3xl overflow-hidden border border-white/10 shadow-2xl shadow-cyan-950/40">
-      <video id="film-player" controls preload="metadata" poster="/demos/closer_ad_poster.jpg" class="w-full h-full object-cover">
+    <!-- 1. INSTAGRAM REEL (9:16 VERTICAL CONTAINER) -->
+    <div id="view-reel" class="relative w-full max-w-[420px] aspect-[9/16] bg-black rounded-3xl overflow-hidden border border-white/15 shadow-2xl shadow-cyan-950/50 my-2">
+      <video id="player-reel" controls preload="metadata" poster="/demos/closer_reel_poster.jpg" class="w-full h-full object-cover">
+        <source src="/demos/closer_reel.mp4" type="video/mp4">
+        Your browser does not support the video tag.
+      </video>
+    </div>
+
+    <!-- 2. CINEMA FILM (16:9 WIDESCREEN CONTAINER, HIDDEN BY DEFAULT) -->
+    <div id="view-cinema" class="hidden relative w-full aspect-video bg-black rounded-3xl overflow-hidden border border-white/10 shadow-2xl shadow-cyan-950/40 my-2">
+      <video id="player-cinema" controls preload="metadata" poster="/demos/closer_ad_poster.jpg" class="w-full h-full object-cover">
         <source src="/demos/closer_ad.mp4" type="video/mp4">
         <track label="English" kind="subtitles" srclang="en" src="/demos/closer_ad.srt" default>
         Your browser does not support the video tag.
@@ -116,7 +134,7 @@
     <div class="w-full mt-6 p-6 rounded-2xl bg-cyan-950/20 border border-cyan-500/30 flex flex-col sm:flex-row items-center justify-between gap-4">
       <div>
         <div class="flex items-center gap-2 text-cyan-400 font-mono text-xs font-bold uppercase tracking-wider mb-1">
-          <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+          <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
           DUAL-MARKET CAPACITY (USA & INDIA)
         </div>
         <div class="text-lg font-bold text-white">Launching Soon — Private Enterprise Deployments Now Open</div>
@@ -133,11 +151,42 @@
   <footer class="w-full max-w-5xl py-6 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 font-mono">
     <div>CLOSER AI © 2026 · Intelligence Designed To Evolve</div>
     <div class="flex gap-4 mt-2 sm:mt-0">
+      <a href="/demos/closer_reel.mp4" download class="hover:text-slate-300">INSTAGRAM REEL (9:16)</a>
+      <a href="/demos/closer_ad.mp4" download class="hover:text-slate-300">KEYNOTE FILM (16:9)</a>
       <a href="/demos/closer_ad.srt" download class="hover:text-slate-300">SUBTITLES (.SRT)</a>
-      <a href="/demos/closer_ad_poster.jpg" download class="hover:text-slate-300">POSTER (.JPG)</a>
       <a href="/commercial_film/CREDITS" class="hover:text-slate-300">CREDITS</a>
     </div>
   </footer>
+
+  <script>
+    function switchFormat(fmt) {
+      const vReel = document.getElementById('view-reel');
+      const vCinema = document.getElementById('view-cinema');
+      const pReel = document.getElementById('player-reel');
+      const pCinema = document.getElementById('player-cinema');
+      const tReel = document.getElementById('tab-reel');
+      const tCinema = document.getElementById('tab-cinema');
+      const dlBtn = document.getElementById('download-btn');
+
+      if (fmt === 'reel') {
+        vReel.classList.remove('hidden');
+        vCinema.classList.add('hidden');
+        pCinema.pause();
+        tReel.className = "px-5 py-2.5 rounded-xl font-mono text-xs font-bold transition-all bg-cyan-400 text-black shadow-lg shadow-cyan-500/30";
+        tCinema.className = "px-5 py-2.5 rounded-xl font-mono text-xs font-bold transition-all text-slate-400 hover:text-white";
+        dlBtn.href = "/demos/closer_reel.mp4";
+        dlBtn.innerText = "DOWNLOAD REEL (9:16)";
+      } else {
+        vReel.classList.add('hidden');
+        vCinema.classList.remove('hidden');
+        pReel.pause();
+        tCinema.className = "px-5 py-2.5 rounded-xl font-mono text-xs font-bold transition-all bg-cyan-400 text-black shadow-lg shadow-cyan-500/30";
+        tReel.className = "px-5 py-2.5 rounded-xl font-mono text-xs font-bold transition-all text-slate-400 hover:text-white";
+        dlBtn.href = "/demos/closer_ad.mp4";
+        dlBtn.innerText = "DOWNLOAD FILM (16:9)";
+      }
+    }
+  </script>
 
 </body>
 </html>
