@@ -16,7 +16,7 @@ $PY "$D/mix.py"
 
 echo "=== 4. Rendering 24 fps Canvas Video Frames ==="
 cd "$LEMO_ROOT"
-node core/render/video.mjs "$D" --fps 24 --workers 3 --out "$D/out/video24.mp4"
+node core/render/video.mjs "$D" --fps 24 --workers 4 --out "$D/out/video24.mp4"
 
 echo "=== 5. Muxing Master Broadcast Video ==="
 PATH="/usr/bin:/bin:/usr/sbin:/sbin:$PATH" \

@@ -59,6 +59,24 @@ def play_hit(stem, inst, t, vel=0.6, pan=0.0, gain=1.0, **kw):
             x = x.mean(1)
         put(stem, x, t, gain=gain, pan=pan)
     except Exception as ex:
+        if inst == 'claves':
+            try:
+                x = S.hit('woodblock', vel=vel, **kw)
+                if x.ndim > 1:
+                    x = x.mean(1)
+                put(stem, x, t, gain=gain, pan=pan)
+                return
+            except Exception:
+                pass
+        elif inst == 'bass_drum':
+            try:
+                x = S.hit('gran_cassa', vel=vel, **kw)
+                if x.ndim > 1:
+                    x = x.mean(1)
+                put(stem, x, t, gain=gain, pan=pan)
+                return
+            except Exception:
+                pass
         print(f"Warning: could not hit {inst} ({ex})")
 
 # 1. Pad generator (detuned supersaw/triangle warmly lowpassed)
