@@ -1,6 +1,15 @@
 #!/usr/bin/env python3
 """mix_reel.py — Foley + Voices + Score Ducking for CLOSER AI 65s Instagram Reel → mix_reel.wav
 Mastered to -14.0 LUFS target.
+Enhanced with MrBeast/Hormozi retention sound design:
+- 0.0s Cash fire whoosh & punch
+- 1.4s Zoom whoosh cut
+- 8.0s Night chime
+- 13.8s Snore & vibration alarm
+- 19.8s Sub drop & neural boot
+- 46.3s WhatsApp dual-tone pop
+- 52.6s Jackpot coins & rolling slot clicks
+- 58.9s Sparkle chime & CTA alert
 """
 import os, sys, json
 import numpy as np
@@ -35,6 +44,13 @@ mus = np.zeros((N, 2), np.float32)
 def sine(f, d, tau):
     return np.sin(2 * np.pi * f * t_(d)) * env_exp(d, tau)
 
+def whoosh_hit():
+    d = 0.45
+    tt = t_(d)
+    w = bp(noise(d), 200, 3500) * np.sin(np.pi * (tt / d)) ** 1.8
+    punch = sine(95, d, 0.08)
+    return norm(w * 0.8 + punch * 0.6)
+
 def alert_ping():
     d = 0.35
     return norm(sine(1300, d, 0.04) + 0.5 * sine(1900, d, 0.03))
@@ -42,9 +58,17 @@ def alert_ping():
 def sub_drop():
     d = 2.0
     tt = t_(d)
-    freq = 65.0 * np.exp(-tt / 0.4) + 38.0
+    freq = 70.0 * np.exp(-tt / 0.38) + 36.0
     phase = 2 * np.pi * np.cumsum(freq) / SR
     return norm(np.sin(phase) * env_exp(d, 0.6) + lp(noise(d), 350) * env_exp(d, 0.02))
+
+def snore_sound():
+    d = 0.6
+    tt = t_(d)
+    # Low raspy vibration
+    v = np.sin(2 * np.pi * 55 * tt) * (1 + 0.5 * np.sin(2 * np.pi * 12 * tt))
+    n = lp(noise(d), 400) * (np.sin(np.pi * (tt / d)) ** 2)
+    return norm(v * 0.5 + n * 0.5)
 
 def whatsapp_pop():
     d = 0.4
@@ -56,25 +80,40 @@ def whatsapp_pop():
     combined[delay:delay + len(tone2) - delay] += tone2[:len(tone2) - delay] * 0.9
     return norm(combined)
 
+def coin_clink():
+    d = 0.25
+    return norm(sine(2400, d, 0.03) + sine(3200, d, 0.02) + sine(4800, d, 0.015))
+
 def comment_chime():
-    d = 0.6
-    return norm(sine(1760, d, 0.1) + sine(2637, d, 0.15) + sine(3520, d, 0.08))
+    d = 0.7
+    return norm(sine(1760, d, 0.12) + sine(2637, d, 0.16) + sine(3520, d, 0.09))
 
 def digit_tick():
     d = 0.025
     return norm(bp(noise(d), 3200, 8000) * env_exp(d, 0.003))
 
-# 1. Foley Placement
-add(fol, alert_ping(), 0.5, 0.5)
-add(fol, alert_ping(), 8.1, 0.4)
-add(fol, sub_drop(), 19.8, 0.85)
-add(fol, whatsapp_pop(), 46.3, 0.8)
-add(fol, sub_drop(), 52.6, 0.9)
+# ──────────────── Foley Placement on Key Retention Cuts ────────────────
+add(fol, whoosh_hit(), 0.0, 0.85)     # 0.0s INTRO HOOK EXPLOSION
+add(fol, alert_ping(), 0.5, 0.5)      # 0.5s Cash register ding
+add(fol, whoosh_hit(), 1.4, 0.6)      # 1.4s SNAP ZOOM PUNCH TO FUNNEL
+add(fol, whoosh_hit(), 8.0, 0.6)      # 8.0s CUT TO NOCTURNAL BEDROOM
+add(fol, alert_ping(), 8.1, 0.4)      # 8.1s 11:42 PM Inquiry Bell
+add(fol, snore_sound(), 13.8, 0.6)    # 13.8s SLEEPING TELECALLER SNORE
+add(fol, whoosh_hit(), 19.8, 0.7)     # 19.8s CUT TO CLOSER AI HERO
+add(fol, sub_drop(), 19.8, 0.9)       # 19.8s SUB BASS DROP
+add(fol, alert_ping(), 26.2, 0.35)    # 26.2s Maya Chime
+add(fol, alert_ping(), 35.2, 0.35)    # 35.2s Pallavi Chime
+add(fol, alert_ping(), 41.2, 0.35)    # 41.2s Swati Chime
+add(fol, whatsapp_pop(), 46.3, 0.85)  # 46.3s WHATSAPP MESSAGE POP
+add(fol, whoosh_hit(), 52.6, 0.65)    # 52.6s UNIT ECONOMICS CUT
+add(fol, sub_drop(), 52.6, 0.9)       # 52.6s BASS DROP ON ₹1.55
 for i in range(6):
-    add(fol, digit_tick(), 53.2 + i * 0.2, 0.35)
-add(fol, comment_chime(), 58.9, 0.75)
+    add(fol, digit_tick(), 53.0 + i * 0.18, 0.35)
+    add(fol, coin_clink(), 53.2 + i * 0.22, 0.4) # Coin jackpot clinking!
+add(fol, comment_chime(), 58.9, 0.85) # 58.9s COMMENT CLOSER SPARKLE
+add(fol, whoosh_hit(), 58.9, 0.5)     # 58.9s Arrow whoosh
 
-# 2. Voices
+# ──────────────── Voices Placement ────────────────
 vo_intervals = []
 for lid, t_start in VOICE_SCHEDULE.items():
     wav_path = os.path.join(HERE, 'voices_reel', f"{lid}.wav")
@@ -90,7 +129,7 @@ for lid, t_start in VOICE_SCHEDULE.items():
     add(vox, y, t_start, 0.84, pan=0.0)
     vo_intervals.append((t_start, t_start + len(y) / SR))
 
-# 3. Score
+# ──────────────── Score Placement ────────────────
 score_path = os.path.join(HERE, 'music', 'score_reel.wav')
 if os.path.exists(score_path):
     m, msr = sf.read(score_path, always_2d=True)
@@ -98,7 +137,7 @@ if os.path.exists(score_path):
         m = resample_poly(m, SR, msr, axis=0)
     mus[:min(N, len(m))] = m[:N]
 
-# 4. Ducking
+# ──────────────── Dynamic Ducking ────────────────
 duck = np.ones(N, dtype=np.float32)
 duck_fol = np.ones(N, dtype=np.float32)
 for a, b in vo_intervals:

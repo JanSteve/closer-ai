@@ -1,10 +1,19 @@
 // reel.js — CLOSER AI Official Instagram Reel Engine (9:16 Vertical 1080x1920)
-// High-Converting Documentary Explainer for Instagram Reels & TikTok.
-// Grounded in JSM Integrated Services (Chennai luxury real estate).
-// Features: Meta Ad Spend Burner, 5-Minute Cliff Chart, Autonomous Callback,
-// Tri-Lingual Closers, Live WhatsApp Co-Browsing, ₹1.55 Economics, Viral Comment Magnet.
+// High-Retention Documentary Explainer for Instagram Reels & TikTok.
+// Features: Animated Characters (Frustrated Builder, Nocturnal Buyer, Sleeping Telecaller,
+// Holographic AI Avatars), Alex Hormozi Karaoke Subtitles, Snap Zooms, Glitch Transitions.
 
 import * as E from './engine.js';
+import {
+  drawBuilderCharacter,
+  drawBuyerCharacter,
+  drawSleepingCallerCharacter,
+  drawAICloserAvatar,
+  renderHormoziCaptions,
+  drawCutTransition,
+  drawScanlines
+} from './characters.js';
+
 const { PAL, clamp, lerp, seg, ss, eo, ei, eio, back, spring, font, rr, glow,
         panel3D, pill, drawWaveform, drawRadialDial, rollingNumber, lightSweep,
         vignette, cinematicBokeh, anamorphicFlare, perspective3D, buf, TAU, rgba } = E;
@@ -12,7 +21,9 @@ const { PAL, clamp, lerp, seg, ss, eo, ei, eio, back, spring, font, rr, glow,
 export const W = 1080, H = 1920;
 export const DUR = 65.0;
 
-// Subtitles timed for 65s Documentary Instagram Reel
+const CUT_TIMES = [0.0, 1.4, 8.0, 13.6, 19.8, 26.2, 35.2, 41.2, 46.3, 52.6, 58.9];
+
+// Subtitles timed for 65s Documentary Instagram Reel (for backup / srt)
 export function reelSubs() {
   return [
     { t0: 0.5, t1: 4.2, text: "Builders spend lakhs on ads.", highlight: "lakhs on ads" },
@@ -29,55 +40,14 @@ export function reelSubs() {
   ];
 }
 
-// ───────────────────────── Instagram Safe-Zone Captions ─────────────────────────
-function renderReelCaptions(g, t) {
-  const current = reelSubs().find(s => t >= s.t0 && t <= s.t1);
-  if (!current) return;
-
-  const fadeIn = clamp((t - current.t0) / 0.16);
-  const fadeOut = clamp((current.t1 - t) / 0.16);
-  const alpha = Math.min(fadeIn, fadeOut);
-  if (alpha <= 0) return;
-
-  g.save();
-  g.globalAlpha = alpha;
-
-  const py = 1530; // Safe zone above Instagram bottom UI
-  g.font = font(42, 800, 'disp');
-  g.textAlign = 'center';
-  g.textBaseline = 'middle';
-
-  // Backdrop pill
-  const tw = g.measureText(current.text).width;
-  const pw = Math.min(W - 80, tw + 60), ph = 76;
-  g.fillStyle = 'rgba(6, 9, 16, 0.94)';
-  g.shadowColor = 'rgba(0, 0, 0, 0.75)';
-  g.shadowBlur = 30;
-  g.shadowOffsetY = 12;
-  rr(g, W / 2 - pw / 2, py - ph / 2, pw, ph, ph / 2);
-  g.fill();
-  g.shadowColor = 'transparent';
-
-  // Glowing border
-  g.strokeStyle = 'rgba(255, 255, 255, 0.22)';
-  g.lineWidth = 1.5;
-  rr(g, W / 2 - pw / 2 + 0.5, py - ph / 2 + 0.5, pw - 1, ph - 1, ph / 2);
-  g.stroke();
-
-  g.fillStyle = '#FFFFFF';
-  g.fillText(current.text, W / 2, py);
-
-  g.restore();
-}
-
 // ───────────────────────── Floating 3D iPhone Mockup ─────────────────────────
 function drawPhoneFrame(g, cx, cy, w, h, t) {
   const r = 56;
   g.save();
   // Titanium Drop Shadow
-  g.shadowColor = 'rgba(0, 0, 0, 0.88)';
-  g.shadowBlur = 70;
-  g.shadowOffsetY = 32;
+  g.shadowColor = 'rgba(0, 0, 0, 0.9)';
+  g.shadowBlur = 75;
+  g.shadowOffsetY = 34;
   g.fillStyle = '#080C14';
   rr(g, cx - w / 2, cy - h / 2, w, h, r);
   g.fill();
@@ -93,7 +63,7 @@ function drawPhoneFrame(g, cx, cy, w, h, t) {
   g.fill();
 
   // Specular Border
-  g.strokeStyle = 'rgba(255, 255, 255, 0.25)';
+  g.strokeStyle = 'rgba(255, 255, 255, 0.28)';
   g.lineWidth = 1.5;
   rr(g, cx - w / 2 + 0.5, cy - h / 2 + 0.5, w - 1, h - 1, r);
   g.stroke();
@@ -185,15 +155,37 @@ function drawNeuralOrb(g, cx, cy, r, t, color = PAL.accent) {
 // ───────────────────────── MASTER VERTICAL REEL RENDERER ─────────────────────────
 export function renderReel(g, t) {
   g.save();
+
+  // 1. CALCULATE SNAP-ZOOMS & SHAKE (MrBeast 1.4s Retention Formula)
+  let camScale = 1.0;
+  let shakeX = 0, shakeY = 0;
+
+  for (const ct of CUT_TIMES) {
+    const dt = t - ct;
+    if (dt >= 0 && dt <= 0.35) {
+      // Zoom punch
+      camScale += 0.12 * Math.exp(-dt / 0.16) * Math.sin(dt * 18);
+      // Impact micro-shake
+      const s = 7.0 * Math.exp(-dt / 0.14);
+      shakeX = Math.sin(dt * 55) * s;
+      shakeY = Math.cos(dt * 45) * s;
+      break;
+    }
+  }
+
+  g.translate(W / 2 + shakeX, H / 2 + shakeY);
+  g.scale(camScale, camScale);
+  g.translate(-W / 2, -H / 2);
+
   // Near-black OLED vertical stage
   E.bg(g, { lift: 1.1, cyanGlow: 2.0, t, cx: W / 2, cy: H * 0.45 });
   E.grid(g, { ox: W / 2, oy: H / 2, alpha: 0.65 });
   cinematicBokeh(g, t, 36);
 
   // TOP BRAND HEADER
-  const topY = 245;
+  const topY = 240;
   g.textAlign = 'center';
-  pill(g, W / 2 - 165, topY - 40, "🔴 CLOSER AI · EXPLANATORY DOCUMENTARY", {
+  pill(g, W / 2 - 165, topY - 40, "🔴 CLOSER AI · DOCUMENTARY REEL", {
     color: PAL.accent, bg: 'rgba(0, 229, 255, 0.14)', px: 13
   });
 
@@ -218,308 +210,206 @@ export function renderReel(g, t) {
 
   if (t < 8.0) {
     // ═════════════════════════════════════════════════════════════════════════
-    // SCENE 1: THE ₹5 LAKH AD SPEND BURNER (Meta & Google Ads Burn)
+    // SCENE 1: THE ULTRA-FAST HOOK & FRUSTRATED BUILDER (0.0s – 8.0s)
     // ═════════════════════════════════════════════════════════════════════════
-    const localT = t;
-    const cardY = sy + 140;
-    glow(g, phoneX, cardY + 160, 320, PAL.red, 0.35);
+    if (t < 3.2) {
+      // 0.0s – 3.2s: Stressed Builder Character holding burning money!
+      drawBuilderCharacter(g, phoneX, sy + 380, t);
 
-    // Header badge
-    pill(g, sx + 50, cardY + 20, "● META & GOOGLE ADS CAMPAIGN", {
-      color: PAL.gold, bg: 'rgba(251, 191, 36, 0.15)', px: 12
-    });
+      pill(g, phoneX - 160, sy + 110, "🔥 REAL ESTATE MONEY BURN", {
+        color: PAL.red, bg: 'rgba(239, 68, 68, 0.2)', px: 12
+      });
 
-    // Big Spend Box
-    panel3D(g, sx + 40, cardY + 60, sw - 80, 160, { r: 20, fill: PAL.surf, stroke: 'rgba(251, 191, 36, 0.3)' });
-    g.font = font(13, 700, 'mono');
-    g.fillStyle = PAL.dim;
-    g.textAlign = 'left';
-    g.fillText("MONTHLY BUILDER AD BUDGET SPENT", sx + 70, cardY + 105);
+      g.font = font(34, 800, 'disp');
+      g.fillStyle = '#FFFFFF';
+      g.textAlign = 'center';
+      g.fillText("Builders Are Burning Lakhs.", phoneX, sy + 180);
 
-    const spendCount = Math.min(500000, Math.floor(localT * 110000));
-    g.font = font(44, 800, 'disp');
-    g.fillStyle = PAL.gold;
-    g.fillText(`₹${spendCount.toLocaleString('en-IN')}`, sx + 70, cardY + 165);
+      g.font = font(16, 600, 'ui');
+      g.fillStyle = PAL.dim;
+      g.fillText("₹5,00,000 spent every month on ads.", phoneX, sy + 220);
 
-    // The Lead Funnel Evaporation Graph
-    const funnelY = cardY + 245;
-    panel3D(g, sx + 40, funnelY, sw - 80, 290, { r: 20, fill: '#14080A', stroke: PAL.red, shadow: 1.4 });
+    } else {
+      // 3.2s – 8.0s: Meta & Google Ads Funnel Evaporation
+      const cardY = sy + 140;
+      glow(g, phoneX, cardY + 160, 320, PAL.red, 0.35);
 
-    g.font = font(14, 700, 'mono');
-    g.fillStyle = PAL.red;
-    g.fillText("⚠️ 70% HIGH-INTENT LEADS EVAPORATE", sx + 70, funnelY + 45);
+      pill(g, sx + 50, cardY + 20, "● META & GOOGLE ADS CAMPAIGN", {
+        color: PAL.gold, bg: 'rgba(251, 191, 36, 0.15)', px: 12
+      });
 
-    // Funnel bars
-    // 1. Leads Generated
-    g.fillStyle = PAL.mute;
-    g.font = font(12, 600, 'mono');
-    g.fillText("142 FORM SUBMISSIONS", sx + 70, funnelY + 85);
-    g.fillStyle = PAL.emerald;
-    rr(g, sx + 70, funnelY + 95, sw - 140, 20, 6);
-    g.fill();
+      panel3D(g, sx + 40, cardY + 60, sw - 80, 150, { r: 20, fill: PAL.surf, stroke: 'rgba(251, 191, 36, 0.3)' });
+      g.font = font(13, 700, 'mono');
+      g.fillStyle = PAL.dim;
+      g.textAlign = 'left';
+      g.fillText("MONTHLY BUILDER AD BUDGET SPENT", sx + 70, cardY + 100);
 
-    // 2. Churned / Abandoned Leads
-    g.fillStyle = PAL.red;
-    g.fillText("99 LEADS GONE IN 4-6 HR DELAY (70%)", sx + 70, funnelY + 145);
-    const lostBarW = (sw - 140) * 0.70;
-    rr(g, sx + 70, funnelY + 155, lostBarW, 20, 6);
-    g.fill();
+      const spendCount = Math.min(500000, Math.floor(t * 110000));
+      g.font = font(44, 800, 'disp');
+      g.fillStyle = PAL.gold;
+      g.fillText(`₹${spendCount.toLocaleString('en-IN')}`, sx + 70, cardY + 155);
 
-    // 3. Contacted
-    g.fillStyle = PAL.dim;
-    g.fillText("ONLY 43 EVER CONTACTED", sx + 70, funnelY + 205);
-    rr(g, sx + 70, funnelY + 215, (sw - 140) * 0.30, 20, 6);
-    g.fill();
+      // Funnel Evaporation
+      const funnelY = cardY + 235;
+      panel3D(g, sx + 40, funnelY, sw - 80, 290, { r: 20, fill: '#14080A', stroke: PAL.red, shadow: 1.4 });
 
-    // Floating burning currency indicators
-    for (let i = 0; i < 5; i++) {
-      const px = sx + 100 + ((i * 127 + localT * 50) % (sw - 200));
-      const py = funnelY + 250 - ((localT * 40 + i * 35) % 180);
-      const pa = clamp(1.0 - (funnelY + 250 - py) / 180);
-      g.font = font(18, 700, 'disp');
-      g.fillStyle = rgba(PAL.red, pa * 0.7);
-      g.fillText("₹", px, py);
+      g.font = font(14, 700, 'mono');
+      g.fillStyle = PAL.red;
+      g.fillText("⚠️ 70% HIGH-INTENT LEADS EVAPORATE", sx + 70, funnelY + 45);
+
+      // Funnel bars
+      g.fillStyle = PAL.mute;
+      g.font = font(12, 600, 'mono');
+      g.fillText("142 FORM SUBMISSIONS", sx + 70, funnelY + 85);
+      g.fillStyle = PAL.emerald;
+      rr(g, sx + 70, funnelY + 95, sw - 140, 20, 6);
+      g.fill();
+
+      g.fillStyle = PAL.red;
+      g.fillText("99 LEADS GONE IN 4-6 HR DELAY (70%)", sx + 70, funnelY + 145);
+      rr(g, sx + 70, funnelY + 155, (sw - 140) * 0.70, 20, 6);
+      g.fill();
+
+      g.fillStyle = PAL.dim;
+      g.fillText("ONLY 43 EVER CONTACTED", sx + 70, funnelY + 205);
+      rr(g, sx + 70, funnelY + 215, (sw - 140) * 0.30, 20, 6);
+      g.fill();
     }
 
   } else if (t < 19.8) {
     // ═════════════════════════════════════════════════════════════════════════
-    // SCENE 2: JSM CHENNAI & THE 5-MINUTE CLIFF (Ground Truth)
+    // SCENE 2: JSM CHENNAI & THE 5-MINUTE CLIFF (8.0s – 19.8s)
     // ═════════════════════════════════════════════════════════════════════════
-    const localT = t - 8.0;
-    const cardY = sy + 130;
-    glow(g, phoneX, cardY + 220, 360, PAL.red, 0.4);
+    if (t < 13.8) {
+      // 8.0s – 13.8s: Dr. Daniels Nocturnal Buyer Character in bed at 11:42 PM!
+      drawBuyerCharacter(g, phoneX, sy + 380, t);
 
-    // Ground Truth Badge
-    pill(g, sx + 50, cardY + 20, "📍 JSM INTEGRATED SERVICES · CHENNAI", {
-      color: PAL.accent, bg: PAL.surf2, px: 12
-    });
-
-    // Midnight Inquiry Card
-    panel3D(g, sx + 40, cardY + 60, sw - 80, 160, { r: 20, fill: PAL.surf, stroke: PAL.red });
-    g.font = font(13, 700, 'mono');
-    g.fillStyle = PAL.red;
-    g.textAlign = 'left';
-    g.fillText("🌙 11:42 PM NOCTURNAL INQUIRY", sx + 70, cardY + 95);
-
-    g.font = font(26, 700, 'disp');
-    g.fillStyle = '#FFFFFF';
-    g.fillText("₹15.5 Cr Beachfront Villa", sx + 70, cardY + 135);
-    g.font = font(14, 500, 'ui');
-    g.fillStyle = PAL.dim;
-    g.fillText("Sales Team: Offline / Asleep (4-6 hr response delay)", sx + 70, cardY + 175);
-
-    // The Interactive 5-Minute Cliff Chart
-    const chartY = cardY + 245;
-    panel3D(g, sx + 40, chartY, sw - 80, 330, { r: 20, fill: '#0A0E17', stroke: PAL.line });
-
-    g.font = font(13, 700, 'mono');
-    g.fillStyle = PAL.accent;
-    g.fillText("THE 5-MINUTE CLIFF (LEAD INTENT DECAY)", sx + 70, chartY + 38);
-
-    // Draw Chart Axes & Curve
-    const cx0 = sx + 80, cy0 = chartY + 260;
-    const cw = sw - 160, ch = 190;
-
-    // Grid lines
-    g.strokeStyle = 'rgba(255,255,255,0.06)';
-    g.lineWidth = 1;
-    for (let gy = 0; gy <= 4; gy++) {
-      const yy = cy0 - (gy / 4) * ch;
-      g.beginPath();
-      g.moveTo(cx0, yy);
-      g.lineTo(cx0 + cw, yy);
-      g.stroke();
-    }
-
-    // Points: (0m, 100%), (5m, 21%), (15m, 8%), (30m, 3%), (4h, 1%)
-    const points = [
-      { x: cx0, y: cy0 - ch },
-      { x: cx0 + cw * 0.22, y: cy0 - ch * 0.21 },
-      { x: cx0 + cw * 0.45, y: cy0 - ch * 0.08 },
-      { x: cx0 + cw * 0.72, y: cy0 - ch * 0.03 },
-      { x: cx0 + cw, y: cy0 - ch * 0.01 }
-    ];
-
-    // Animated path drawing
-    const drawProg = clamp(localT / 2.5);
-    g.beginPath();
-    g.moveTo(points[0].x, points[0].y);
-    for (let p = 1; p < points.length; p++) {
-      const prev = points[p - 1];
-      const cur = points[p];
-      const curX = lerp(prev.x, cur.x, clamp((drawProg - (p - 1) * 0.25) / 0.25));
-      const curY = lerp(prev.y, cur.y, clamp((drawProg - (p - 1) * 0.25) / 0.25));
-      g.lineTo(curX, curY);
-      if (drawProg < p * 0.25) break;
-    }
-    g.strokeStyle = PAL.red;
-    g.lineWidth = 4;
-    g.stroke();
-
-    // Area Fill
-    g.lineTo(cx0 + cw * Math.min(1.0, drawProg), cy0);
-    g.lineTo(cx0, cy0);
-    g.closePath();
-    const grArea = g.createLinearGradient(0, cy0 - ch, 0, cy0);
-    grArea.addColorStop(0, 'rgba(255, 69, 69, 0.35)');
-    grArea.addColorStop(1, 'rgba(255, 69, 69, 0.0)');
-    g.fillStyle = grArea;
-    g.fill();
-
-    // Cliff Callout Marker at 5m
-    if (drawProg > 0.3) {
-      const mX = cx0 + cw * 0.22, mY = cy0 - ch * 0.21;
-      glow(g, mX, mY, 30, PAL.red, 0.8);
-      g.beginPath();
-      g.arc(mX, mY, 6, 0, TAU);
-      g.fillStyle = '#FFFFFF';
-      g.fill();
-
-      pill(g, mX - 85, mY - 45, "📉 -391% DROP AT 5 MIN", {
-        color: '#FFFFFF', bg: PAL.red, px: 10
+      pill(g, phoneX - 165, sy + 100, "📍 JSM INTEGRATED SERVICES · CHENNAI", {
+        color: PAL.accent, bg: PAL.surf2, px: 12
       });
-    }
 
-    // X Axis Labels
-    g.font = font(11, 600, 'mono');
-    g.fillStyle = PAL.mute;
-    g.fillText("0m", cx0 - 5, cy0 + 20);
-    g.fillText("5 min", cx0 + cw * 0.22 - 15, cy0 + 20);
-    g.fillText("30 min", cx0 + cw * 0.65 - 15, cy0 + 20);
-    g.fillText("4 hrs", cx0 + cw - 20, cy0 + 20);
+      g.font = font(30, 700, 'disp');
+      g.fillStyle = '#FFFFFF';
+      g.textAlign = 'center';
+      g.fillText("The Midnight Buyer", phoneX, sy + 165);
+
+      g.font = font(15, 500, 'ui');
+      g.fillStyle = PAL.dim;
+      g.fillText("₹15.5 Cr ECR Beachfront Villa Inquiry", phoneX, sy + 200);
+
+    } else {
+      // 13.8s – 19.8s: Sleeping Sales Desk + 5-Minute Cliff Curve!
+      drawSleepingCallerCharacter(g, phoneX, sy + 350, t);
+
+      pill(g, phoneX - 150, sy + 95, "📉 THE 5-MINUTE CLIFF COLLAPSE", {
+        color: PAL.red, bg: 'rgba(239, 68, 68, 0.2)', px: 12
+      });
+
+      g.font = font(26, 700, 'disp');
+      g.fillStyle = '#FFFFFF';
+      g.textAlign = 'center';
+      g.fillText("While Human Teams Sleep,", phoneX, sy + 155);
+      g.fillText("Intent Dies in Minutes.", phoneX, sy + 195);
+    }
 
   } else if (t < 26.0) {
     // ═════════════════════════════════════════════════════════════════════════
-    // SCENE 3: CLOSER AI AUTONOMOUS SPEED-TO-CALL (0.08s Dial)
+    // SCENE 3: CLOSER AI AUTONOMOUS SPEED-TO-CALL (19.8s – 26.0s)
     // ═════════════════════════════════════════════════════════════════════════
-    const localT = t - 19.8;
-    const cardY = sy + 150;
-    glow(g, phoneX, cardY + 220, 380, PAL.accent, 0.45);
-
-    // Center Dynamic Neural Orb
-    drawNeuralOrb(g, phoneX, cardY + 160, 90, t, PAL.accent);
+    drawAICloserAvatar(g, phoneX, sy + 310, t, 'maya');
 
     g.textAlign = 'center';
-    pill(g, phoneX - 170, cardY + 285, "● AUTONOMOUS DIAL IN 0.08 SECONDS", {
+    pill(g, phoneX - 170, sy + 510, "● AUTONOMOUS DIAL IN 0.08 SECONDS", {
       color: PAL.accent, bg: 'rgba(0, 229, 255, 0.15)', px: 12
     });
 
     g.font = font(34, 700, 'disp');
     g.fillStyle = '#FFFFFF';
-    g.fillText("Sub-45s Inbound Callback", phoneX, cardY + 355);
+    g.fillText("Sub-45s Inbound Callback", phoneX, sy + 575);
 
     g.font = font(14, 600, 'mono');
     g.fillStyle = PAL.lime;
-    g.fillText("OPUS-HD 48kHz · LATENCY: 238ms · 200 OK", phoneX, cardY + 395);
+    g.fillText("OPUS-HD 48kHz · LATENCY: 238ms · 200 OK", phoneX, sy + 615);
 
-    drawWaveform(g, phoneX, cardY + 460, sw - 120, 50, t, { active: true, color: PAL.accent, energy: 1.3 });
+    drawWaveform(g, phoneX, sy + 690, sw - 120, 50, t, { active: true, color: PAL.accent, energy: 1.3 });
 
   } else if (t < 35.1) {
     // ═════════════════════════════════════════════════════════════════════════
-    // SCENE 4A: MAYA (ENGLISH NRI CLOSER)
+    // SCENE 4A: MAYA (ENGLISH NRI CLOSER) (26.0s – 35.1s)
     // ═════════════════════════════════════════════════════════════════════════
-    const cardY = sy + 130;
-    drawNeuralOrb(g, phoneX, cardY + 120, 80, t, PAL.accent);
+    drawAICloserAvatar(g, phoneX, sy + 280, t, 'maya');
 
     g.textAlign = 'center';
-    pill(g, phoneX - 150, cardY + 230, "NEURAL CLOSER: MAYA (ENGLISH)", {
-      color: PAL.accent, bg: PAL.surf2, px: 12
-    });
-
-    g.font = font(28, 700, 'disp');
-    g.fillStyle = '#FFFFFF';
-    g.fillText("Sea-Facing Penthouse Desk", phoneX, cardY + 285);
-
-    pill(g, phoneX - 120, cardY + 305, "⭐ 8.4% PROJECTED RENTAL YIELD", {
+    pill(g, phoneX - 120, sy + 475, "⭐ 8.4% PROJECTED RENTAL YIELD", {
       color: PAL.lime, bg: 'rgba(183, 243, 74, 0.15)', px: 11
     });
 
     // Live Voice Transcript Panel
-    panel3D(g, sx + 40, cardY + 360, sw - 80, 160, { r: 18, fill: PAL.surf2, stroke: 'rgba(0, 229, 255, 0.3)' });
+    panel3D(g, sx + 40, sy + 520, sw - 80, 160, { r: 18, fill: PAL.surf2, stroke: 'rgba(0, 229, 255, 0.3)' });
     g.font = font(12, 700, 'mono');
     g.fillStyle = PAL.accent;
-    g.fillText("LIVE VOICE TRANSCRIPT", phoneX, cardY + 395);
+    g.fillText("LIVE VOICE TRANSCRIPT", phoneX, sy + 555);
 
     g.font = font(19, 500, 'ui');
     g.fillStyle = '#FFFFFF';
-    g.fillText('"Projected rental yield is 8.4%.', phoneX, cardY + 435);
-    g.fillText('Sunday 11 AM is reserved for your visit."', phoneX, cardY + 470);
+    g.fillText('"Projected rental yield is 8.4%.', phoneX, sy + 595);
+    g.fillText('Sunday 11 AM is reserved for your visit."', phoneX, sy + 630);
 
-    drawWaveform(g, phoneX, cardY + 560, sw - 120, 48, t, { active: true, color: PAL.accent, energy: 1.2 });
+    drawWaveform(g, phoneX, sy + 720, sw - 120, 48, t, { active: true, color: PAL.accent, energy: 1.2 });
 
   } else if (t < 41.1) {
     // ═════════════════════════════════════════════════════════════════════════
-    // SCENE 4B: PALLAVI (TAMIL CLOSER)
+    // SCENE 4B: PALLAVI (TAMIL CLOSER) (35.1s – 41.1s)
     // ═════════════════════════════════════════════════════════════════════════
-    const cardY = sy + 130;
-    drawNeuralOrb(g, phoneX, cardY + 120, 80, t, PAL.emerald);
+    drawAICloserAvatar(g, phoneX, sy + 280, t, 'pallavi');
 
     g.textAlign = 'center';
-    pill(g, phoneX - 155, cardY + 230, "NEURAL CLOSER: PALLAVI (TAMIL)", {
-      color: PAL.emerald, bg: PAL.surf2, px: 12
-    });
-
-    g.font = font(28, 700, 'disp');
-    g.fillStyle = '#FFFFFF';
-    g.fillText("Chennai & ECR Luxury Desk", phoneX, cardY + 285);
-
-    pill(g, phoneX - 110, cardY + 305, "🛡️ TN-RERA VERIFIED PROMPT", {
+    pill(g, phoneX - 110, sy + 475, "🛡️ TN-RERA VERIFIED PROMPT", {
       color: PAL.emerald, bg: 'rgba(16, 185, 129, 0.15)', px: 11
     });
 
-    panel3D(g, sx + 40, cardY + 360, sw - 80, 160, { r: 18, fill: PAL.surf2, stroke: 'rgba(16, 185, 129, 0.3)' });
+    panel3D(g, sx + 40, sy + 520, sw - 80, 160, { r: 18, fill: PAL.surf2, stroke: 'rgba(16, 185, 129, 0.3)' });
     g.font = font(12, 700, 'mono');
     g.fillStyle = PAL.emerald;
-    g.fillText("நேரடி அழைப்பு (LIVE TAMIL CALL)", phoneX, cardY + 395);
+    g.fillText("நேரடி அழைப்பு (LIVE TAMIL CALL)", phoneX, sy + 555);
 
     g.font = font(18, 500, 'ui');
     g.fillStyle = '#FFFFFF';
-    g.fillText('"வணக்கம் சார், சென்னை ECR வில்லாவின்', phoneX, cardY + 435);
-    g.fillText('RERA அப்ரூவல் விவரங்கள் தயார்."', phoneX, cardY + 470);
+    g.fillText('"வணக்கம் சார், சென்னை ECR வில்லாவின்', phoneX, sy + 595);
+    g.fillText('RERA அப்ரூவல் விவரங்கள் தயார்."', phoneX, sy + 630);
 
-    drawWaveform(g, phoneX, cardY + 560, sw - 120, 48, t, { active: true, color: PAL.emerald, energy: 1.2 });
+    drawWaveform(g, phoneX, sy + 720, sw - 120, 48, t, { active: true, color: PAL.emerald, energy: 1.2 });
 
   } else if (t < 46.2) {
     // ═════════════════════════════════════════════════════════════════════════
-    // SCENE 4C: SWATI (HINDI CLOSER)
+    // SCENE 4C: SWATI (HINDI CLOSER) (41.1s – 46.2s)
     // ═════════════════════════════════════════════════════════════════════════
-    const cardY = sy + 130;
-    drawNeuralOrb(g, phoneX, cardY + 120, 80, t, PAL.purple);
+    drawAICloserAvatar(g, phoneX, sy + 280, t, 'swati');
 
     g.textAlign = 'center';
-    pill(g, phoneX - 150, cardY + 230, "NEURAL CLOSER: SWATI (HINDI)", {
-      color: PAL.purple, bg: PAL.surf2, px: 12
-    });
-
-    g.font = font(28, 700, 'disp');
-    g.fillStyle = '#FFFFFF';
-    g.fillText("Delhi NCR Luxury Desk", phoneX, cardY + 285);
-
-    pill(g, phoneX - 130, cardY + 305, "🗓️ SUNDAY 11:00 AM CONFIRMED", {
+    pill(g, phoneX - 130, sy + 475, "🗓️ SUNDAY 11:00 AM CONFIRMED", {
       color: PAL.purple, bg: 'rgba(192, 132, 252, 0.15)', px: 11
     });
 
-    panel3D(g, sx + 40, cardY + 360, sw - 80, 160, { r: 18, fill: PAL.surf2, stroke: 'rgba(192, 132, 252, 0.3)' });
+    panel3D(g, sx + 40, sy + 520, sw - 80, 160, { r: 18, fill: PAL.surf2, stroke: 'rgba(192, 132, 252, 0.3)' });
     g.font = font(12, 700, 'mono');
     g.fillStyle = PAL.purple;
-    g.fillText("लाइव कॉल (LIVE HINDI CALL)", phoneX, cardY + 395);
+    g.fillText("लाइव कॉल (LIVE HINDI CALL)", phoneX, sy + 555);
 
     g.font = font(18, 500, 'ui');
     g.fillStyle = '#FFFFFF';
-    g.fillText('"नमस्ते सर, गोल्फ कोर्स रोड पेंटहाउस के लिए', phoneX, cardY + 435);
-    g.fillText('आपकी विज़िट बुक कर दी है।"', phoneX, cardY + 470);
+    g.fillText('"नमस्ते सर, गोल्फ कोर्स रोड पेंटहाउस के लिए', phoneX, sy + 595);
+    g.fillText('आपकी विज़िट बुक कर दी है।"', phoneX, sy + 630);
 
-    drawWaveform(g, phoneX, cardY + 560, sw - 120, 48, t, { active: true, color: PAL.purple, energy: 1.2 });
+    drawWaveform(g, phoneX, sy + 720, sw - 120, 48, t, { active: true, color: PAL.purple, energy: 1.2 });
 
   } else if (t < 52.5) {
     // ═════════════════════════════════════════════════════════════════════════
-    // SCENE 5: DUAL-CHANNEL SPEED-TO-WALKTHROUGH (Live WhatsApp Push)
+    // SCENE 5: DUAL-CHANNEL WHATSAPP CO-BROWSING (46.2s – 52.5s)
     // ═════════════════════════════════════════════════════════════════════════
-    const localT = t - 46.2;
     const cardY = sy + 130;
     glow(g, phoneX, cardY + 240, 360, PAL.emerald, 0.4);
 
-    // WhatsApp Interface Header
     panel3D(g, sx + 30, cardY, sw - 60, 68, { r: 16, fill: '#005D4B', stroke: '#128C7E' });
     g.textAlign = 'left';
     g.font = font(18, 700, 'disp');
@@ -572,7 +462,7 @@ export function renderReel(g, t) {
 
   } else if (t < 58.8) {
     // ═════════════════════════════════════════════════════════════════════════
-    // SCENE 6: THE UNIT ECONOMICS SHOWDOWN (₹1.55)
+    // SCENE 6: THE UNIT ECONOMICS SHOWDOWN (52.5s – 58.8s)
     // ═════════════════════════════════════════════════════════════════════════
     const localT = t - 52.5;
     const cardY = sy + 130;
@@ -600,7 +490,6 @@ export function renderReel(g, t) {
     // Showdown Battle Box
     panel3D(g, sx + 40, cardY + 260, sw - 80, 240, { r: 20, fill: PAL.surf, stroke: PAL.line });
 
-    // Row 1: Human Call Center
     g.font = font(14, 700, 'mono');
     g.fillStyle = PAL.red;
     g.textAlign = 'left';
@@ -611,14 +500,12 @@ export function renderReel(g, t) {
     g.fillStyle = PAL.dim;
     g.fillText("4-6 hr delay · 40% monthly churn · Nocturnal dark", sx + 70, cardY + 365);
 
-    // Separator line
     g.strokeStyle = PAL.line;
     g.beginPath();
     g.moveTo(sx + 70, cardY + 385);
     g.lineTo(sx + sw - 70, cardY + 385);
     g.stroke();
 
-    // Row 2: CLOSER AI
     g.font = font(14, 700, 'mono');
     g.fillStyle = PAL.lime;
     g.fillText("CLOSER AI AUTONOMOUS GATEKEEPER", sx + 70, cardY + 420);
@@ -630,16 +517,14 @@ export function renderReel(g, t) {
 
   } else {
     // ═════════════════════════════════════════════════════════════════════════
-    // SCENE 7: THE VIRAL COMMENT MAGNET (Comment "CLOSER")
+    // SCENE 7: THE VIRAL COMMENT MAGNET (58.8s – 65.0s)
     // ═════════════════════════════════════════════════════════════════════════
     const localT = t - 58.8;
     const cardY = sy + 130;
     glow(g, phoneX, cardY + 220, 420, PAL.gold, 0.45);
 
-    // Glowing Golden Border Card
     panel3D(g, sx + 30, cardY, sw - 60, 480, { r: 24, fill: '#14120A', stroke: PAL.gold, shadow: 1.6 });
 
-    // Comment Magnet Header
     g.textAlign = 'center';
     pill(g, phoneX - 165, cardY + 40, "🔥 INSTAGRAM EXCLUSIVE BLUEPRINT", {
       color: PAL.gold, bg: 'rgba(251, 191, 36, 0.2)', px: 13
@@ -654,7 +539,6 @@ export function renderReel(g, t) {
     g.fillStyle = PAL.gold;
     g.fillText("Instant DM Delivery of our Full Blueprint:", phoneX, cardY + 215);
 
-    // Checklist of Deliverables
     const perks = [
       "✅ Luxury Real Estate AI System Architecture",
       "✅ High-Ticket Objection Handling Scripts",
@@ -668,19 +552,21 @@ export function renderReel(g, t) {
       g.fillText(p, sx + 60, py);
     });
 
-    // Pulsing Animated Comment Arrow
     const arrowBounce = Math.sin(t * 8) * 8;
     g.textAlign = 'center';
-    g.font = font(32, 700, 'disp');
+    g.font = font(36, 700, 'disp');
     g.fillStyle = PAL.accent;
     g.fillText("👇", phoneX, cardY + 425 + arrowBounce);
 
     g.font = font(14, 700, 'mono');
     g.fillStyle = PAL.lime;
-    g.fillText("DROP 'CLOSER' IN COMMENTS NOW", phoneX, cardY + 455);
+    g.fillText("DROP 'CLOSER' IN COMMENTS NOW", phoneX, cardY + 458);
   }
 
   g.restore(); // end phone screen clip
+
+  // ───────────────────────── HORMOZI KARAOKE SUBTITLES ─────────────────────────
+  renderHormoziCaptions(g, t, W, H);
 
   // ───────────────────────── BOTTOM VIRAL CTA BAR ─────────────────────────
   const ctaY = 1690;
@@ -695,8 +581,9 @@ export function renderReel(g, t) {
   g.fillStyle = PAL.gold;
   g.fillText("💬 COMMENT 'CLOSER' FOR FREE BLUEPRINT ➔", W / 2, ctaY);
 
-  // Subtitle Captions
-  renderReelCaptions(g, t);
+  // ───────────────────────── GLITCH & RETENTION TRANSITIONS ─────────────────────────
+  drawCutTransition(g, t, CUT_TIMES, W, H);
+  drawScanlines(g, W, H);
 
   vignette(g, 0.45);
   g.restore();
