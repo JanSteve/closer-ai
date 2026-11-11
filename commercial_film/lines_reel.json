@@ -1,55 +1,61 @@
 [
   {
-    "id": "r1_hook",
-    "text": "Every month, property builders spend lakhs on Meta and Google ads. But seventy percent of those luxury leads vanish into thin air.",
+    "id": "r1_agency",
+    "text": "In India, every business hires an ad agency. You spend lakhs on ads, and they hand you an Excel sheet of 500 leads.",
     "voice": "af_heart",
     "speed": 1.15
   },
   {
-    "id": "r2_cliff",
-    "text": "At JSM in Chennai, we found luxury buyers inquire at 11:42 PM. Sales teams take four hours to call back. But after just five minutes, lead intent drops off a cliff.",
+    "id": "r2_hangup",
+    "text": "Your sales team calls hours later. The customer says: 'Who are you? I never filled a form.' And hangs up.",
     "voice": "af_heart",
     "speed": 1.15
   },
   {
-    "id": "r3_intro",
-    "text": "Meet CLOSER AI. The second a lead clicks submit, our engine dials them in under forty-five seconds.",
+    "id": "r3_harvard",
+    "text": "After just five minutes, customer intent drops off a cliff. By next morning, your ad spend is dead.",
+    "voice": "af_heart",
+    "speed": 1.15
+  },
+  {
+    "id": "r4_closer",
+    "text": "Meet CLOSER AI. The second a lead submits, our autonomous engine dials them in under forty-five seconds.",
     "voice": "af_heart",
     "speed": 1.15
   },
   {
     "id": "r_maya",
-    "text": "Good evening Mr. Daniels. Sea-Facing Penthouse rental yield is 8.4%. Sunday eleven AM is reserved for your visit.",
+    "text": "Good evening Mr. Sharma. The sea-facing villa brochure is in your WhatsApp. Sunday eleven AM is locked for your site visit.",
     "voice": "af_bella",
-    "speed": 1.12
+    "speed": 1.10
   },
   {
     "id": "r_pallavi",
-    "text": "வணக்கம் சார், சென்னை ECR வில்லாவின் RERA அப்ரூவல் மற்றும் சைட் விசிட் விவரங்கள் தயார்.",
+    "text": "வணக்கம் மேடம், உங்கள் டென்டல் இம்ப்ளான்ட் அப்பாயின்மென்ட் நாளை மாலை 5 மணிக்கு கன்பார்ம் செய்யப்பட்டுள்ளது.",
     "voice": "ta-IN-PallaviNeural",
     "rate": "+10%"
   },
   {
     "id": "r_swati",
-    "text": "नमस्ते सर, गोल्फ कोर्स रोड पेंटहाउस के लिए आपकी विज़िट बुक कर दी है।",
+    "text": "नमस्ते सर, आपके 5kW रूफटॉप सोलर का कोटेशन हमने व्हाट्सएप पर भेज दिया है।",
     "voice": "hi-IN-SwaraNeural",
     "rate": "+10%"
   },
   {
-    "id": "r4_whatsapp",
-    "text": "And while talking, CLOSER AI drops the verified floor plans and calendar pass directly into their WhatsApp.",
+    "id": "r5_whatsapp",
+    "text": "While on call, CLOSER AI drops the quotation, clinic pass, or floor plan straight into WhatsApp.",
     "voice": "af_heart",
     "speed": 1.15
   },
   {
-    "id": "r5_economics",
-    "text": "A human call center costs two hundred and twenty rupees. CLOSER AI is one rupee fifty-five paise.",
+    "id": "r6_economics",
+    "text": "Human telecallers: two hundred and twenty rupees. CLOSER AI: one rupee fifty-five paise per call.",
     "voice": "af_heart",
     "speed": 1.15
   },
   {
-    "id": "r6_cta",
-    "text": "Comment CLOSER below, and I'll DM you our luxury real estate AI blueprint and prompt scripts.",
+    "id": "r7_cta",
+    "text": "Whether you run an agency, clinic, or real estate: comment CLOSER below, and I'll DM you our multi-sector prompt stack.",
     "voice": "af_heart",
     "speed": 1.12
   }

@@ -1,15 +1,6 @@
 #!/usr/bin/env python3
-"""mix_reel.py — Foley + Voices + Score Ducking for CLOSER AI 65s Instagram Reel → mix_reel.wav
+"""mix_reel.py — Foley + Voices + Score Ducking for CLOSER AI 68s Multi-Sector Instagram Reel
 Mastered to -14.0 LUFS target.
-Enhanced with MrBeast/Hormozi retention sound design:
-- 0.0s Cash fire whoosh & punch
-- 1.4s Zoom whoosh cut
-- 8.0s Night chime
-- 13.8s Snore & vibration alarm
-- 19.8s Sub drop & neural boot
-- 46.3s WhatsApp dual-tone pop
-- 52.6s Jackpot coins & rolling slot clicks
-- 58.9s Sparkle chime & CTA alert
 """
 import os, sys, json
 import numpy as np
@@ -22,19 +13,20 @@ LEMO_ROOT = '/Users/janstevedaniel/lemo-opuscar'
 sys.path.insert(0, LEMO_ROOT)
 from core.audio.sfx import SR, t_, env_exp, bp, lp, hp, noise, norm, add, compress, limit
 
-DUR = 65.0
+DUR = 68.0
 N = int(DUR * SR)
 
 VOICE_SCHEDULE = {
-    "r1_hook": 0.5,
-    "r2_cliff": 8.1,
-    "r3_intro": 19.8,
-    "r_maya": 26.2,
-    "r_pallavi": 35.2,
-    "r_swati": 41.2,
-    "r4_whatsapp": 46.3,
-    "r5_economics": 52.6,
-    "r6_cta": 58.9
+    "r1_agency": 0.4,
+    "r2_hangup": 7.8,
+    "r3_harvard": 14.0,
+    "r4_closer": 19.8,
+    "r_maya": 26.5,
+    "r_pallavi": 34.7,
+    "r_swati": 41.1,
+    "r5_whatsapp": 47.2,
+    "r6_economics": 53.0,
+    "r7_cta": 59.2
 }
 
 fol = np.zeros((N, 2), np.float32)
@@ -62,13 +54,20 @@ def sub_drop():
     phase = 2 * np.pi * np.cumsum(freq) / SR
     return norm(np.sin(phase) * env_exp(d, 0.6) + lp(noise(d), 350) * env_exp(d, 0.02))
 
-def snore_sound():
-    d = 0.6
+def hangup_click():
+    d = 0.3
     tt = t_(d)
-    # Low raspy vibration
-    v = np.sin(2 * np.pi * 55 * tt) * (1 + 0.5 * np.sin(2 * np.pi * 12 * tt))
-    n = lp(noise(d), 400) * (np.sin(np.pi * (tt / d)) ** 2)
-    return norm(v * 0.5 + n * 0.5)
+    click = hp(noise(d), 4000) * env_exp(d, 0.005)
+    busy = np.sin(2 * np.pi * 480 * tt) * env_exp(d, 0.05)
+    return norm(click * 0.8 + busy * 0.4)
+
+def clinic_chime():
+    d = 0.5
+    return norm(sine(1046.5, d, 0.06) + sine(1318.5, d, 0.08) + sine(2093, d, 0.05))
+
+def solar_whoosh():
+    d = 0.5
+    return norm(bp(noise(d), 800, 2400) * env_exp(d, 0.08))
 
 def whatsapp_pop():
     d = 0.4
@@ -93,25 +92,25 @@ def digit_tick():
     return norm(bp(noise(d), 3200, 8000) * env_exp(d, 0.003))
 
 # ──────────────── Foley Placement on Key Retention Cuts ────────────────
-add(fol, whoosh_hit(), 0.0, 0.85)     # 0.0s INTRO HOOK EXPLOSION
-add(fol, alert_ping(), 0.5, 0.5)      # 0.5s Cash register ding
-add(fol, whoosh_hit(), 1.4, 0.6)      # 1.4s SNAP ZOOM PUNCH TO FUNNEL
-add(fol, whoosh_hit(), 8.0, 0.6)      # 8.0s CUT TO NOCTURNAL BEDROOM
-add(fol, alert_ping(), 8.1, 0.4)      # 8.1s 11:42 PM Inquiry Bell
-add(fol, snore_sound(), 13.8, 0.6)    # 13.8s SLEEPING TELECALLER SNORE
+add(fol, whoosh_hit(), 0.0, 0.85)     # 0.0s AGENCY INVOICE EXPLOSION
+add(fol, alert_ping(), 0.4, 0.5)      # 0.4s Invoice ding
+add(fol, whoosh_hit(), 7.8, 0.65)     # 7.8s CUT TO CUSTOMER HANGUP
+add(fol, hangup_click(), 11.2, 0.85)  # 11.2s PHONE HANGUP CLICK & BUSY TONE
+add(fol, whoosh_hit(), 14.0, 0.6)     # 14.0s 5-MIN BRAIN FREEZE COUNTDOWN
+add(fol, alert_ping(), 14.1, 0.4)     # 14.1s Timer countdown ping
 add(fol, whoosh_hit(), 19.8, 0.7)     # 19.8s CUT TO CLOSER AI HERO
-add(fol, sub_drop(), 19.8, 0.9)       # 19.8s SUB BASS DROP
-add(fol, alert_ping(), 26.2, 0.35)    # 26.2s Maya Chime
-add(fol, alert_ping(), 35.2, 0.35)    # 35.2s Pallavi Chime
-add(fol, alert_ping(), 41.2, 0.35)    # 41.2s Swati Chime
-add(fol, whatsapp_pop(), 46.3, 0.85)  # 46.3s WHATSAPP MESSAGE POP
-add(fol, whoosh_hit(), 52.6, 0.65)    # 52.6s UNIT ECONOMICS CUT
-add(fol, sub_drop(), 52.6, 0.9)       # 52.6s BASS DROP ON ₹1.55
+add(fol, sub_drop(), 19.8, 0.95)      # 19.8s SUB BASS DROP
+add(fol, alert_ping(), 26.5, 0.35)    # 26.5s Maya English Luxury Villa
+add(fol, clinic_chime(), 34.7, 0.55)  # 34.7s Pallavi Tamil Clinic Medical Chime
+add(fol, solar_whoosh(), 41.1, 0.5)   # 41.1s Swati Hindi Solar Whoosh
+add(fol, whatsapp_pop(), 47.2, 0.85)  # 47.2s WHATSAPP 3-SECTOR PUSH
+add(fol, whoosh_hit(), 53.0, 0.65)    # 53.0s UNIT ECONOMICS CUT
+add(fol, sub_drop(), 53.0, 0.9)       # 53.0s BASS DROP ON ₹1.55
 for i in range(6):
-    add(fol, digit_tick(), 53.0 + i * 0.18, 0.35)
-    add(fol, coin_clink(), 53.2 + i * 0.22, 0.4) # Coin jackpot clinking!
-add(fol, comment_chime(), 58.9, 0.85) # 58.9s COMMENT CLOSER SPARKLE
-add(fol, whoosh_hit(), 58.9, 0.5)     # 58.9s Arrow whoosh
+    add(fol, digit_tick(), 53.4 + i * 0.18, 0.35)
+    add(fol, coin_clink(), 53.6 + i * 0.22, 0.4) # Coin jackpot clinking!
+add(fol, comment_chime(), 59.2, 0.85) # 59.2s COMMENT CLOSER SPARKLE
+add(fol, whoosh_hit(), 59.2, 0.5)     # 59.2s Arrow whoosh
 
 # ──────────────── Voices Placement ────────────────
 vo_intervals = []
