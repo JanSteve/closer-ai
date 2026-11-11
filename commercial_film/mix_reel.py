@@ -13,20 +13,20 @@ LEMO_ROOT = '/Users/janstevedaniel/lemo-opuscar'
 sys.path.insert(0, LEMO_ROOT)
 from core.audio.sfx import SR, t_, env_exp, bp, lp, hp, noise, norm, add, compress, limit
 
-DUR = 68.0
+DUR = 78.0
 N = int(DUR * SR)
 
 VOICE_SCHEDULE = {
     "r1_agency": 0.4,
-    "r2_hangup": 7.8,
-    "r3_harvard": 14.0,
-    "r4_closer": 19.8,
-    "r_maya": 26.5,
-    "r_pallavi": 34.7,
-    "r_swati": 41.1,
-    "r5_whatsapp": 47.2,
-    "r6_economics": 53.0,
-    "r7_cta": 59.2
+    "r2_hangup": 10.8,
+    "r3_harvard": 17.8,
+    "r4_closer": 25.4,
+    "r_maya": 34.2,
+    "r_pallavi": 42.4,
+    "r_swati": 48.9,
+    "r5_whatsapp": 55.1,
+    "r6_economics": 62.3,
+    "r7_cta": 70.4
 }
 
 fol = np.zeros((N, 2), np.float32)
@@ -92,25 +92,25 @@ def digit_tick():
     return norm(bp(noise(d), 3200, 8000) * env_exp(d, 0.003))
 
 # ──────────────── Foley Placement on Key Retention Cuts ────────────────
-add(fol, whoosh_hit(), 0.0, 0.85)     # 0.0s AGENCY INVOICE EXPLOSION
+add(fol, whoosh_hit(), 0.0, 0.85)     # 0.0s AGENCY INVOICE & MULTI-SECTOR INTRO
 add(fol, alert_ping(), 0.4, 0.5)      # 0.4s Invoice ding
-add(fol, whoosh_hit(), 7.8, 0.65)     # 7.8s CUT TO CUSTOMER HANGUP
-add(fol, hangup_click(), 11.2, 0.85)  # 11.2s PHONE HANGUP CLICK & BUSY TONE
-add(fol, whoosh_hit(), 14.0, 0.6)     # 14.0s 5-MIN BRAIN FREEZE COUNTDOWN
-add(fol, alert_ping(), 14.1, 0.4)     # 14.1s Timer countdown ping
-add(fol, whoosh_hit(), 19.8, 0.7)     # 19.8s CUT TO CLOSER AI HERO
-add(fol, sub_drop(), 19.8, 0.95)      # 19.8s SUB BASS DROP
-add(fol, alert_ping(), 26.5, 0.35)    # 26.5s Maya English Luxury Villa
-add(fol, clinic_chime(), 34.7, 0.55)  # 34.7s Pallavi Tamil Clinic Medical Chime
-add(fol, solar_whoosh(), 41.1, 0.5)   # 41.1s Swati Hindi Solar Whoosh
-add(fol, whatsapp_pop(), 47.2, 0.85)  # 47.2s WHATSAPP 3-SECTOR PUSH
-add(fol, whoosh_hit(), 53.0, 0.65)    # 53.0s UNIT ECONOMICS CUT
-add(fol, sub_drop(), 53.0, 0.9)       # 53.0s BASS DROP ON ₹1.55
-for i in range(6):
-    add(fol, digit_tick(), 53.4 + i * 0.18, 0.35)
-    add(fol, coin_clink(), 53.6 + i * 0.22, 0.4) # Coin jackpot clinking!
-add(fol, comment_chime(), 59.2, 0.85) # 59.2s COMMENT CLOSER SPARKLE
-add(fol, whoosh_hit(), 59.2, 0.5)     # 59.2s Arrow whoosh
+add(fol, whoosh_hit(), 10.8, 0.65)    # 10.8s CUT TO CUSTOMER HANGUP
+add(fol, hangup_click(), 15.6, 0.85)  # 15.6s PHONE HANGUP CLICK & BUSY TONE
+add(fol, whoosh_hit(), 17.8, 0.6)     # 17.8s 5-MIN INTENT COLLAPSE COUNTDOWN
+add(fol, alert_ping(), 17.9, 0.4)     # 17.9s Timer countdown ping
+add(fol, whoosh_hit(), 25.4, 0.7)     # 25.4s CUT TO CLOSER AI HERO
+add(fol, sub_drop(), 25.4, 0.95)      # 25.4s SUB BASS DROP ON HERO
+add(fol, alert_ping(), 34.2, 0.35)    # 34.2s Maya English Luxury Villa
+add(fol, clinic_chime(), 42.4, 0.55)  # 42.4s Pallavi Tamil Clinic Medical Chime
+add(fol, solar_whoosh(), 48.9, 0.5)   # 48.9s Swati Hindi Solar Whoosh
+add(fol, whatsapp_pop(), 55.1, 0.85)  # 55.1s WHATSAPP MULTI-SECTOR PUSH
+add(fol, whoosh_hit(), 62.3, 0.65)    # 62.3s UNIT ECONOMICS CUT
+add(fol, sub_drop(), 62.3, 0.9)       # 62.3s BASS DROP ON ₹1.55
+for i in range(7):
+    add(fol, digit_tick(), 62.6 + i * 0.18, 0.35)
+    add(fol, coin_clink(), 62.8 + i * 0.22, 0.4) # Coin jackpot clinking!
+add(fol, comment_chime(), 70.4, 0.85) # 70.4s COMMENT CLOSER SPARKLE
+add(fol, whoosh_hit(), 70.4, 0.5)     # 70.4s Arrow whoosh
 
 # ──────────────── Voices Placement ────────────────
 vo_intervals = []

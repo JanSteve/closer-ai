@@ -668,15 +668,15 @@ export function drawAgencyExcelScene(g, cx, cy, t) {
     hairStyle: 'fade',
     attire: 'turtleneck',
     expression: 'smug',
-    isTalking: (t < 4.0),
+    isTalking: (t < 5.2),
     accessories: ['glasses'],
     t
   });
 
   // Agency Guy Speech Bubble
-  if (t < 4.2) {
+  if (t < 5.2) {
     g.fillStyle = '#1E293B';
-    rr(g, -260, -140, 180, 55, 14);
+    rr(g, -270, -145, 200, 60, 14);
     g.fill();
     g.strokeStyle = '#F59E0B';
     g.lineWidth = 2;
@@ -684,10 +684,10 @@ export function drawAgencyExcelScene(g, cx, cy, t) {
     g.fillStyle = '#FFFFFF';
     g.font = '700 13px Inter, sans-serif';
     g.textAlign = 'center';
-    g.fillText('"Bro, 500 leads!"', -170, -118);
+    g.fillText('"Bro, 500 leads delivered!"', -170, -122);
     g.font = '600 11px JBMono, monospace';
     g.fillStyle = '#FBBF24';
-    g.fillText('"All high intent! 🔥"', -170, -100);
+    g.fillText('"Clinics, Solar, Real Estate! 🔥"', -170, -102);
   }
 
   // CHARACTER 2: RAHUL (Frustrated Founder - Right)
@@ -699,15 +699,15 @@ export function drawAgencyExcelScene(g, cx, cy, t) {
     hairStyle: 'parted',
     attire: 'blazer',
     expression: 'stressed',
-    isTalking: (t >= 4.0),
+    isTalking: (t >= 5.2),
     accessories: ['sweat'],
     t
   });
 
   // Founder Thought Bubble
-  if (t >= 4.0) {
+  if (t >= 5.2) {
     g.fillStyle = '#17060A';
-    rr(g, 90, -145, 190, 60, 14);
+    rr(g, 90, -145, 200, 60, 14);
     g.fill();
     g.strokeStyle = '#EF4444';
     g.lineWidth = 2;
@@ -715,11 +715,19 @@ export function drawAgencyExcelScene(g, cx, cy, t) {
     g.fillStyle = '#FFFFFF';
     g.font = '700 13px Inter, sans-serif';
     g.textAlign = 'center';
-    g.fillText('"I paid ₹2,50,000..."', 185, -122);
+    g.fillText('"I paid ₹2,50,000..."', 190, -122);
     g.font = '600 11px JBMono, monospace';
     g.fillStyle = '#F87171';
-    g.fillText('"for an Excel sheet?! 📉"', 185, -102);
+    g.fillText('"for an Excel of dead leads?! 📉"', 190, -102);
   }
+
+  // Multi-Sector Indicator Strip
+  const sectors = ["🏥 Clinics", "☀️ Solar", "🏢 Real Estate", "💼 B2B"];
+  sectors.forEach((sec, idx) => {
+    pill(g, -170 + idx * 90, 50, sec, {
+      color: '#94A3B8', bg: 'rgba(30, 41, 59, 0.7)', px: 8
+    });
+  });
 
   // Center Prop: The Giant Floating Excel Sheet & Invoice
   const xlY = 90;
@@ -774,7 +782,7 @@ export function drawYellingCustomerScene(g, cx, cy, t) {
   g.fillStyle = gr;
   g.fillRect(-450, -300, 900, 600);
 
-  const isSlam = (t > 12.2);
+  const isSlam = (t > 15.4);
   const shakeX = isSlam ? (Math.random() - 0.5) * 8 : (Math.sin(t * 24) * 3);
   const shakeY = isSlam ? (Math.random() - 0.5) * 6 : 0;
 
@@ -848,7 +856,7 @@ export function drawBrainFreezeScene(g, cx, cy, t) {
   g.save();
   g.translate(cx, cy);
 
-  const prog = clamp((t - 14.0) / 5.2, 0, 1);
+  const prog = clamp((t - 17.8) / 6.5, 0, 1);
   const isFrozen = (prog > 0.6);
 
   const gr = g.createRadialGradient(0, 0, 20, 0, 0, 360);
@@ -928,7 +936,7 @@ export function drawMayaRealEstateScene(g, cx, cy, t) {
     hairStyle: 'bob',
     attire: 'blazer',
     expression: 'smiling',
-    isTalking: (t >= 26.5 && t <= 34.7),
+    isTalking: (t >= 34.2 && t <= 42.2),
     accessories: ['headset'],
     t
   });
@@ -1000,7 +1008,7 @@ export function drawPallaviClinicScene(g, cx, cy, t) {
     hairStyle: 'bun',
     attire: 'labcoat',
     expression: 'smiling',
-    isTalking: (t >= 34.7 && t <= 41.1),
+    isTalking: (t >= 42.4 && t <= 48.7),
     accessories: ['stethoscope', 'headset'],
     t
   });
@@ -1072,7 +1080,7 @@ export function drawSwatiSolarScene(g, cx, cy, t) {
     hairStyle: 'ponytail',
     attire: 'vest',
     expression: 'smiling',
-    isTalking: (t >= 41.1 && t <= 47.2),
+    isTalking: (t >= 48.9 && t <= 54.9),
     accessories: ['headset'],
     t
   });
@@ -1126,9 +1134,9 @@ export function drawSwatiSolarScene(g, cx, cy, t) {
 // SCENE 5 MASTER DISPATCHER: Renders Maya, Pallavi, or Swati seamlessly!
 // ─────────────────────────────────────────────────────────────────────────────
 export function drawMultiSectorScene(g, cx, cy, t) {
-  if (t < 34.7) {
+  if (t < 42.4) {
     drawMayaRealEstateScene(g, cx, cy, t);
-  } else if (t < 41.1) {
+  } else if (t < 48.9) {
     drawPallaviClinicScene(g, cx, cy, t);
   } else {
     drawSwatiSolarScene(g, cx, cy, t);
@@ -1249,22 +1257,56 @@ export function drawCommentCtaScene(g, cx, cy, t) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// HORMOZI HIGH-RETENTION KARAOKE SUBTITLES
+// HORMOZI HIGH-RETENTION KARAOKE SUBTITLES (Instagram Reels Safe-Zone Y=1360)
 // ─────────────────────────────────────────────────────────────────────────────
-const DEFAULT_REEL_SUBS = [
-  { t0: 0.4, t1: 7.6, text: "In India, every business hires an agency.", highlight: "hires an agency" },
-  { t0: 7.8, t1: 13.8, text: 'Customer: "WHO ARE YOU?! I NEVER FILLED A FORM."', highlight: "WHO ARE YOU" },
-  { t0: 14.0, t1: 19.6, text: "After 5 minutes, customer intent drops off a cliff.", highlight: "5-Minute Cliff" },
-  { t0: 19.8, t1: 26.4, text: "CLOSER AI dials the lead in 0.08 seconds.", highlight: "0.08 seconds" },
-  { t0: 26.5, t1: 34.5, text: 'Maya: "Villa brochure in WhatsApp. Sunday 11 AM locked."', highlight: "Real Estate" },
-  { t0: 34.7, t1: 41.0, text: 'Pallavi: "டென்டல் அப்பாயின்மென்ட் நாளை மாலை 5 மணிக்கு கன்பார்ம்."', highlight: "Healthcare Clinic" },
-  { t0: 41.1, t1: 47.1, text: 'Swati: "रूफटॉप सोलर का कोटेशन व्हाट्सएप पर भेज दिया है।"', highlight: "Solar & Interiors" },
-  { t0: 47.2, t1: 52.8, text: "Drops quote, clinic pass, or floor plan in WhatsApp.", highlight: "WhatsApp Sync" },
-  { t0: 53.0, t1: 59.1, text: "Human telecaller: ₹220. CLOSER AI: ₹1.55.", highlight: "₹1.55 / call" },
-  { t0: 59.2, t1: 67.0, text: 'Comment "CLOSER" for the multi-sector prompt stack!', highlight: 'Comment "CLOSER"' }
+export const DEFAULT_REEL_SUBS = [
+  // Scene 0: Universal Need & Agency Excel Trap (0.0s – 10.8s)
+  { t0: 0.4, t1: 3.0, text: "Every Single Business", tag: "UNIVERSAL TELECALLER" },
+  { t0: 3.0, t1: 5.5, text: "Needs Telecallers Today!", tag: "UNIVERSAL TELECALLER" },
+  { t0: 5.5, t1: 8.0, text: "Clinics · Solar · Agencies · Real Estate", tag: "ANY INDUSTRY" },
+  { t0: 8.0, t1: 10.6, text: "Lakhs Wasted On Dead Leads!", tag: "AD SPEND TRAP" },
+
+  // Scene 1: The Angry Prospect Hangup (10.8s – 17.8s)
+  { t0: 10.8, t1: 13.0, text: "Human Telecallers Call Hours Late", tag: "THE PROBLEM" },
+  { t0: 13.0, t1: 15.4, text: 'Customer: "WHO ARE YOU?!"', tag: "LOST SALE" },
+  { t0: 15.4, t1: 17.6, text: '"I Never Filled Any Form!" 💥', tag: "LOST SALE" },
+
+  // Scene 2: 5-Minute Intent Collapse (17.8s – 25.4s)
+  { t0: 17.8, t1: 20.4, text: "After 5 Minutes, Intent Collapses", tag: "HARVARD STUDY" },
+  { t0: 20.4, t1: 22.8, text: "Human Telecallers Sleep At Night...", tag: "NIGHT LOSS" },
+  { t0: 22.8, t1: 25.2, text: "...While Ad Budgets Burn 24/7!", tag: "BUDGET BURN" },
+
+  // Scene 3: CLOSER AI Hero Reveal (25.4s – 34.2s)
+  { t0: 25.4, t1: 28.0, text: "Meet CLOSER AI", tag: "AI BREAKTHROUGH" },
+  { t0: 28.0, t1: 30.8, text: "Autonomous Telecalling For ANY Business", tag: "UNIVERSAL ENGINE" },
+  { t0: 30.8, t1: 34.0, text: "Instant Dials In Under 45 Seconds!", tag: "< 45s SPEED" },
+
+  // Scene 4A: Maya Luxury Real Estate (34.2s – 42.4s)
+  { t0: 34.2, t1: 38.0, text: 'Maya: "Villa Brochure On WhatsApp"', tag: "REAL ESTATE" },
+  { t0: 38.0, t1: 42.2, text: '"Sunday 11 AM Site Visit Locked!"', tag: "REAL ESTATE" },
+
+  // Scene 4B: Dr. Pallavi Dental Clinic (42.4s – 48.9s)
+  { t0: 42.4, t1: 45.4, text: 'Pallavi: "வணக்கம் மேடம்..."', tag: "HEALTHCARE CLINIC" },
+  { t0: 45.4, t1: 48.7, text: '"டென்டல் அப்பாயின்மென்ட் கன்பார்ம்!"', tag: "TAMIL AI CALL" },
+
+  // Scene 4C: Swati Rooftop Solar (48.9s – 55.1s)
+  { t0: 48.9, t1: 51.8, text: 'Swati: "5kW सोलर कोटेशन..."', tag: "SOLAR ENERGY" },
+  { t0: 51.8, t1: 54.9, text: '"व्हाट्सएप पर तुरंत भेज दिया है!"', tag: "HINDI AI CALL" },
+
+  // Scene 5: WhatsApp Instant Delivery (55.1s – 62.3s)
+  { t0: 55.1, t1: 58.4, text: "Clinics · Solar · EdTech · Real Estate", tag: "MULTI-SECTOR DISPATCH" },
+  { t0: 58.4, t1: 62.1, text: "Drops Quotes & Passes On WhatsApp!", tag: "INSTANT SYNC" },
+
+  // Scene 6: Unit Economics Showdown (62.3s – 70.4s)
+  { t0: 62.3, t1: 65.8, text: "Human Telecaller: ₹220 Per Lead", tag: "BPO EXPENSE" },
+  { t0: 65.8, t1: 70.2, text: "CLOSER AI: ₹1.55 With Zero Payroll!", tag: "⚡ 99.3% SAVINGS" },
+
+  // Scene 7: Viral Comment Magnet CTA (70.4s – 78.0s)
+  { t0: 70.4, t1: 73.6, text: "Run ANY Business Needing Calls?", tag: "UNIVERSAL SETUP" },
+  { t0: 73.6, t1: 77.5, text: 'Comment "CLOSER" For Free Playbook 👇', tag: "GET THE STACK" }
 ];
 
-export function renderHormoziCaptions(g, t, W, H, lines = DEFAULT_REEL_SUBS) {
+export function renderHormoziCaptions(g, t, W = 1080, H = 1920, lines = DEFAULT_REEL_SUBS) {
   const active = lines.find(l => t >= l.t0 && t <= l.t1);
   if (!active) return;
 
@@ -1272,50 +1314,87 @@ export function renderHormoziCaptions(g, t, W, H, lines = DEFAULT_REEL_SUBS) {
   const words = active.text.split(' ');
   const activeWordIdx = Math.min(words.length - 1, Math.floor(prog * words.length));
 
-  const subY = H - 240;
+  // Instagram Safe Zone: Y=1360 (clear of Reels bottom captions & native action buttons)
+  const subY = 1360;
   g.save();
 
-  g.font = '900 36px InterTight, sans-serif';
-  const fullTw = g.measureText(active.text).width;
-  g.fillStyle = 'rgba(0, 0, 0, 0.78)';
-  rr(g, W / 2 - fullTw / 2 - 25, subY - 45, fullTw + 50, 65, 20);
+  // Measure text with 38px punchy font
+  g.font = '900 38px InterTight, sans-serif';
+  let totalW = 0;
+  const wordWidths = words.map(w => {
+    const wWidth = g.measureText(w + ' ').width;
+    totalW += wWidth;
+    return wWidth;
+  });
+
+  // Clamp max width so subtitles NEVER cover the full screen
+  const maxW = 680;
+  let scaleRatio = 1.0;
+  if (totalW > maxW) {
+    scaleRatio = maxW / totalW;
+  }
+
+  const boxW = Math.min(totalW * scaleRatio + 56, maxW + 40);
+  const boxH = 68;
+
+  // Mini Category / Sector Tag above subtitle pill
+  if (active.tag) {
+    pill(g, W / 2 - 120, subY - 68, active.tag, {
+      color: '#FACC15', bg: 'rgba(0, 0, 0, 0.85)', px: 12
+    });
+  }
+
+  // Frosted dark pill container
+  g.fillStyle = 'rgba(6, 9, 18, 0.88)';
+  rr(g, W / 2 - boxW / 2, subY - boxH / 2, boxW, boxH, 20);
   g.fill();
-  g.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-  g.lineWidth = 1;
+  g.strokeStyle = 'rgba(250, 204, 21, 0.45)';
+  g.lineWidth = 1.5;
   g.stroke();
 
-  let curX = W / 2 - fullTw / 2;
+  // Draw karaoke words
+  g.save();
+  g.translate(W / 2, subY);
+  if (scaleRatio < 1.0) {
+    g.scale(scaleRatio, scaleRatio);
+  }
+
+  let startX = -totalW / 2;
   words.forEach((w, idx) => {
     const isCur = (idx === activeWordIdx);
-    const wordWidth = g.measureText(w + ' ').width;
+    const ww = wordWidths[idx];
 
     if (isCur) {
       const bounce = Math.sin(prog * words.length * Math.PI) * 4;
       g.save();
-      g.translate(curX + wordWidth / 2, subY - bounce);
+      g.translate(startX + ww / 2, -bounce);
       g.scale(1.15, 1.15);
       g.fillStyle = '#FACC15';
-      g.shadowColor = 'rgba(250, 204, 21, 0.8)';
-      g.shadowBlur = 18;
+      g.shadowColor = 'rgba(250, 204, 21, 0.9)';
+      g.shadowBlur = 20;
       g.textAlign = 'center';
+      g.textBaseline = 'middle';
       g.fillText(w, 0, 0);
       g.restore();
     } else {
       g.fillStyle = '#FFFFFF';
-      g.shadowColor = 'transparent';
+      g.shadowColor = 'rgba(0, 0, 0, 0.8)';
+      g.shadowBlur = 6;
       g.textAlign = 'left';
-      g.fillText(w, curX, subY);
+      g.textBaseline = 'middle';
+      g.fillText(w, startX, 0);
     }
-    curX += wordWidth;
+    startX += ww;
   });
 
+  g.restore();
   g.restore();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // TRANSITIONS & VISUAL EFFECTS
 // ─────────────────────────────────────────────────────────────────────────────
-const DEFAULT_CUT_TIMES = [0.0, 7.8, 14.0, 19.8, 26.5, 34.7, 41.1, 47.2, 53.0, 59.2];
+export const DEFAULT_CUT_TIMES = [0.0, 10.8, 17.8, 25.4, 34.2, 42.4, 48.9, 55.1, 62.3, 70.4];
 
 export function drawCutTransition(g, t, cutTimes = DEFAULT_CUT_TIMES, W = 1080, H = 1920) {
   const cuts = Array.isArray(cutTimes) ? cutTimes : DEFAULT_CUT_TIMES;

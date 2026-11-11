@@ -1,6 +1,7 @@
 {
   "status": "ready",
-  "title": "CLOSER AI — The Performance Agency Trap (Multi-Sector Viral Reel)",
+  "title": "CLOSER AI — Universal Telecalling Engine For ANY Business (Official Reel)",
+  "duration_seconds": 78.0,
   "video_url": "https://closer-ai-tawny.vercel.app/demos/closer_reel.mp4",
   "video_url_720p": "https://closer-ai-tawny.vercel.app/demos/closer_reel_720p.mp4",
   "video_url_square": "https://closer-ai-tawny.vercel.app/demos/closer_reel_square.mp4",
@@ -9,12 +10,12 @@
   "qr_code_url": "https://closer-ai-tawny.vercel.app/demos/closer_reel_qr.png",
   "subtitles_srt": "https://closer-ai-tawny.vercel.app/demos/closer_reel.srt",
   "subtitles_vtt": "https://closer-ai-tawny.vercel.app/demos/closer_reel.vtt",
-  "caption": "Are you paying a performance marketing agency ₹2,50,000 every month just to get an Excel sheet of dead leads? 📊📉\n\nWatch what actually happens in India:\n1️⃣ Your agency runs Meta ads promising \"500 High-Intent Inquiries\".\n2️⃣ Your telecaller calls 4 hours later.\n3️⃣ The customer yells: \"WHO ARE YOU?! I NEVER FILLED ANY FORM!\" and slams the phone. 📞💥\n\nHarvard Business Review proved this:\nWait just 5 minutes, and lead qualification collapses by -391%. In 4 hours, your ad budget is literally up in smoke. 🔥\n\nEnter CLOSER AI — the autonomous voice sales agent operating across all high-ticket sectors:\n\n🏖️ REAL ESTATE: Maya closes ₹15.5 Cr ECR beach villas in fluent English with instant RERA floor plans.\n🩺 HEALTHCARE & CLINICS: Dr. Pallavi books hair transplants & dental VIP consultations in Chennai in conversational Tamil.\n☀️ SOLAR & HOME RENO: Swati calculates 40% government rooftop subsidies in Hindi for Delhi NCR homeowners.\n\n⚡ 0.08s Speed-To-Lead: Dials while the lead is still looking at your ad.\n📲 Multi-Sector WhatsApp Engine: Drops floor plans, clinic passes & quotes directly on WhatsApp mid-call.\n💰 ₹1.55 Economics: Replaces ₹220/call human agency overhead.\n\nWant to see how CLOSER AI works for your exact industry?\n\n👇 COMMENT \"AUDIT\" BELOW 👇\nand our system will automatically DM you:\n1. The Multi-Sector Autonomous Lead-Capture Blueprint\n2. Live Tamil, Hindi & English Voice Agent Demo Numbers\n3. Free Unit Economics Calculator for Real Estate, Clinics & Solar\n\nSave this reel and comment \"AUDIT\" right now! 🚀\n\n#MetaAds #PerformanceMarketing #LeadGeneration #AIAgents #RealEstateIndia #DentalClinic #HairTransplantIndia #SolarEnergy #EdTech #VoiceAI #Automation #CloserAI",
+  "caption": "Every single business needs telecallers. But whether you run a clinic, solar company, B2B agency, or real estate firm, you spend lakhs on Meta ads only to get an Excel sheet of dead leads. 📊📉\n\nHere is what happens every day across India:\n1️⃣ Your ad campaigns generate leads at 11 PM or during peak hours.\n2️⃣ Human telecallers call hours late the next afternoon.\n3️⃣ The customer yells: \"WHO ARE YOU?! I NEVER FILLED ANY FORM!\" and slams the phone. 📞💥\n\nHarvard Business Review proved this:\nWait just 5 minutes, and lead qualification collapses by -391%. Human telecallers sleep at night, but your ad budget burns 24/7/365. 🔥\n\nMeet CLOSER AI — the autonomous telecalling engine built for ANY business:\n\n🩺 HEALTHCARE & CLINICS: Dr. Pallavi confirms dental implant & hair transplant appointments in Chennai in fluent Tamil.\n☀️ SOLAR & CLEAN ENERGY: Swati calculates ₹78,000 PM Surya Ghar rooftop solar subsidies in Hindi for homeowners.\n🏖️ REAL ESTATE & BUILDERS: Maya locks Sunday 11 AM beach villa site visits in luxury English.\n🎓 EDTECH & B2B AGENCIES: Qualifies inbound students & corporate buyers, answering objections instantly.\n\n⚡ Sub-45s Speed-To-Lead: Dials while the lead is still on your landing page.\n📲 Universal WhatsApp Delivery: Automatically drops invoices, clinic passes, and catalogs into WhatsApp during the phone call.\n💰 ₹1.55 Unit Economics: Replaces ₹220/call human BPO bench overhead with zero payroll.\n\nRun ANY business that needs telecalling?\n\n👇 COMMENT \"CLOSER\" BELOW 👇\nand our system will automatically DM you:\n1. The Universal Telecalling Playbook for YOUR exact business\n2. Plug-and-play Make.com & CRM Auto-Dial Webhook Workflows\n3. Multi-Language Voice Agent Prompt Stacks (Tamil, Hindi & English)\n4. Live Interactive Demo Test Phone Number\n\nSave this reel and comment \"CLOSER\" below right now! 🚀\n\n#Telecalling #VoiceAI #AIAgents #LeadGeneration #MetaAds #CloserAI #RealEstateIndia #DentalClinic #HairTransplant #SolarEnergy #EdTech #BusinessAutomation #SalesAI",
   "formats": {
     "reel_1080p": {
       "aspect_ratio": "9:16",
       "resolution": "1080x1920",
-      "size_mb": 17.0,
+      "size_mb": 18.8,
       "format": "mp4",
       "codec": "H.264",
       "url": "https://closer-ai-tawny.vercel.app/demos/closer_reel.mp4"
@@ -22,7 +23,7 @@
     "mobile_720p": {
       "aspect_ratio": "9:16",
       "resolution": "720x1280",
-      "size_mb": 4.3,
+      "size_mb": 4.7,
       "format": "mp4",
       "codec": "H.264",
       "url": "https://closer-ai-tawny.vercel.app/demos/closer_reel_720p.mp4"
@@ -30,7 +31,7 @@
     "square_feed_1080p": {
       "aspect_ratio": "1:1",
       "resolution": "1080x1080",
-      "size_mb": 5.8,
+      "size_mb": 6.5,
       "format": "mp4",
       "codec": "H.264",
       "url": "https://closer-ai-tawny.vercel.app/demos/closer_reel_square.mp4"
@@ -46,19 +47,32 @@
     "audio_mix": {
       "format": "mp3",
       "bitrate": "320 kbps",
-      "size_mb": 2.6,
+      "size_mb": 3.0,
       "lufs": -14.1,
       "url": "https://closer-ai-tawny.vercel.app/demos/closer_reel_audio.mp3"
+    },
+    "poster": {
+      "format": "jpg",
+      "resolution": "1080x1920",
+      "size_kb": 163,
+      "url": "https://closer-ai-tawny.vercel.app/demos/closer_reel_poster.jpg"
     }
   },
-  "duration_seconds": 68.0,
-  "call_to_action_keyword": "AUDIT",
   "sectors": [
-    "Real Estate (ECR Beach Villas)",
-    "Healthcare Clinics (Dental & Hair Transplants)",
-    "Solar & Home Renovation",
-    "B2B Performance Marketing Agencies"
+    "Healthcare & Aesthetics (Dental, Hair, IVF)",
+    "Rooftop Solar & Clean Energy EPC",
+    "Real Estate, Builders & Luxury Villas",
+    "EdTech & Higher Education Bootcamps",
+    "B2B Agencies & IT Services",
+    "High-Ticket E-Commerce"
   ],
-  "target_platforms": ["Instagram Reels", "YouTube Shorts", "WhatsApp Status", "LinkedIn Feed", "Facebook Reels"],
-  "updated_at": "2026-11-11T12:55:00Z"
+  "languages": ["Tamil (தமிழ்)", "Hindi (हिन्दी)", "Indian English"],
+  "unit_economics": {
+    "human_telecaller_bpo_per_lead": "₹220",
+    "closer_ai_per_call": "₹1.55",
+    "cost_savings": "99.3%",
+    "speed_to_lead": "< 45 seconds",
+    "concurrency": "1,000+ simultaneous inbound calls",
+    "availability": "24/7/365 uninterrupted"
+  }
 }

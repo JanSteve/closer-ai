@@ -13,7 +13,7 @@ sys.path.insert(0, LEMO_ROOT)
 from core.audio import sampler as S
 from core.audio.sfx import SR, t_, env_exp, bp, lp, hp, noise, norm
 
-DUR = 68.0
+DUR = 78.0
 N = int(DUR * SR)
 BEAT = 0.5  # 120 BPM
 S16 = 0.125 # sixteenth note
@@ -64,26 +64,26 @@ def make_pad(d, f_hz):
     env = np.sin(np.pi * np.clip(tt / d, 0, 1)) ** 0.8
     return lp(x * env, 800)
 
-# 1. Tension Section (0.0s – 19.5s) — The Agency Nightmare & 5-Minute Collapse
-for t in np.arange(0.4, 19.5, 0.5):
+# 1. Tension Section (0.4s – 25.0s) — Agency Trap & 5-Minute Intent Collapse
+for t in np.arange(0.4, 25.0, 0.5):
     play_hit('perc', 'woodblock', t, vel=0.35, pan=-0.2)
     if int(t * 2) % 4 == 0:
         play_hit('perc', 'toms', t, vel=0.45, pan=0.1)
 
-put('pad', make_pad(19.0, 65.4), 0.4, gain=0.35, pan=0.0)
+put('pad', make_pad(24.5, 65.4), 0.4, gain=0.35, pan=0.0)
 
-# 2. The Breakthrough Drop at 19.8s (CLOSER AI Sub-45s Callback)
-play_hit('perc', 'sus_cymbal', 19.8, vel=0.75)
-play_hit('perc', 'gran_cassa', 19.8, vel=0.95)
-play('vibes', 'vibraphone_hard', 19.8, 60, 3.0, vel=0.85)
-play('vibes', 'vibraphone_hard', 19.8, 63, 3.0, vel=0.75)
-play('vibes', 'vibraphone_hard', 19.8, 67, 3.0, vel=0.75)
+# 2. The Breakthrough Drop at 25.4s (CLOSER AI Universal Telecaller)
+play_hit('perc', 'sus_cymbal', 25.4, vel=0.75)
+play_hit('perc', 'gran_cassa', 25.4, vel=0.95)
+play('vibes', 'vibraphone_hard', 25.4, 60, 3.0, vel=0.85)
+play('vibes', 'vibraphone_hard', 25.4, 63, 3.0, vel=0.75)
+play('vibes', 'vibraphone_hard', 25.4, 67, 3.0, vel=0.75)
 
-# 3. Kinetic Grooves across Multi-Sector Demos, WhatsApp, Economics & CTA (20.0s – 66.5s)
+# 3. Kinetic Grooves across Universal Telecalling Demos (25.5s – 76.5s)
 c_notes = [60, 63, 67, 70, 74, 70, 67, 63]
-t_step = 20.0
+t_step = 25.5
 idx = 0
-while t_step < 66.5:
+while t_step < 76.5:
     m_note = c_notes[idx % len(c_notes)]
     vel = 0.52 if idx % 4 == 0 else 0.38
     pan = ((idx % 4) - 1.5) * 0.2
@@ -95,9 +95,9 @@ while t_step < 66.5:
     t_step += S16
     idx += 1
 
-# Outro Final Hit at 66.8s
-play_hit('perc', 'gran_cassa', 66.8, vel=0.8)
-play('vibes', 'vibraphone_hard', 66.8, 60, 1.5, vel=0.7)
+# Outro Final Hit at 76.8s
+play_hit('perc', 'gran_cassa', 76.8, vel=0.8)
+play('vibes', 'vibraphone_hard', 76.8, 60, 1.5, vel=0.7)
 
 out_score = np.zeros((N, 2), np.float32)
 for s in STEMS:

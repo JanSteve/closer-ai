@@ -10,12 +10,21 @@ set -e
 
 D="$(cd "$(dirname "$0")/.." && pwd)"
 DEMOS="$D/demos"
+COMMERCIAL="$D/commercial_film"
 FFMPEG="${FFMPEG:-/Users/janstevedaniel/.local/bin/ffmpeg}"
 
 echo "=== CLOSER AI Video Engine: Multi-Format Transcoding ==="
 
+mkdir -p "$DEMOS"
+
+if [ -f "$COMMERCIAL/closer_reel.mp4" ]; then
+  echo "Syncing master reel from commercial_film to demos/..."
+  cp -f "$COMMERCIAL/closer_reel.mp4" "$DEMOS/closer_reel.mp4"
+  [ -f "$COMMERCIAL/closer_reel_poster.jpg" ] && cp -f "$COMMERCIAL/closer_reel_poster.jpg" "$DEMOS/closer_reel_poster.jpg"
+fi
+
 if [ ! -f "$DEMOS/closer_reel.mp4" ]; then
-  echo "Error: $DEMOS/closer_reel.mp4 not found. Please render the master reel first."
+  echo "Error: closer_reel.mp4 not found. Please render the master reel first."
   exit 1
 fi
 

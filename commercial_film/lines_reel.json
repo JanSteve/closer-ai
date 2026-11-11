@@ -1,25 +1,25 @@
 [
   {
     "id": "r1_agency",
-    "text": "In India, every business hires an ad agency. You spend lakhs on ads, and they hand you an Excel sheet of 500 leads.",
+    "text": "Every single business needs telecallers. But whether you run a clinic, solar, agency, or real estate, you spend lakhs on ads, only to get an Excel sheet of dead leads.",
     "voice": "af_heart",
     "speed": 1.15
   },
   {
     "id": "r2_hangup",
-    "text": "Your sales team calls hours later. The customer says: 'Who are you? I never filled a form.' And hangs up.",
+    "text": "Your human telecallers call hours late. The customer yells: 'Who are you? I never filled a form.' And slams the phone.",
     "voice": "af_heart",
     "speed": 1.15
   },
   {
     "id": "r3_harvard",
-    "text": "After just five minutes, customer intent drops off a cliff. By next morning, your ad spend is dead.",
+    "text": "After five minutes, buying intent collapses. Human telecallers sleep at night, but your ad budget is burning twenty-four-seven.",
     "voice": "af_heart",
     "speed": 1.15
   },
   {
     "id": "r4_closer",
-    "text": "Meet CLOSER AI. The second a lead submits, our autonomous engine dials them in under forty-five seconds.",
+    "text": "Meet CLOSER AI. The autonomous telecalling engine built for ANY business. The second a lead submits, it dials in under forty-five seconds.",
     "voice": "af_heart",
     "speed": 1.15
   },
@@ -43,19 +43,19 @@
   },
   {
     "id": "r5_whatsapp",
-    "text": "While on call, CLOSER AI drops the quotation, clinic pass, or floor plan straight into WhatsApp.",
+    "text": "EdTech, clinics, solar, or real estate: while on call, it drops invoices, passes, or catalogs straight to WhatsApp.",
     "voice": "af_heart",
     "speed": 1.15
   },
   {
     "id": "r6_economics",
-    "text": "Human telecallers: two hundred and twenty rupees. CLOSER AI: one rupee fifty-five paise per call.",
+    "text": "Human telecaller benches: two hundred and twenty rupees. CLOSER AI: one rupee fifty-five paise per call, with zero payroll.",
     "voice": "af_heart",
     "speed": 1.15
   },
   {
     "id": "r7_cta",
-    "text": "Whether you run an agency, clinic, or real estate: comment CLOSER below, and I'll DM you our multi-sector prompt stack.",
+    "text": "If you run ANY business that needs telecalling: comment CLOSER below, and I'll DM you our universal setup playbook.",
     "voice": "af_heart",
     "speed": 1.12
   }
