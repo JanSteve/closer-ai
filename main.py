@@ -404,3 +404,58 @@ async def set_apilayer_key(request: Request):
         "configured": _app_apilayer_client.is_configured(),
         "provider": "APILayer Unified Suite (Live API Key Connected)" if _app_apilayer_client.is_configured() else "CLOSER AI Intelligence Engine (High-Fidelity Simulation)"
     })
+
+
+@app.get("/api/daily-reel")
+async def get_daily_reel():
+    """Returns the ready-to-publish Instagram Reel payload for Make.com / Zapier / Automated schedulers."""
+    caption = """Are you paying a performance marketing agency ₹2,50,000 every month just to get an Excel sheet of dead leads? 📊📉
+
+Watch what actually happens in India:
+1️⃣ Your agency runs Meta ads promising "500 High-Intent Inquiries".
+2️⃣ Your telecaller calls 4 hours later.
+3️⃣ The customer yells: "WHO ARE YOU?! I NEVER FILLED ANY FORM!" and slams the phone. 📞💥
+
+Harvard Business Review proved this:
+Wait just 5 minutes, and lead qualification collapses by -391%. In 4 hours, your ad budget is literally up in smoke. 🔥
+
+Enter CLOSER AI — the autonomous voice sales agent operating across all high-ticket sectors:
+
+🏖️ REAL ESTATE: Maya closes ₹15.5 Cr ECR beach villas in fluent English with instant RERA floor plans.
+🩺 HEALTHCARE & CLINICS: Dr. Pallavi books hair transplants & dental VIP consultations in Chennai in conversational Tamil.
+☀️ SOLAR & HOME RENO: Swati calculates 40% government rooftop subsidies in Hindi for Delhi NCR homeowners.
+
+⚡ 0.08s Speed-To-Lead: Dials while the lead is still looking at your ad.
+📲 Multi-Sector WhatsApp Engine: Drops floor plans, clinic passes & quotes directly on WhatsApp mid-call.
+💰 ₹1.55 Economics: Replaces ₹220/call human agency overhead.
+
+Want to see how CLOSER AI works for your exact industry?
+
+👇 COMMENT "AUDIT" BELOW 👇
+and our system will automatically DM you:
+1. The Multi-Sector Autonomous Lead-Capture Blueprint
+2. Live Tamil, Hindi & English Voice Agent Demo Numbers
+3. Free Unit Economics Calculator for Real Estate, Clinics & Solar
+
+Save this reel and comment "AUDIT" right now! 🚀
+
+#MetaAds #PerformanceMarketing #LeadGeneration #AIAgents #RealEstateIndia #DentalClinic #HairTransplantIndia #SolarEnergy #EdTech #VoiceAI #Automation #CloserAI"""
+
+    return JSONResponse(content={
+        "status": "ready",
+        "title": "CLOSER AI — The Performance Agency Trap (Multi-Sector Viral Reel)",
+        "video_url": "https://closer-ai-tawny.vercel.app/demos/closer_reel.mp4",
+        "cover_url": "https://closer-ai-tawny.vercel.app/demos/closer_reel_poster.jpg",
+        "caption": caption,
+        "aspect_ratio": "9:16",
+        "resolution": "1080x1920",
+        "duration_seconds": 68.0,
+        "call_to_action_keyword": "AUDIT",
+        "sectors": [
+            "Real Estate (ECR Beach Villas)",
+            "Healthcare Clinics (Dental & Hair Transplants)",
+            "Solar & Home Renovation",
+            "B2B Performance Marketing Agencies"
+        ],
+        "target_platforms": ["Instagram Reels", "YouTube Shorts", "Facebook Reels"]
+    })
