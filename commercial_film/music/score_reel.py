@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""50-second high-energy kinetic minimalist score for CLOSER AI Instagram Reel.
+"""65-second high-energy kinetic documentary score for CLOSER AI Instagram Reel.
 Uses VCSL + VSCO2CE samples via core.audio.sampler.
 """
 import os, sys
@@ -13,7 +13,7 @@ sys.path.insert(0, LEMO_ROOT)
 from core.audio import sampler as S
 from core.audio.sfx import SR, t_, env_exp, bp, lp, hp, noise, norm
 
-DUR = 50.0
+DUR = 65.0
 N = int(DUR * SR)
 BEAT = 0.5  # 120 BPM
 S16 = 0.125 # sixteenth note
@@ -64,27 +64,26 @@ def make_pad(d, f_hz):
     env = np.sin(np.pi * np.clip(tt / d, 0, 1)) ** 0.8
     return lp(x * env, 800)
 
-# Build Reel Score
-# Tension Section (0.0s – 11.0s)
-for t in np.arange(0.5, 10.5, 0.5):
+# 1. Tension Section (0.0s – 19.5s) — The Ad Burn & 5-Minute Cliff
+for t in np.arange(0.5, 19.5, 0.5):
     play_hit('perc', 'woodblock', t, vel=0.35, pan=-0.2)
     if int(t * 2) % 4 == 0:
         play_hit('perc', 'toms', t, vel=0.45, pan=0.1)
 
-put('pad', make_pad(10.0, 65.4), 0.5, gain=0.35, pan=0.0)
+put('pad', make_pad(19.0, 65.4), 0.5, gain=0.35, pan=0.0)
 
-# The Drop at 11.2s (Outbound Dial in 0.08s)
-play_hit('perc', 'sus_cymbal', 11.2, vel=0.7)
-play_hit('perc', 'gran_cassa', 11.2, vel=0.9)
-play('vibes', 'vibraphone_hard', 11.2, 60, 3.0, vel=0.8)
-play('vibes', 'vibraphone_hard', 11.2, 63, 3.0, vel=0.7)
-play('vibes', 'vibraphone_hard', 11.2, 67, 3.0, vel=0.7)
+# 2. The Breakthrough Drop at 19.8s (CLOSER AI Sub-45s Callback)
+play_hit('perc', 'sus_cymbal', 19.8, vel=0.75)
+play_hit('perc', 'gran_cassa', 19.8, vel=0.95)
+play('vibes', 'vibraphone_hard', 19.8, 60, 3.0, vel=0.85)
+play('vibes', 'vibraphone_hard', 19.8, 63, 3.0, vel=0.75)
+play('vibes', 'vibraphone_hard', 19.8, 67, 3.0, vel=0.75)
 
-# Kinetic Grooves across Voice Sections (11.5s – 48.0s)
+# 3. Kinetic Grooves across Demos, WhatsApp, Economics & CTA (20.0s – 63.5s)
 c_notes = [60, 63, 67, 70, 74, 70, 67, 63]
-t_step = 11.5
+t_step = 20.0
 idx = 0
-while t_step < 48.0:
+while t_step < 63.5:
     m_note = c_notes[idx % len(c_notes)]
     vel = 0.52 if idx % 4 == 0 else 0.38
     pan = ((idx % 4) - 1.5) * 0.2
@@ -95,6 +94,10 @@ while t_step < 48.0:
         play('glock', 'glockenspiel', t_step, m_note + 12, 0.8, vel=0.45, pan=-0.2)
     t_step += S16
     idx += 1
+
+# Outro Final Hit at 63.8s
+play_hit('perc', 'gran_cassa', 63.8, vel=0.8)
+play('vibes', 'vibraphone_hard', 63.8, 60, 1.5, vel=0.7)
 
 out_score = np.zeros((N, 2), np.float32)
 for s in STEMS:

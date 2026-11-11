@@ -1,50 +1,56 @@
 [
   {
-    "id": "r1",
-    "text": "At 11:42 PM, you're asleep. A fifteen crore luxury buyer just submitted an inquiry.",
+    "id": "r1_hook",
+    "text": "Every month, property builders spend lakhs on Meta and Google ads. But seventy percent of those luxury leads vanish into thin air.",
     "voice": "af_heart",
-    "speed": 1.08
+    "speed": 1.15
   },
   {
-    "id": "r2",
-    "text": "Your sales team is dark for eight hours. By morning, your commission is gone.",
+    "id": "r2_cliff",
+    "text": "At JSM in Chennai, we found luxury buyers inquire at 11:42 PM. Sales teams take four hours to call back. But after just five minutes, lead intent drops off a cliff.",
     "voice": "af_heart",
-    "speed": 1.08
+    "speed": 1.15
   },
   {
-    "id": "r3",
-    "text": "Meet CLOSER AI. It calls the lead in zero point zero eight seconds.",
+    "id": "r3_intro",
+    "text": "Meet CLOSER AI. The second a lead clicks submit, our engine dials them in under forty-five seconds.",
     "voice": "af_heart",
-    "speed": 1.10
+    "speed": 1.15
   },
   {
     "id": "r_maya",
-    "text": "Good evening, Mr. Daniels. Sea-Facing Penthouse projected rental yield is 8.4%. Sunday eleven AM is reserved for your visit.",
+    "text": "Good evening Mr. Daniels. Sea-Facing Penthouse rental yield is 8.4%. Sunday eleven AM is reserved for your visit.",
     "voice": "af_bella",
-    "speed": 1.06
+    "speed": 1.12
   },
   {
     "id": "r_pallavi",
     "text": "வணக்கம் சார், சென்னை ECR வில்லாவின் RERA அப்ரூவல் மற்றும் சைட் விசிட் விவரங்கள் தயார்.",
     "voice": "ta-IN-PallaviNeural",
-    "rate": "+5%"
+    "rate": "+10%"
   },
   {
     "id": "r_swati",
-    "text": "नमस्ते सर, गोल्फ कोर्स रोड पेंटहाउस के लिए रविवार सुबह ग्यारह बजे आपकी फैमिली विज़िट बुक कर दी है।",
+    "text": "नमस्ते सर, गोल्फ कोर्स रोड पेंटहाउस के लिए आपकी विज़िट बुक कर दी है।",
     "voice": "hi-IN-SwaraNeural",
-    "rate": "+5%"
+    "rate": "+10%"
   },
   {
-    "id": "r4",
-    "text": "One rupee and fifty-five paise per call. Ninety-nine percent margin uplift.",
+    "id": "r4_whatsapp",
+    "text": "And while talking, CLOSER AI drops the verified floor plans and calendar pass directly into their WhatsApp.",
     "voice": "af_heart",
-    "speed": 1.08
+    "speed": 1.15
   },
   {
-    "id": "r5",
-    "text": "CLOSER AI. Launching soon. Tap the link in bio to test live.",
+    "id": "r5_economics",
+    "text": "A human call center costs two hundred and twenty rupees. CLOSER AI is one rupee fifty-five paise.",
     "voice": "af_heart",
-    "speed": 1.08
+    "speed": 1.15
+  },
+  {
+    "id": "r6_cta",
+    "text": "Comment CLOSER below, and I'll DM you our luxury real estate AI blueprint and prompt scripts.",
+    "voice": "af_heart",
+    "speed": 1.12
   }
 ]
