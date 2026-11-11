@@ -179,9 +179,9 @@
           </p>
         </div>
 
-        <a href="/demos/closer_production_bundle.zip" download class="self-start sm:self-center whitespace-nowrap px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-400 to-lime-400 text-black font-extrabold text-xs font-mono tracking-wider transition-all hover:opacity-95 shadow-lg shadow-cyan-500/20 flex items-center gap-2">
-          <span>📦</span> DOWNLOAD ALL (.ZIP) · 29 MB
-        </a>
+        <button onclick="downloadAllFormats()" class="self-start sm:self-center whitespace-nowrap px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-400 to-lime-400 text-black font-extrabold text-xs font-mono tracking-wider transition-all hover:opacity-95 shadow-lg shadow-cyan-500/20 flex items-center gap-2">
+          <span>⚡</span> DOWNLOAD ALL ASSETS (1-CLICK)
+        </button>
       </div>
 
       <!-- FORMATS GRID -->
@@ -540,6 +540,27 @@ Save this reel and comment "AUDIT" right now! 🚀
         const btn = document.getElementById('copy-btn');
         btn.innerText = "✓ COPIED!";
         setTimeout(() => { btn.innerText = "📋 COPY CAPTION"; }, 2000);
+      });
+    }
+
+    function downloadAllFormats() {
+      const files = [
+        { url: '/demos/closer_reel.mp4', name: 'closer_reel_1080x1920.mp4' },
+        { url: '/demos/closer_reel_720p.mp4', name: 'closer_reel_720p.mp4' },
+        { url: '/demos/closer_reel_square.mp4', name: 'closer_reel_square.mp4' },
+        { url: '/demos/closer_reel_audio.mp3', name: 'closer_reel_audio.mp3' },
+        { url: '/demos/closer_reel_poster.jpg', name: 'closer_reel_poster.jpg' },
+        { url: '/demos/closer_reel.srt', name: 'closer_reel.srt' }
+      ];
+      files.forEach((f, idx) => {
+        setTimeout(() => {
+          const a = document.createElement('a');
+          a.href = f.url;
+          a.download = f.name;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        }, idx * 300);
       });
     }
   </script>
