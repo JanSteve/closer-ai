@@ -101,6 +101,234 @@
       </video>
     </div>
 
+    <!-- QUICK PLAYER CONTROLS & UTILITIES TOOLBAR -->
+    <div class="w-full max-w-2xl mt-4 flex flex-wrap items-center justify-between gap-2 p-3 rounded-2xl bg-white/[0.04] border border-white/10 backdrop-blur font-mono text-xs">
+      <div class="flex items-center gap-1.5 text-slate-400">
+        <span class="text-slate-500">SPEED:</span>
+        <button onclick="setSpeed(1.0)" id="spd-10" class="px-2 py-1 rounded-lg bg-cyan-400/20 text-cyan-300 font-bold">1x</button>
+        <button onclick="setSpeed(1.25)" id="spd-125" class="px-2 py-1 rounded-lg hover:bg-white/10 text-slate-400">1.25x</button>
+        <button onclick="setSpeed(1.5)" id="spd-15" class="px-2 py-1 rounded-lg hover:bg-white/10 text-slate-400">1.5x</button>
+        <button onclick="toggleLoop()" id="loop-btn" class="ml-2 px-2 py-1 rounded-lg hover:bg-white/10 text-slate-400 flex items-center gap-1">
+          <span>🔁</span> LOOP: OFF
+        </button>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button onclick="captureFrame()" title="Grab current frame as high-res poster" class="px-3 py-1 rounded-xl bg-white/10 hover:bg-white/20 text-white font-medium transition-all flex items-center gap-1">
+          <span>📸</span> SNAPSHOT FRAME
+        </button>
+        <button onclick="toggleQrModal()" title="Scan to save directly to iPhone / Android camera roll" class="px-3 py-1 rounded-xl bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 font-medium transition-all flex items-center gap-1 border border-cyan-500/30">
+          <span>📱</span> SCAN TO PHONE
+        </button>
+      </div>
+    </div>
+
+    <!-- SCAN TO PHONE MODAL / DRAWER (HIDDEN BY DEFAULT) -->
+    <div id="qr-modal" class="hidden w-full max-w-2xl mt-4 p-6 rounded-3xl bg-[#080E1A] border border-cyan-500/40 shadow-2xl shadow-cyan-950/60 backdrop-blur animate-fade-in">
+      <div class="flex items-start justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-2xl bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 text-lg">
+            📱
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-white tracking-tight">Direct Phone Download & AirPlay</h3>
+            <p class="text-xs text-slate-400">Scan with your iPhone or Android camera to play or save directly to camera roll</p>
+          </div>
+        </div>
+        <button onclick="toggleQrModal()" class="w-7 h-7 rounded-lg bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white flex items-center justify-center font-mono text-xs">
+          ✕
+        </button>
+      </div>
+
+      <div class="mt-5 flex flex-col sm:flex-row items-center gap-6 p-4 rounded-2xl bg-black/50 border border-white/5">
+        <div class="p-3 bg-black rounded-2xl border border-cyan-500/30 shadow-lg shadow-cyan-500/10">
+          <img src="/demos/closer_reel_qr.png" alt="Scan to download Reel" class="w-36 h-36 rounded-lg object-contain">
+        </div>
+        <div class="space-y-2 text-xs text-slate-300 flex-1">
+          <div class="font-mono text-cyan-400 font-semibold flex items-center gap-1.5">
+            <span>⚡</span> ZERO-FRICTION CREATOR TRANSFER:
+          </div>
+          <ol class="list-decimal list-inside space-y-1 text-slate-400 pl-1 leading-relaxed">
+            <li>Point your phone camera at the QR code above.</li>
+            <li>Tap the link to open <span class="text-white">closer_reel.mp4</span> in Safari or Chrome.</li>
+            <li>Tap the <span class="text-white">Share</span> icon → tap <span class="text-cyan-300">Save Video</span>.</li>
+            <li>Open Instagram or YouTube and post directly from your Gallery!</li>
+          </ol>
+          <div class="pt-2 flex items-center gap-2">
+            <button onclick="copyDirectLink()" id="copy-link-btn" class="px-3 py-1.5 rounded-lg bg-cyan-400/20 text-cyan-300 hover:bg-cyan-400/30 font-mono text-[11px] transition-all">
+              🔗 COPY DIRECT VIDEO URL
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADVANCED MULTI-FORMAT VIDEO DOWNLOAD ENGINE -->
+    <div class="w-full max-w-4xl mt-10 p-6 sm:p-8 rounded-3xl bg-white/[0.02] border border-white/10 backdrop-blur">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-6 border-b border-white/10 gap-3">
+        <div>
+          <div class="flex items-center gap-2 text-cyan-400 font-mono text-xs font-bold uppercase tracking-wider mb-1">
+            <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+            HIGH-PERFORMANCE VIDEO EXPORT ENGINE
+          </div>
+          <h3 class="text-xl sm:text-2xl font-black tracking-tight text-white">
+            Download Multi-Platform Formats & Production Master Stems
+          </h3>
+          <p class="text-xs text-slate-400 mt-1">
+            Transcoded with native H.264 & AAC profiles. Ready for Instagram, WhatsApp, YouTube, and LinkedIn.
+          </p>
+        </div>
+
+        <a href="/demos/closer_production_bundle.zip" download class="self-start sm:self-center whitespace-nowrap px-4 py-2.5 rounded-xl bg-gradient-to-r from-cyan-400 to-lime-400 text-black font-extrabold text-xs font-mono tracking-wider transition-all hover:opacity-95 shadow-lg shadow-cyan-500/20 flex items-center gap-2">
+          <span>📦</span> DOWNLOAD ALL (.ZIP) · 29 MB
+        </a>
+      </div>
+
+      <!-- FORMATS GRID -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+
+        <!-- FORMAT 1: 9:16 MASTER REEL -->
+        <div class="p-5 rounded-2xl bg-black/40 border border-cyan-500/30 hover:border-cyan-400/60 transition-all flex flex-col justify-between group">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-lg">📱</span>
+              <span class="font-mono text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-semibold border border-cyan-500/30">1080x1920 · 9:16</span>
+            </div>
+            <div class="font-bold text-white text-sm">Instagram Reel / Shorts / TikTok</div>
+            <div class="text-[11px] text-slate-400 mt-1">
+              Master broadcast grade. Full vertical resolution with embedded karaoke subtitles and Foley sound design.
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between">
+            <span class="font-mono text-[11px] text-slate-400">17.0 MB · 24fps</span>
+            <a href="/demos/closer_reel.mp4" download="closer_reel_1080x1920.mp4" class="px-3 py-1.5 rounded-xl bg-cyan-400 text-black font-bold font-mono text-xs hover:bg-cyan-300 transition-all shadow-md shadow-cyan-500/20">
+              DOWNLOAD
+            </a>
+          </div>
+        </div>
+
+        <!-- FORMAT 2: 9:16 MOBILE & WHATSAPP QUICK SHARE -->
+        <div class="p-5 rounded-2xl bg-black/40 border border-white/10 hover:border-lime-400/50 transition-all flex flex-col justify-between group">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-lg">⚡</span>
+              <span class="font-mono text-[10px] px-2 py-0.5 rounded-full bg-lime-500/20 text-lime-300 font-semibold border border-lime-500/30">720x1280 · 9:16</span>
+            </div>
+            <div class="font-bold text-white text-sm">WhatsApp & Telegram Quick-Share</div>
+            <div class="text-[11px] text-slate-400 mt-1">
+              Compressed 720p stream. Sends in 2 seconds over 4G/5G mobile connections with zero buffering.
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between">
+            <span class="font-mono text-[11px] text-slate-400">4.3 MB · Low Data</span>
+            <a href="/demos/closer_reel_720p.mp4" download="closer_reel_720p.mp4" class="px-3 py-1.5 rounded-xl bg-lime-400 text-black font-bold font-mono text-xs hover:bg-lime-300 transition-all shadow-md shadow-lime-500/20">
+              DOWNLOAD
+            </a>
+          </div>
+        </div>
+
+        <!-- FORMAT 3: 1:1 SQUARE FEED -->
+        <div class="p-5 rounded-2xl bg-black/40 border border-white/10 hover:border-purple-400/50 transition-all flex flex-col justify-between group">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-lg">⏹️</span>
+              <span class="font-mono text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-semibold border border-purple-500/30">1080x1080 · 1:1</span>
+            </div>
+            <div class="font-bold text-white text-sm">LinkedIn & Meta Square Feed</div>
+            <div class="text-[11px] text-slate-400 mt-1">
+              Engineered with dynamic ambient background blur for desktop and mobile feeds. Maximum readability.
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between">
+            <span class="font-mono text-[11px] text-slate-400">5.8 MB · Square</span>
+            <a href="/demos/closer_reel_square.mp4" download="closer_reel_square_1080.mp4" class="px-3 py-1.5 rounded-xl bg-purple-500 text-white font-bold font-mono text-xs hover:bg-purple-400 transition-all shadow-md shadow-purple-500/20">
+              DOWNLOAD
+            </a>
+          </div>
+        </div>
+
+        <!-- FORMAT 4: 16:9 CINEMATIC FILM -->
+        <div class="p-5 rounded-2xl bg-black/40 border border-white/10 hover:border-white/30 transition-all flex flex-col justify-between group">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-lg">💻</span>
+              <span class="font-mono text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-slate-300 font-semibold border border-white/20">1920x1080 · 16:9</span>
+            </div>
+            <div class="font-bold text-white text-sm">Keynote & YouTube Widescreen</div>
+            <div class="text-[11px] text-slate-400 mt-1">
+              Landscape documentary cut. Perfect for investor pitch decks, boardroom presentations, and YouTube.
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between">
+            <span class="font-mono text-[11px] text-slate-400">18.0 MB · Widescreen</span>
+            <a href="/demos/closer_ad.mp4" download="closer_keynote_1080p.mp4" class="px-3 py-1.5 rounded-xl bg-white/15 text-white font-bold font-mono text-xs hover:bg-white/25 transition-all">
+              DOWNLOAD
+            </a>
+          </div>
+        </div>
+
+        <!-- FORMAT 5: MASTER AUDIO MP3 -->
+        <div class="p-5 rounded-2xl bg-black/40 border border-white/10 hover:border-amber-400/50 transition-all flex flex-col justify-between group">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-lg">🎵</span>
+              <span class="font-mono text-[10px] px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30">320 kbps · Audio</span>
+            </div>
+            <div class="font-bold text-white text-sm">Broadcast Audio Mix (MP3)</div>
+            <div class="text-[11px] text-slate-400 mt-1">
+              Mastered to -14.1 LUFS broadcast standard. Includes tri-lingual voices, score, and all Foley sound effects.
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between">
+            <span class="font-mono text-[11px] text-slate-400">2.6 MB · 320 kbps</span>
+            <a href="/demos/closer_reel_audio.mp3" download="closer_audio_mix_320k.mp3" class="px-3 py-1.5 rounded-xl bg-amber-400 text-black font-bold font-mono text-xs hover:bg-amber-300 transition-all shadow-md shadow-amber-500/20">
+              DOWNLOAD
+            </a>
+          </div>
+        </div>
+
+        <!-- FORMAT 6: THUMBNAIL POSTER -->
+        <div class="p-5 rounded-2xl bg-black/40 border border-white/10 hover:border-cyan-400/50 transition-all flex flex-col justify-between group">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-lg">🖼️</span>
+              <span class="font-mono text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 font-semibold border border-cyan-500/30">1080x1920 · JPG</span>
+            </div>
+            <div class="font-bold text-white text-sm">High-Res Poster / Cover Art</div>
+            <div class="text-[11px] text-slate-400 mt-1">
+              Eye-catching thumbnail image calibrated for Instagram Reels grid & YouTube Shorts cover picker.
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-white/5 flex items-center justify-between">
+            <span class="font-mono text-[11px] text-slate-400">184 KB · Clean JPG</span>
+            <a href="/demos/closer_reel_poster.jpg" download="closer_reel_poster.jpg" class="px-3 py-1.5 rounded-xl bg-white/15 text-white font-bold font-mono text-xs hover:bg-white/25 transition-all">
+              DOWNLOAD
+            </a>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- SUBTITLES & METADATA BAR -->
+      <div class="mt-6 pt-5 border-t border-white/10 flex flex-wrap items-center justify-between gap-3 text-xs font-mono text-slate-400">
+        <div class="flex items-center gap-2">
+          <span>📝 CLOSED CAPTIONS:</span>
+          <a href="/demos/closer_reel.srt" download="closer_reel.srt" class="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-cyan-300 border border-white/10">
+            SRT (Subtitles)
+          </a>
+          <a href="/demos/closer_reel.vtt" download="closer_reel.vtt" class="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-lime-300 border border-white/10">
+            VTT (WebVTT)
+          </a>
+          <a href="/demos/daily_reel.json" target="_blank" class="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-amber-300 border border-white/10">
+            JSON Feed
+          </a>
+        </div>
+        <div class="text-slate-500">
+          Codec: H.264 / yuv420p · Audio: AAC 48kHz Stereo (-14.1 LUFS)
+        </div>
+      </div>
+    </div>
+
     <!-- VIRAL COMMENT MAGNET BOX (INSTAGRAM ENGAGEMENT LOOP) -->
     <div class="w-full max-w-2xl mt-8 p-6 rounded-2xl bg-amber-500/[0.07] border border-amber-500/30 backdrop-blur">
       <div class="flex items-center justify-between mb-3">
@@ -210,7 +438,10 @@ Save this reel and comment "AUDIT" right now! 🚀
   </footer>
 
   <script>
+    let currentFormat = 'reel';
+
     function switchFormat(fmt) {
+      currentFormat = fmt;
       const vReel = document.getElementById('view-reel');
       const vCinema = document.getElementById('view-cinema');
       const pReel = document.getElementById('player-reel');
@@ -236,6 +467,71 @@ Save this reel and comment "AUDIT" right now! 🚀
         dlBtn.href = "/demos/closer_ad.mp4";
         dlBtn.innerText = "DOWNLOAD FILM (16:9)";
       }
+    }
+
+    function getActivePlayer() {
+      return currentFormat === 'reel' ? document.getElementById('player-reel') : document.getElementById('player-cinema');
+    }
+
+    function setSpeed(rate) {
+      const p = getActivePlayer();
+      p.playbackRate = rate;
+      ['10', '125', '15'].forEach(id => {
+        const btn = document.getElementById(`spd-${id}`);
+        if (btn) btn.className = "px-2 py-1 rounded-lg text-slate-400 hover:bg-white/10";
+      });
+      const activeId = rate === 1.0 ? '10' : (rate === 1.25 ? '125' : '15');
+      const activeBtn = document.getElementById(`spd-${activeId}`);
+      if (activeBtn) activeBtn.className = "px-2 py-1 rounded-lg bg-cyan-400/20 text-cyan-300 font-bold";
+    }
+
+    function toggleLoop() {
+      const p = getActivePlayer();
+      p.loop = !p.loop;
+      const btn = document.getElementById('loop-btn');
+      if (btn) {
+        btn.innerHTML = p.loop ? '<span>🔁</span> LOOP: <span class="text-cyan-300 font-bold">ON</span>' : '<span>🔁</span> LOOP: OFF';
+      }
+    }
+
+    function captureFrame() {
+      const p = getActivePlayer();
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = p.videoWidth || (currentFormat === 'reel' ? 1080 : 1920);
+        canvas.height = p.videoHeight || (currentFormat === 'reel' ? 1920 : 1080);
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(p, 0, 0, canvas.width, canvas.height);
+        const sec = Math.round(p.currentTime || 0);
+        const link = document.createElement('a');
+        link.download = `closer_${currentFormat}_frame_${sec}s.jpg`;
+        link.href = canvas.toDataURL('image/jpeg', 0.95);
+        link.click();
+      } catch (e) {
+        console.warn('Frame capture notice:', e);
+        // Fallback to static poster download
+        const link = document.createElement('a');
+        link.href = currentFormat === 'reel' ? '/demos/closer_reel_poster.jpg' : '/demos/closer_ad_poster.jpg';
+        link.download = `closer_${currentFormat}_poster.jpg`;
+        link.click();
+      }
+    }
+
+    function toggleQrModal() {
+      const m = document.getElementById('qr-modal');
+      m.classList.toggle('hidden');
+      if (!m.classList.contains('hidden')) {
+        m.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+
+    function copyDirectLink() {
+      const url = window.location.origin + (currentFormat === 'reel' ? '/demos/closer_reel.mp4' : '/demos/closer_ad.mp4');
+      navigator.clipboard.writeText(url).then(() => {
+        const btn = document.getElementById('copy-link-btn');
+        btn.innerText = "✓ VIDEO LINK COPIED!";
+        setTimeout(() => { btn.innerText = "🔗 COPY DIRECT VIDEO URL"; }, 2500);
+      });
     }
 
     function copyCaption() {
