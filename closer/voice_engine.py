@@ -167,25 +167,27 @@ class NeuralVoiceEngine:
                 ta.save(wav_path, wav, cb.sr)
                 return wav_path
 
-        # 3. Indic Languages (Tamil & Hindi)
-        # Check if Sarvam AI key is configured
-        if self.sarvam.is_configured:
-            lang_key = "tamil" if "tamil" in target_agent or "pallavi" in target_agent else "hindi"
-            mp3_path = output_path if output_path.endswith(".mp3") else output_path.rsplit(".", 1)[0] + ".mp3"
-            success = await self.sarvam.synthesize(clean_text, lang_key, mp3_path)
-            if success:
-                return mp3_path
+        # 3. Indic Languages (Tamil & Hindi) routed via Unified Indic Neural Engine
+        # Supports ai4bharat/IndicF5, ai4bharat/indic-parler-tts, fishaudio/fish-speech,
+        # Sarvam AI bulbul:v3, and Dialect Breath-Paced Edge-TTS fallback.
+        from closer.telephony.indic_neural_engine import IndicNeuralVoiceEngine
 
-        # 4. Local / Free Sweet Neural Telecaller Voice (Zero Cost, Zero Key)
-        import edge_tts
-        mp3_path = output_path if output_path.endswith(".mp3") else output_path.rsplit(".", 1)[0] + ".mp3"
-        voice_id = str(profile["voice_id"])
-        rate = str(profile.get("rate", "-3%"))
-        pitch = str(profile.get("pitch", "+1Hz"))
-        
-        c = edge_tts.Communicate(clean_text, voice=voice_id, rate=rate, pitch=pitch)
-        await c.save(mp3_path)
-        return mp3_path
+        lang_key = "tamil" if "tamil" in target_agent or "pallavi" in target_agent else "hindi"
+        dialect = str(profile.get("dialect", "")) or None
+        indic_engine = IndicNeuralVoiceEngine(sarvam_engine=self.sarvam)
+        audio_bytes, provider_used, _, audio_fmt = await indic_engine.synthesize(
+            text=text,
+            language=lang_key,
+            dialect=dialect,
+            rate=str(profile.get("rate", "-4%")),
+            pitch=str(profile.get("pitch", "+1Hz")),
+        )
+        self.last_provider_used = provider_used
+        ext = f".{audio_fmt}" if audio_fmt in ("wav", "mp3") else ".mp3"
+        final_path = output_path if output_path.endswith(ext) else output_path.rsplit(".", 1)[0] + ext
+        with open(final_path, "wb") as f:
+            f.write(audio_bytes)
+        return final_path
 
     def get_filler_phrase(self, agent: Optional[str] = None) -> str:
         target = (agent or self.current_agent).lower()

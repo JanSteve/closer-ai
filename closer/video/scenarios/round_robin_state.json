@@ -1,0 +1,9 @@
+{
+  "last_sector_index": 1,
+  "last_sector": "solar",
+  "selected_scenario_id": "solar_rooftop_epc_01",
+  "last_scenario_by_sector": {
+    "clinics": "clinic_dental_implant_01",
+    "solar": "solar_rooftop_epc_01"
+  }
+}

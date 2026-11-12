@@ -34,7 +34,13 @@ class ConversationEngine:
     Supports 3 Main Global Languages: US Luxury Real Estate ISA, India Customer Care, and Native Hindi Closing.
     """
 
-    def __init__(self, lead: Optional[InboundLead] = None, market_mode: str = "usa"):
+    def __init__(
+        self,
+        lead: Optional[InboundLead] = None,
+        market_mode: str = "usa",
+        sector: str = "real_estate",
+        business_name: Optional[str] = None,
+    ):
         self.lead = lead or InboundLead(
             lead_id="sim_lead_001",
             full_name="Alex Morgan",
@@ -42,17 +48,31 @@ class ConversationEngine:
             ad_campaign="Bel Air Sunset Modern Collection"
         )
         if lead and getattr(lead, "market_region", None):
-            if "hindi" in str(lead.market_region).lower():
+            mr = str(lead.market_region).lower()
+            if "tamil" in mr:
+                market_mode = "tamil"
+            elif "hindi" in mr:
                 market_mode = "hindi"
-            elif "india" in str(lead.market_region).lower() and market_mode == "usa":
+            elif "india" in mr and market_mode == "usa":
                 market_mode = "india"
 
+        from src.closer.agent.sector_playbooks import resolve_sector_key
+        self.sector = resolve_sector_key(sector)
+        self.business_name = business_name or settings.BROKERAGE_NAME
+
         self._market_mode = market_mode.lower().strip()
-        if self._market_mode in ("hindi", "hi", "hi-in"):
+        if self._market_mode in ("tamil", "ta", "ta-in"):
+            self._market_mode = "tamil"
+            region = "INDIA"
+            currency = "INR"
+            sys_prompt = INDIA_CUSTOMER_CARE_SYSTEM_PROMPT
+        elif self._market_mode in ("hindi", "hi", "hi-in"):
+            self._market_mode = "hindi"
             region = "INDIA"
             currency = "INR"
             sys_prompt = HINDI_CUSTOMER_CARE_SYSTEM_PROMPT
         elif self._market_mode in ("india", "en-in"):
+            self._market_mode = "india"
             region = "INDIA"
             currency = "INR"
             sys_prompt = INDIA_CUSTOMER_CARE_SYSTEM_PROMPT
@@ -96,25 +116,48 @@ class ConversationEngine:
             return info
         return {}
 
+    def configure_business(self, sector: str = "real_estate", business_name: Optional[str] = None) -> None:
+        """Configures active vertical sector and brand name for universal telecalling."""
+        from src.closer.agent.sector_playbooks import resolve_sector_key
+        self.sector = resolve_sector_key(sector)
+        if business_name and business_name.strip():
+            self.business_name = business_name.strip()
+
     def set_market_mode(self, mode: str) -> None:
-        """Dynamically switches between 'usa', 'india', and 'hindi' market modes."""
+        """Dynamically switches between 'usa', 'india', 'hindi', and 'tamil' market modes."""
         m = mode.lower().strip()
-        self._market_mode = m
-        if m in ("hindi", "hi", "hi-in"):
+        if m in ("tamil", "ta", "ta-in"):
+            self._market_mode = "tamil"
+            self.dossier.market_region = "INDIA"
+            self.dossier.budget_currency = "INR"
+            self.messages = [{"role": "system", "content": INDIA_CUSTOMER_CARE_SYSTEM_PROMPT}]
+        elif m in ("hindi", "hi", "hi-in"):
+            self._market_mode = "hindi"
             self.dossier.market_region = "INDIA"
             self.dossier.budget_currency = "INR"
             self.messages = [{"role": "system", "content": HINDI_CUSTOMER_CARE_SYSTEM_PROMPT}]
         elif m in ("india", "en-in"):
+            self._market_mode = "india"
             self.dossier.market_region = "INDIA"
             self.dossier.budget_currency = "INR"
             self.messages = [{"role": "system", "content": INDIA_CUSTOMER_CARE_SYSTEM_PROMPT}]
         else:
+            self._market_mode = m
             self.dossier.market_region = "USA"
             self.dossier.budget_currency = "USD"
             self.messages = [{"role": "system", "content": ISA_SYSTEM_PROMPT}]
 
     def get_initial_greeting(self) -> str:
-        """Generates the sub-500ms initial call greeting across the 3 main languages."""
+        """Generates the sub-500ms initial call greeting across Tamil, Hindi, India, and US modes."""
+        if self.market_mode == "tamil":
+            greeting = (
+                f"வணக்கம் Sir... {self.business_name}-ல இருந்து பல்லவி பேசுறேங்க. "
+                "உங்க enquiry பத்தி கொஞ்சம் details ஷேர் பண்ணலாம்னு கால் பண்ணேங்க — இப்போ 2 நிமிஷம் பேசலாமா Sir?"
+            )
+            self.messages.append({"role": "assistant", "content": greeting})
+            self.turn_count += 1
+            return greeting
+
         if self.market_mode == "hindi":
             greeting = (
                 "नमस्ते जी! क्लोज़र एआई कस्टमर सपोर्ट में आपका स्वागत है। मैं स्वाति बात कर रही हूँ। "
@@ -158,7 +201,34 @@ class ConversationEngine:
         
         # 1. Update dossier extraction from new utterance
         self._extract_entities(clean_input)
-        
+
+        # Multi-Sector Universal Telecaller (Clinics, Solar, EdTech, General B2B)
+        if getattr(self, "sector", "real_estate") != "real_estate":
+            from src.closer.agent.sector_playbooks import process_non_realestate_sector_turn
+            sector_reply = process_non_realestate_sector_turn(
+                clean_input,
+                self.dossier,
+                self.market_mode,
+                self.sector,
+                getattr(self, "business_name", settings.BROKERAGE_NAME),
+            )
+            self._update_telemetry(clean_input, sector_reply)
+            self.messages.append({"role": "assistant", "content": sector_reply})
+            return sector_reply
+
+        # In Tamil Mode: Route to dedicated Chennai/Coimbatore Tanglish closer engine
+        if self.market_mode == "tamil":
+            from src.closer.agent.sector_playbooks import process_tamil_turn
+            tamil_reply = process_tamil_turn(
+                clean_input,
+                self.dossier,
+                sector="real_estate",
+                business_name=getattr(self, "business_name", settings.BROKERAGE_NAME),
+            )
+            self._update_telemetry(clean_input, tamil_reply)
+            self.messages.append({"role": "assistant", "content": tamil_reply})
+            return tamil_reply
+
         # In Hindi Mode: Route to dedicated Hindi customer care and closing engine
         if self.market_mode == "hindi":
             hindi_reply = self._process_hindi_turn(clean_input)
@@ -537,8 +607,8 @@ class ConversationEngine:
         elif "modern" in t or "contemporary" in t:
             self.dossier.property_type = "Modern Architectural"
 
-        # Indian INR Budget extraction (Lakhs & Crores, English & Hindi Devanagari)
-        cr_match = re.search(r'(?:₹|rs\.?|inr)?\s*(\d+(?:\.\d+)?)\s*(?:cr\b|crores?\b|करोड़)', t)
+        # Indian INR Budget extraction (Lakhs & Crores, English, Hindi & Tamil)
+        cr_match = re.search(r'(?:₹|rs\.?|inr)?\s*(\d+(?:\.\d+)?)\s*(?:cr\b|crores?\b|करोड़|கோடி|கிரோர்)', t)
         if cr_match:
             cr_val = float(cr_match.group(1))
             amount = int(cr_val * 10_000_000)
@@ -547,7 +617,7 @@ class ConversationEngine:
             self.dossier.budget_currency = "INR"
             self.dossier.budget_inr_text = f"₹{cr_val} Crores"
         else:
-            lakh_match = re.search(r'(?:₹|rs\.?|inr)?\s*(\d+(?:\.\d+)?)\s*(?:lakhs?\b|lacs?\b|l\b|लाख)', t)
+            lakh_match = re.search(r'(?:₹|rs\.?|inr)?\s*(\d+(?:\.\d+)?)\s*(?:lakhs?\b|lacs?\b|l\b|लाख|லட்சம்)', t)
             if lakh_match:
                 lakh_val = float(lakh_match.group(1))
                 amount = int(lakh_val * 100_000)

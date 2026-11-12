@@ -1,0 +1,13 @@
+{
+  "name": "closer-video-renderer",
+  "version": "1.0.0",
+  "description": "CLOSER AI Headless Playwright Canvas 2D Vertical 1080x1920 Video Renderer",
+  "type": "module",
+  "scripts": {
+    "render": "node capture.mjs web --fps 30 --workers 4",
+    "preview": "node capture.mjs web --fps 30 --workers 1 --duration 5.0"
+  },
+  "dependencies": {
+    "playwright-core": "^1.40.0"
+  }
+}

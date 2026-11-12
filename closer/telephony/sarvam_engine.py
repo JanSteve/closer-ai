@@ -2,8 +2,8 @@
 
 Models:
 - TTS: bulbul:v3
-  - Tamil: 'kavitha' (Authentic Chennai dialect, sweet consultative closer)
-  - Hindi: 'shreya' (Authentic Hinglish telecaller prosody)
+  - Tamil: 'priya' (female twin of 'shubh', authentic Chennai conversational closer)
+  - Hindi: 'ritu' (female twin of 'shubh', expressive Delhi/Mumbai Hinglish closer)
 - STT: saaras:v3 (Ultra-low latency multilingual speech-to-text)
 
 Zero-cost developer tier with automatic local offline fallback.
@@ -13,18 +13,42 @@ from __future__ import annotations
 
 import base64
 import os
+import re
 from pathlib import Path
-from typing import Optional, Tuple
-import aiohttp
+from typing import Optional
+import httpx
 
 SARVAM_TTS_URL = "https://api.sarvam.ai/text-to-speech"
 SARVAM_STT_URL = "https://api.sarvam.ai/speech-to-text"
 
 SARVAM_FEMALE_VOICES = {
-    "tamil": "kavitha",   # Flagship sweet Tamil closer
-    "hindi": "shreya",    # Flagship sweet Hindi closer
-    "english": "shreya",  # Multilingual English
+    "tamil": "priya",    # Warm conversational female twin of shubh (Chennai Tanglish)
+    "hindi": "ritu",     # Warm expressive female twin of shubh (Delhi/Mumbai Hinglish)
+    "english": "ritu",   # Multilingual Indian English
 }
+
+SARVAM_MALE_CUSTOMER_VOICES = {
+    "tamil": "shubh",
+    "hindi": "shubh",
+    "english": "shubh",
+}
+
+_SARVAM_TAMIL_SCRIPT_LOANWORDS = (
+    ("special discount", "ஸ்பெஷல் டிஸ்கவுண்ட்"),
+    ("payment options", "பேமெண்ட் ஆப்ஷன்ஸ்"),
+    ("payment option", "பேமெண்ட் ஆப்ஷன்"),
+    ("payment plan", "பேமெண்ட் பிளான்"),
+    ("best package", "பெஸ்ட் பேக்கேஜ்"),
+    ("floor plan", "ஃப்ளோர் பிளான்"),
+    ("site visit", "சைட் விசிட்"),
+    ("whatsapp", "வாட்ஸ்அப்"),
+    ("discount", "டிஸ்கவுண்ட்"),
+    ("budget", "பட்ஜெட்"),
+    ("sir", "சார்"),
+    ("vip", "விஐபி"),
+    ("bro", "ப்ரோ"),
+    ("ok", "ஓகே"),
+)
 
 
 class SarvamVoiceEngine:
@@ -41,6 +65,16 @@ class SarvamVoiceEngine:
                         self.api_key = line.split("=", 1)[1].strip()
                         break
 
+        self.last_status_code: Optional[int] = None
+
+    @staticmethod
+    def _smooth_tamil_for_sarvam(text: str) -> str:
+        """Converts common mixed Latin loanwords to spoken Tamil script for smooth ta-IN inflection."""
+        out = text
+        for latin_term, tamil_phonetic in _SARVAM_TAMIL_SCRIPT_LOANWORDS:
+            out = re.sub(rf"\b{re.escape(latin_term)}\b", tamil_phonetic, out, flags=re.IGNORECASE)
+        return out
+
     @property
     def is_configured(self) -> bool:
         return bool(self.api_key and len(self.api_key) > 10)
@@ -50,48 +84,53 @@ class SarvamVoiceEngine:
         text: str,
         target_language: str,  # "tamil" or "hindi"
         output_path: str,
-        speed: float = 0.95,
+        speed: float = 0.96,
+        customer_mode: bool = False,
+        speaker_override: Optional[str] = None,
     ) -> bool:
-        """Synthesizes conversational speech via Sarvam AI API."""
+        """Synthesizes natural conversational speech via Sarvam AI Bulbul v3 REST API."""
         if not self.is_configured:
             return False
 
-        lang_code = "ta-IN" if "tam" in target_language.lower() else "hi-IN"
-        speaker = SARVAM_FEMALE_VOICES.get(target_language.lower(), "shreya")
+        self.last_status_code = None
+        t_low = target_language.lower()
+        lang_key = "tamil" if "tam" in t_low else ("hindi" if "hin" in t_low else "english")
+        lang_code = "ta-IN" if lang_key == "tamil" else ("hi-IN" if lang_key == "hindi" else "en-IN")
+        default_map = SARVAM_MALE_CUSTOMER_VOICES if customer_mode else SARVAM_FEMALE_VOICES
+        speaker = speaker_override or default_map.get(lang_key, "priya" if lang_key == "tamil" else "ritu")
+        spoken_text = self._smooth_tamil_for_sarvam(text) if lang_key == "tamil" else text
 
         headers = {
             "api-subscription-key": self.api_key,
             "Content-Type": "application/json",
         }
         payload = {
-            "inputs": [text],
+            "text": spoken_text,
             "target_language_code": lang_code,
             "speaker": speaker,
-            "pitch": 0,
             "pace": speed,
-            "loudness": 1.0,
-            "speech_sample_rate": 22050,
+            "speech_sample_rate": 24000,
             "enable_preprocessing": True,
             "model": "bulbul:v3",
         }
 
         try:
-            async with aiohttp.ClientSession() as session:
-                async with session.post(SARVAM_TTS_URL, json=payload, headers=headers, timeout=12) as resp:
-                    if resp.status == 200:
-                        data = await resp.json()
-                        audios = data.get("audios", [])
-                        if audios:
-                            raw_bytes = base64.b64decode(audios[0])
-                            with open(output_path, "wb") as f:
-                                f.write(raw_bytes)
-                            return True
-                    else:
-                        err_body = await resp.text()
-                        print(f"[SarvamVoice] Warning: API status {resp.status}: {err_body[:100]}")
-                        return False
+            async with httpx.AsyncClient(timeout=15.0) as client:
+                resp = await client.post(SARVAM_TTS_URL, json=payload, headers=headers)
+                self.last_status_code = resp.status_code
+                if resp.status_code == 200:
+                    data = resp.json()
+                    audios = data.get("audios", [])
+                    if audios:
+                        raw_bytes = base64.b64decode(audios[0])
+                        with open(output_path, "wb") as f:
+                            f.write(raw_bytes)
+                        return True
+                else:
+                    print(f"[SarvamVoice] Warning: API status {resp.status_code}: {resp.text[:140]}")
+                    return False
         except Exception as e:
-            print(f"[SarvamVoice] Network error: {e}")
+            print(f"[SarvamVoice] Network error: {type(e).__name__}: {e}")
             return False
 
         return False
@@ -102,27 +141,18 @@ class SarvamVoiceEngine:
             return None
 
         headers = {"api-subscription-key": self.api_key}
-        data = {
-            "model": "saaras:v3",
-            "language_code": language_code,
-        }
-
         try:
             with open(audio_path, "rb") as f:
                 audio_bytes = f.read()
 
-            form = aiohttp.FormData()
-            form.add_field("file", audio_bytes, filename="audio.wav", content_type="audio/wav")
-            form.add_field("model", "saaras:v3")
-            form.add_field("language_code", language_code)
+            files = {"file": ("audio.wav", audio_bytes, "audio/wav")}
+            data = {"model": "saaras:v3", "language_code": language_code}
 
-            async with aiohttp.ClientSession() as session:
-                async with session.post(SARVAM_STT_URL, headers=headers, data=form, timeout=12) as resp:
-                    if resp.status == 200:
-                        res = await resp.json()
-                        return res.get("transcript", "").strip()
-                    else:
-                        print(f"[SarvamSTT] Error {resp.status}: {await resp.text()}")
+            async with httpx.AsyncClient(timeout=12.0) as client:
+                resp = await client.post(SARVAM_STT_URL, headers=headers, data=data, files=files)
+                if resp.status_code == 200:
+                    return resp.json().get("transcript", "").strip()
+                print(f"[SarvamSTT] Error {resp.status_code}: {resp.text[:140]}")
         except Exception as e:
-            print(f"[SarvamSTT] Exception: {e}")
+            print(f"[SarvamSTT] Exception: {type(e).__name__}: {e}")
         return None

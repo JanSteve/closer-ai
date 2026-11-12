@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>CLOSER AI — Vertical 1080x1920 Reel Renderer</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Inter+Tight:wght@700;800;900&family=JetBrains+Mono:wght@500;600;700;800&display=swap');
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #030509;
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+    }
+    #c {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      object-fit: contain;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="c" width="1080" height="1920"></canvas>
+
+  <script type="module">
+    import * as E from './engine.js';
+    import { drawHumanRig } from './characters.js';
+    import { renderHormoziCaptions, renderViralCTABanner, SAFE_ZONE_SUBTITLE_Y, SAFE_ZONE_CTA_Y } from './captions.js';
+
+    const { W, H, PAL, font, rr, glow, pill, panel3D, bg, cinematicBokeh, drawPhoneFrame,
+            drawWaveform, drawCutTransition, drawScanlines, vignette, clamp, lerp, ss, TAU } = E;
+
+    const cv = document.getElementById('c');
+    const g = cv.getContext('2d');
+
+    // Ensure fonts are ready before setting READY
+    await Promise.all([
+      document.fonts.load('900 38px InterTight'),
+      document.fonts.load('700 24px Inter'),
+      document.fonts.load('700 16px JBMono')
+    ]).catch(() => {});
+
+    // Parse configuration query params
+    const Q = new URLSearchParams(location.search);
+    const sector = Q.get('sector') || 'clinics';
+    const manifestUrl = Q.get('manifest');
+
+    let manifest = null;
+    if (manifestUrl) {
+      try {
+        const res = await fetch(manifestUrl);
+        if (res.ok) manifest = await res.json();
+      } catch (err) {
+        console.warn('Could not load custom manifest, falling back to sector defaults:', err);
+      }
+    }
+
+    // Sector Configuration Mappings
+    const SECTORS = {
+      clinics: {
+        title: "Dental & Aesthetic Clinic Lead Recovery",
+        hook: "Doctors: Why Your Front Desk Misses 40% of Inquiries",
+        characterA: { attire: 'labcoat', hairStyle: 'bun', accessories: ['stethoscope'], skin: '#C68A4C' },
+        characterB: { attire: 'blazer', hairStyle: 'bob', accessories: ['headset'], skin: '#D29568' },
+        tag: "HEALTHCARE CLINIC",
+        lang: "Tamil / Indian English",
+        callPrompt: 'Pallavi: "வணக்கம் மேடம்... டென்டல் அப்பாயின்மென்ட் கன்பார்ம்!"',
+        whatsappDoc: "VIP_Clinic_Consultation_Pass.pkpass"
+      },
+      solar: {
+        title: "Rooftop Solar Subsidy Fast-Close",
+        hook: "Solar EPCs: Midnight Meta Leads Go Cold by Morning",
+        characterA: { attire: 'vest', hairStyle: 'ponytail', accessories: ['headset'], skin: '#D29568' },
+        characterB: { attire: 'blazer', hairStyle: 'fade', accessories: [], skin: '#96562B' },
+        tag: "SOLAR ENERGY",
+        lang: "Hindi / Indian English",
+        callPrompt: 'Swati: "5kW सोलर कोटेशन व्हाट्सएप पर तुरंत भेज दिया है!"',
+        whatsappDoc: "5kW_Solar_PM_Surya_Ghar_Quotation.pdf"
+      },
+      realestate: {
+        title: "Luxury Real Estate & Villa Site Visit",
+        hook: "Builders: Why High-Net-Worth Buyers Ghost Your Sales Team",
+        characterA: { attire: 'blazer', hairStyle: 'parted', accessories: ['glasses'], skin: '#D29568' },
+        characterB: { attire: 'turtleneck', hairStyle: 'bob', accessories: ['headset'], skin: '#E0A97E' },
+        tag: "REAL ESTATE",
+        lang: "Indian English / Hindi",
+        callPrompt: 'Maya: "Villa Brochure on WhatsApp... Sunday 11 AM Site Visit Locked!"',
+        whatsappDoc: "ECR_Sea_Facing_Penthouse_Brochure.pdf"
+      },
+      edtech: {
+        title: "Career Bootcamp & Admissions Speed",
+        hook: "Institutes: First Caller in 45 Seconds Wins the Student",
+        characterA: { attire: 'polo', hairStyle: 'fade', accessories: ['glasses'], skin: '#C68A4C' },
+        characterB: { attire: 'blazer', hairStyle: 'fade', accessories: ['headset'], skin: '#96562B' },
+        tag: "EDTECH ADMISSIONS",
+        lang: "Hinglish / Indian English",
+        callPrompt: 'Arjun: "Scholarship syllabus and syllabus pack sent to your WhatsApp!"',
+        whatsappDoc: "Data_Science_Syllabus_Scholarship_Pass.pdf"
+      },
+      agency: {
+        title: "B2B Performance Marketer Auto-Dialer",
+        hook: "Agencies: Stop Sending Clients Excel Sheets of Dead Leads",
+        characterA: { attire: 'turtleneck', hairStyle: 'fade', accessories: ['phone-right'], skin: '#96562B' },
+        characterB: { attire: 'blazer', hairStyle: 'fade', accessories: ['headset'], skin: '#D29568' },
+        tag: "B2B AGENCY",
+        lang: "Indian English / Hinglish",
+        callPrompt: 'Closer: "Instant dials in under 45s with verified qualified buyers."',
+        whatsappDoc: "Agency_Instant_AutoDialer_Workflow.pdf"
+      }
+    };
+
+    const curSector = SECTORS[sector] || SECTORS.clinics;
+    const TOTAL_DUR = manifest?.duration || 68.0;
+
+    // Subtitle Line Definitions
+    const SUBTITLE_LINES = manifest?.subtitles || [
+      { t0: 0.5, t1: 3.5, text: curSector.hook, tag: curSector.tag },
+      { t0: 3.5, t1: 6.8, text: "Lakhs Wasted When Staff Takes 4 Hours To Dial!", tag: "THE PROBLEM" },
+      { t0: 6.8, t1: 10.2, text: 'Customer: "WHO ARE YOU?! I NEVER FILLED ANY FORM!"', tag: "LOST SALE 💥" },
+      { t0: 10.2, t1: 14.5, text: "After 5 Minutes, Lead Intent Drops by 800%!", tag: "HARVARD STUDY" },
+      { t0: 14.5, t1: 19.0, text: "CLOSER AI Dials Every Prospect in Under 45 Seconds!", tag: "< 45s SPEED ⚡" },
+      { t0: 19.0, t1: 24.5, text: curSector.callPrompt, tag: curSector.lang },
+      { t0: 24.5, t1: 29.8, text: `Instant WhatsApp Sync: ${curSector.whatsappDoc}`, tag: "INSTANT ASSET" },
+      { t0: 29.8, t1: 35.5, text: "Human Telecaller: ₹220/Lead vs CLOSER AI: ₹1.55", tag: "⚡ 99.3% SAVINGS" },
+      { t0: 35.5, t1: 42.0, text: "Zero Sick Leaves · Zero Retraining · 24/7 Execution", tag: "AUTONOMOUS STACK" },
+      { t0: 42.0, t1: TOTAL_DUR, text: 'Comment "CLOSER" For Your Business Setup Stack 👇', tag: "GET THE STACK" }
+    ];
+
+    const CUT_TIMES = [0.0, 6.8, 10.2, 14.5, 24.5, 29.8, 35.5, 42.0];
+
+    // Master Render Frame Function called by Playwright for each frame t
+    window.render = function(t) {
+      g.save();
+      g.clearRect(0, 0, W, H);
+
+      // 1. Stage Background with Dynamic Spotlight
+      bg(g, { t, lift: 1.0, cyanGlow: 1.2 });
+      cinematicBokeh(g, t, 32);
+
+      // 2. Stage Header: Category & Sector Pill
+      pill(g, 60, 120, `CLOSER AI · ${curSector.tag}`, {
+        color: PAL.accent, bg: 'rgba(0, 229, 255, 0.12)', fontSize: 16, px: 18, py: 8
+      });
+
+      // 3. Central Staging Area: Dynamic Phone Frame (Y: 260 to 1240)
+      const phoneW = 740, phoneH = 920;
+      const phoneX = W / 2, phoneY = 750;
+      const [sx, sy, sw, sh] = drawPhoneFrame(g, phoneX, phoneY, phoneW, phoneH, t, {
+        callActive: t >= 14.5 && t < 35.5,
+        waveLevel: Math.sin(t * 8) * 0.5 + 0.5
+      });
+
+      // 4. Clip Content to Inside Phone Screen
+      g.save();
+      rr(g, sx, sy, sw, sh, 40);
+      g.clip();
+
+      if (t < 6.8) {
+        // Scene 0: The Frustrated Business Operator
+        drawHumanRig(g, {
+          cx: phoneX, cy: sy + 380, scale: 1.8, t,
+          attire: curSector.characterA.attire,
+          hairStyle: curSector.characterA.hairStyle,
+          accessories: curSector.characterA.accessories,
+          skin: curSector.characterA.skin,
+          expression: 'stressed',
+          isTalking: t > 1.0 && t < 5.0
+        });
+
+        panel3D(g, sx + 40, sy + sh - 200, sw - 80, 140, { r: 16, fill: 'rgba(15, 23, 42, 0.85)', stroke: PAL.red });
+        g.textAlign = 'center';
+        g.font = font(20, 700, 'disp');
+        g.fillStyle = PAL.red;
+        g.fillText("⚠️ 40% OF HIGH-TICKET LEADS LOST", phoneX, sy + sh - 145);
+        g.font = font(14, 500, 'ui');
+        g.fillStyle = PAL.text;
+        g.fillText("Delayed callbacks destroy conversion intent", phoneX, sy + sh - 110);
+
+      } else if (t < 14.5) {
+        // Scene 1 & 2: Shouting Customer / Intent Collapse
+        drawHumanRig(g, {
+          cx: phoneX, cy: sy + 380, scale: 1.8, t,
+          attire: 'polo',
+          hairStyle: 'messy',
+          accessories: ['phone-right', 'anger-vein', 'steam'],
+          expression: 'angry',
+          isTalking: true
+        });
+
+        panel3D(g, sx + 40, sy + sh - 200, sw - 80, 140, { r: 16, fill: 'rgba(15, 23, 42, 0.85)', stroke: PAL.red });
+        g.textAlign = 'center';
+        g.font = font(22, 800, 'disp');
+        g.fillStyle = PAL.red;
+        g.fillText('"WHO ARE YOU?! CALLING HOURS LATE!"', phoneX, sy + sh - 140);
+        g.font = font(14, 600, 'mono');
+        g.fillStyle = PAL.dim;
+        g.fillText("Harvard Study: 5-Min Intent Collapse", phoneX, sy + sh - 105);
+
+      } else if (t < 29.8) {
+        // Scene 3 & 4: CLOSER AI Hero In Action
+        drawHumanRig(g, {
+          cx: phoneX, cy: sy + 340, scale: 1.7, t,
+          attire: curSector.characterB.attire,
+          hairStyle: curSector.characterB.hairStyle,
+          accessories: curSector.characterB.accessories,
+          skin: curSector.characterB.skin,
+          expression: 'smiling',
+          isTalking: true
+        });
+
+        // Live Audio Waveform & Instant Call Badge
+        drawWaveform(g, phoneX, sy + 560, sw - 120, 70, t, 1.2);
+
+        panel3D(g, sx + 40, sy + sh - 210, sw - 80, 160, { r: 16, fill: 'rgba(6, 9, 18, 0.92)', stroke: PAL.accent });
+        g.textAlign = 'center';
+        pill(g, phoneX - 110, sy + sh - 195, "⚡ CONNECTED IN 0.08s", { color: PAL.accent, bg: 'rgba(0,229,255,0.18)' });
+        g.font = font(16, 600, 'ui');
+        g.fillStyle = '#FFFFFF';
+        g.fillText(curSector.whatsappDoc, phoneX, sy + sh - 125);
+        g.font = font(13, 500, 'mono');
+        g.fillStyle = PAL.lime;
+        g.fillText("✓ WhatsApp Delivered & Site Visit Confirmed", phoneX, sy + sh - 95);
+
+      } else if (t < 42.0) {
+        // Scene 5: Unit Economics Comparison
+        const cardY = sy + 140;
+        glow(g, phoneX, cardY + 120, 320, PAL.lime, 0.35);
+
+        panel3D(g, sx + 30, cardY, sw - 60, 480, { r: 24, fill: '#0A1208', stroke: PAL.lime, shadow: 1.5 });
+        g.textAlign = 'center';
+        pill(g, phoneX - 120, cardY + 35, "⚡ UNIT ECONOMICS", { color: PAL.lime, bg: 'rgba(183, 243, 74, 0.2)' });
+
+        g.font = font(96, 900, 'disp');
+        g.fillStyle = PAL.lime;
+        g.fillText("₹1.55", phoneX, cardY + 160);
+
+        g.font = font(18, 700, 'mono');
+        g.fillStyle = PAL.text;
+        g.fillText("PER AUTONOMOUS CLOSER DIAL", phoneX, cardY + 210);
+
+        // Comparison Row
+        panel3D(g, sx + 50, cardY + 250, sw - 100, 180, { r: 16, fill: PAL.surf, stroke: PAL.line });
+        g.textAlign = 'left';
+        g.font = font(14, 700, 'mono');
+        g.fillStyle = PAL.red;
+        g.fillText("HUMAN TELECALLER BENCH: ₹220 / Lead", sx + 80, cardY + 295);
+        g.font = font(12, 500, 'ui');
+        g.fillStyle = PAL.dim;
+        g.fillText("Slow dials · Night lead drops · ₹25k/mo fixed overhead", sx + 80, cardY + 322);
+
+        g.font = font(14, 700, 'mono');
+        g.fillStyle = PAL.lime;
+        g.fillText("CLOSER AI ENGINE: ₹1.55 / Dial", sx + 80, cardY + 370);
+        g.font = font(12, 500, 'ui');
+        g.fillStyle = PAL.dim;
+        g.fillText("Sub-45s speed · 100% connect rate · 99.3% cost reduction", sx + 80, cardY + 397);
+
+      } else {
+        // Scene 6: Viral Comment Magnet CTA
+        const cardY = sy + 140;
+        glow(g, phoneX, cardY + 180, 360, PAL.gold, 0.4);
+
+        panel3D(g, sx + 30, cardY, sw - 60, 480, { r: 24, fill: '#14120A', stroke: PAL.gold, shadow: 1.6 });
+        g.textAlign = 'center';
+        pill(g, phoneX - 160, cardY + 40, "🔥 FREE AUTOMATION PLAYBOOK", { color: PAL.gold, bg: 'rgba(251, 191, 36, 0.2)' });
+
+        g.font = font(36, 900, 'disp');
+        g.fillStyle = '#FFFFFF';
+        g.fillText("Comment 'CLOSER'", phoneX, cardY + 120);
+        g.font = font(22, 700, 'disp');
+        g.fillStyle = PAL.gold;
+        g.fillText(`For ${curSector.tag} System`, phoneX, cardY + 165);
+
+        const perks = [
+          "✅ Autonomous Telecalling Setup Guide",
+          "✅ WhatsApp Quotation Automation Template",
+          "✅ Live Demo Access with ₹0 Setup"
+        ];
+        perks.forEach((p, idx) => {
+          g.textAlign = 'left';
+          g.font = font(14, 600, 'ui');
+          g.fillStyle = '#FFFFFF';
+          g.fillText(p, sx + 60, cardY + 240 + idx * 45);
+        });
+
+        const bounce = Math.sin(t * 8) * 8;
+        g.textAlign = 'center';
+        g.font = font(38, 700, 'disp');
+        g.fillText("👇", phoneX, cardY + 415 + bounce);
+        g.font = font(14, 800, 'mono');
+        g.fillStyle = PAL.gold;
+        g.fillText("DROP 'CLOSER' IN COMMENTS NOW", phoneX, cardY + 455);
+      }
+
+      g.restore(); // end phone clip
+
+      // 5. Feature 5: Safe-Zone Subtitle Renderer at Y = 1360
+      renderHormoziCaptions(g, t, W, H, SUBTITLE_LINES);
+
+      // 6. Feature 6: Viral CTA Banner at Y = 1530 (Shown in closing scene)
+      renderViralCTABanner(g, t, W, H, {
+        keyword: 'CLOSER',
+        text: "💬 COMMENT 'CLOSER' FOR YOUR BUSINESS PLAYBOOK ➔",
+        showDuration: 8.0,
+        totalDuration: TOTAL_DUR
+      });
+
+      // 7. Cinematic Cut Transitions, Scanlines & Vignette
+      drawCutTransition(g, t, CUT_TIMES, W, H);
+      drawScanlines(g, W, H);
+      vignette(g, 0.45, W, H);
+
+      g.restore();
+    };
+
+    window.DUR = TOTAL_DUR;
+    window.READY = true;
+  </script>
+</body>
+</html>

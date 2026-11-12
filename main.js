@@ -264,6 +264,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnMarketHindi = document.getElementById('btnMarketHindi');
   const btnMarketIndia = document.getElementById('btnMarketIndia');
   const voiceSelector = document.getElementById('demoVoiceSelect') || document.getElementById('voiceSelector');
+  const dialectSelector = document.getElementById('demoDialectSelect');
+  const sectorSelector = document.getElementById('demoSectorSelect');
   const btnVoicePreview = document.getElementById('btnVoicePreview');
   const promptChipsContainer = document.getElementById('promptChips');
   const demoUtteranceInput = document.getElementById('demoUtteranceInput');
@@ -293,6 +295,7 @@ document.addEventListener('DOMContentLoaded', () => {
     usa: {
       marketLabel: 'USA (Luxury Real Estate — Maya Closer)',
       defaultVoice: 'maya_en',
+      defaultDialect: 'english_consultative',
       leadName: 'Harrison & Claire Sterling (+1-310-555-0144)',
       initialGreeting: 'Hey, good morning! Maya here from the Grand OMR Penthouse. I noticed you were exploring our private residences online. Quick question — are you looking for an investment or a spacious layout for your family?',
       defaultBudget: '$6,500,000 USD (Bel Air / Beverly Hills)',
@@ -314,10 +317,11 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     },
     tamil: {
-      marketLabel: 'Tamil Nadu (Chennai Luxury — Pallavi Closer)',
-      defaultVoice: 'pallavi_ta',
+      marketLabel: 'Tamil Nadu (Sarvam bulbul:v3 — Priya Closer)',
+      defaultVoice: 'priya_ta',
+      defaultDialect: 'chennai_tanglish',
       leadName: 'கார்த்திக் & திவ்யா சுந்தரம் (+91-98840-23456)',
-      initialGreeting: 'வணக்கம் Sir! OMR கிராண்ட் பென்ட்ஹவுஸ்ல இருந்து பல்லவி பேசுறேங்க. நம்ம luxury 3BHK residences பத்தி enquiry பண்ணியிருந்தீங்க. நீங்க ஃபேமிலியோட stay பண்ண பாக்குறீங்களா, இல்ல investment-க்காகவா Sir?',
+      initialGreeting: 'வணக்கம் Sir! OMR கிராண்ட் பென்ட்ஹவுஸ்ல இருந்து பிரியா பேசுறேங்க. நம்ம luxury 3BHK residences பத்தி enquiry பண்ணியிருந்தீங்க. நீங்க ஃபேமிலியோட stay பண்ண பாக்குறீங்களா, இல்ல investment-க்காகவா Sir?',
       defaultBudget: '₹2.85 Crore (OMR Waterfront, Chennai)',
       defaultFinancing: 'HDFC / SBI Pre-Approved Home Loan',
       initialStatus: 'QUALIFYING',
@@ -337,10 +341,11 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     },
     hindi: {
-      marketLabel: 'Pan-India (Luxury Telecaller — Swati Closer)',
-      defaultVoice: 'swati_hi',
+      marketLabel: 'Pan-India (Sarvam bulbul:v3 — Ritu Closer)',
+      defaultVoice: 'ritu_hi',
+      defaultDialect: 'delhi_hinglish',
       leadName: 'रोहित & अनन्या शर्मा (+91-98800-12345)',
-      initialGreeting: 'नमस्ते सर! ग्रैंड OMR पेंटहाउस से स्वाति बात कर रही हूँ। आपने हमारी luxury 3BHK residences के लिए enquiry की थी। सर, आप अपने परिवार के साथ रहने के लिए देख रहे हैं या फिर high-yield investment के लिए?',
+      initialGreeting: 'नमस्ते सर! ग्रैंड OMR पेंटहाउस से रितु बात कर रही हूँ। आपने हमारी luxury 3BHK residences के लिए enquiry की थी। सर, आप अपने परिवार के साथ रहने के लिए देख रहे हैं या फिर high-yield investment के लिए?',
       defaultBudget: '₹2.85 Crore (Luxury High-Rise)',
       defaultFinancing: 'HDFC / ICICI Pre-Sanctioned Home Loan',
       initialStatus: 'QUALIFYING',
@@ -389,9 +394,12 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // Set voice dropdown
+    // Set voice & dialect dropdowns
     if (voiceSelector) {
       voiceSelector.value = config.defaultVoice;
+    }
+    if (dialectSelector && config.defaultDialect) {
+      dialectSelector.value = config.defaultDialect;
     }
 
     // Set greeting & initial response
@@ -437,12 +445,14 @@ document.addEventListener('DOMContentLoaded', () => {
     notifyBackendMarketMode(market);
   }
 
+  const closerSessionId = `web_${Math.random().toString(36).slice(2, 10)}`;
+
   async function notifyBackendMarketMode(market) {
     try {
       await fetch('/api/market_mode', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mode: market })
+        body: JSON.stringify({ session_id: closerSessionId, mode: market })
       });
     } catch {
       // Backend not running on same origin; ignore silently
@@ -532,6 +542,14 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnMarketIndia) {
     btnMarketIndia.addEventListener('click', () => updateMarketUI('hindi'));
   }
+  if (voiceSelector) {
+    voiceSelector.addEventListener('change', (e) => {
+      const val = e.target.value;
+      if (val === 'priya_ta' || val === 'pallavi_ta') updateMarketUI('tamil');
+      else if (val === 'ritu_hi' || val === 'swati_hi') updateMarketUI('hindi');
+      else updateMarketUI('usa');
+    });
+  }
 
   // -------------------------------------------------------------------------
   // 4. Voice Synthesis & Audio Playback Pipeline
@@ -558,12 +576,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function playAudioResponse(audioBase64, fallbackText, onEndedCallback) {
+  function playAudioResponse(audioBase64, fallbackText, onEndedCallback, audioFormat = 'wav') {
     if (audioBase64) {
       lastAudioBase64 = audioBase64;
       if (btnReplayAudio) btnReplayAudio.style.display = 'inline-flex';
 
-      demoAudioPlayer.src = `data:audio/wav;base64,${audioBase64}`;
+      const mime = audioFormat === 'mp3' ? 'audio/mpeg' : 'audio/wav';
+      demoAudioPlayer.src = `data:${mime};base64,${audioBase64}`;
       startSpeakingUI();
 
       demoAudioPlayer.play().catch(() => {
@@ -641,12 +660,12 @@ document.addEventListener('DOMContentLoaded', () => {
       let audioSrc = '/demos/en_opener.wav';
       let sampleMsg = 'Hey, good morning! Maya here from the Grand OMR Penthouse. Quick question — are you looking for an investment or a spacious layout for your family?';
 
-      if (selectedVoice === 'pallavi_ta' || selectedVoice.includes('ta') || selectedVoice.includes('tamil')) {
+      if (selectedVoice === 'priya_ta' || selectedVoice === 'pallavi_ta' || selectedVoice.includes('ta') || selectedVoice.includes('tamil')) {
         audioSrc = '/demos/ta_opener.mp3';
-        sampleMsg = 'வணக்கம் Sir! OMR கிராண்ட் பென்ட்ஹவுஸ்ல இருந்து பல்லவி பேசுறேங்க. நம்ம luxury 3BHK residences பத்தி enquiry பண்ணியிருந்தீங்க.';
-      } else if (selectedVoice === 'swati_hi' || selectedVoice.includes('hi') || selectedVoice.includes('hindi')) {
+        sampleMsg = 'வணக்கம் Sir! OMR கிராண்ட் பென்ட்ஹவுஸ்ல இருந்து பிரியா பேசுறேங்க. நம்ம luxury 3BHK residences பத்தி தெரிஞ்சுக்க enquiry பண்ணியிருந்தீங்க — நீங்க ஃபேமிலியோட stay பண்ண பாக்குறீங்களா, இல்ல investment-க்காகவா Sir?';
+      } else if (selectedVoice === 'ritu_hi' || selectedVoice === 'swati_hi' || selectedVoice.includes('hi') || selectedVoice.includes('hindi')) {
         audioSrc = '/demos/hi_opener.mp3';
-        sampleMsg = 'नमस्ते सर! ग्रैंड OMR पेंटहाउस से स्वाति बात कर रही हूँ। आपने हमारी luxury 3BHK residences के लिए enquiry की थी।';
+        sampleMsg = 'नमस्ते सर! ग्रैंड OMR पेंटहाउस से रितु बात कर रही हूँ। आपने हमारी luxury 3BHK residences के लिए enquiry की थी — आप अपने परिवार के साथ रहने के लिए देख रहे हैं या फिर high-yield investment के लिए?';
       }
 
       if (modalAIText) modalAIText.textContent = `"${sampleMsg}"`;
@@ -674,6 +693,8 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!utteranceText || !utteranceText.trim()) return;
     const text = utteranceText.trim();
     const selectedVoice = voiceSelector ? voiceSelector.value : 'en-US-AriaNeural';
+    const selectedDialect = dialectSelector ? dialectSelector.value : undefined;
+    const selectedSector = sectorSelector ? sectorSelector.value : 'real_estate';
 
     if (demoSendBtn) {
       demoSendBtn.disabled = true;
@@ -685,20 +706,29 @@ document.addEventListener('DOMContentLoaded', () => {
       const res = await fetch('/api/turn', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ utterance: text, voice: selectedVoice })
+        body: JSON.stringify({
+          session_id: closerSessionId,
+          utterance: text,
+          voice: selectedVoice,
+          dialect: selectedDialect,
+          sector: selectedSector
+        })
       });
 
       if (res.ok) {
         const data = await res.json();
         if (modalAIText) modalAIText.textContent = `"${data.reply}"`;
+        if (modalVadStatus && data.tts_provider) {
+          modalVadStatus.textContent = `● VOICE: ${data.tts_provider}`;
+        }
 
         if (data.dossier) {
           if (modalDossierStatus) {
             modalDossierStatus.textContent = data.dossier.qualified ? 'QUALIFIED' : 'QUALIFYING';
             modalDossierStatus.className = data.dossier.qualified ? 'dossier-badge green' : 'dossier-badge';
           }
-          if (modalDossierBudget && data.dossier.budget_bracket) {
-            modalDossierBudget.textContent = data.dossier.budget_bracket;
+          if (modalDossierBudget && (data.dossier.budget_inr_text || data.dossier.budget_bracket)) {
+            modalDossierBudget.textContent = data.dossier.budget_inr_text || data.dossier.budget_bracket;
           }
           if (modalDossierFinancing && data.dossier.financing_status) {
             modalDossierFinancing.textContent = data.dossier.financing_status;
@@ -706,13 +736,14 @@ document.addEventListener('DOMContentLoaded', () => {
           if (modalDossierAction && data.dossier.follow_up_note) {
             modalDossierAction.textContent = data.dossier.follow_up_note;
           }
-          if (modalIntentFill && data.dossier.qualification_score !== undefined) {
-            modalIntentFill.style.width = `${data.dossier.qualification_score}%`;
-            modalIntentText.textContent = `${data.dossier.qualification_score}% Intent Score`;
+          if (modalIntentFill && (data.dossier.intent_score !== undefined || data.dossier.qualification_score !== undefined)) {
+            const scoreVal = data.dossier.intent_score !== undefined ? data.dossier.intent_score : data.dossier.qualification_score;
+            modalIntentFill.style.width = `${scoreVal}%`;
+            modalIntentText.textContent = `${scoreVal}% Intent Score`;
           }
         }
 
-        playAudioResponse(data.audio_base64, data.reply);
+        playAudioResponse(data.audio_base64, data.reply, null, data.audio_format || 'wav');
         if (demoSendBtn) {
           demoSendBtn.disabled = false;
           demoSendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> <span>Simulate Turn</span>';
@@ -930,8 +961,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const textMap = {
       'english': "Hey, good morning! Maya here from the Grand OMR Penthouse. I noticed you were exploring our private residences online. Quick question — are you looking for an investment or a spacious layout for your family?",
       'usa': "Hey, good morning! Maya here from the Grand OMR Penthouse. I noticed you were exploring our private residences online. Quick question — are you looking for an investment or a spacious layout for your family?",
-      'tamil': "வணக்கம் Sir! OMR கிராண்ட் பென்ட்ஹவுஸ்ல இருந்து பல்லவி பேசுறேங்க. நம்ம luxury 3BHK residences பத்தி தெரிஞ்சுக்க enquiry பண்ணியிருந்தீங்க. நீங்க ஃபேமிலியோட stay பண்ண பாக்குறீங்களா, இல்ல investment-க்காகவா Sir?",
-      'hindi': "नमस्ते सर! ग्रैंड OMR पेंटहाउस से स्वाति बात कर रही हूँ। आपने हमारी luxury 3BHK residences के लिए enquiry की थी। सर, आप अपने परिवार के साथ रहने के लिए देख रहे हैं या फिर high-yield investment के लिए?"
+      'tamil': "வணக்கம் Sir! OMR கிராண்ட் பென்ட்ஹவுஸ்ல இருந்து பிரியா பேசுறேங்க. நம்ம luxury 3BHK residences பத்தி தெரிஞ்சுக்க enquiry பண்ணியிருந்தீங்க. நீங்க ஃபேமிலியோட stay பண்ண பாக்குறீங்களா, இல்ல investment-க்காகவா Sir?",
+      'hindi': "नमस्ते सर! ग्रैंड OMR पेंटहाउस से रितु बात कर रही हूँ। आपने हमारी luxury 3BHK residences के लिए enquiry की थी। सर, आप अपने परिवार के साथ रहने के लिए देख रहे हैं या फिर high-yield investment के लिए?"
     };
     const text = textMap[market] || textMap['english'];
     const voice = market === 'tamil' ? 'tamil' : (market === 'hindi' ? 'hindi' : 'english');
@@ -985,43 +1016,43 @@ document.addEventListener('DOMContentLoaded', () => {
       text: "Terrific! I have reserved the exclusive sunrise penthouse preview for you this Saturday at 11 AM. I am texting you the VIP gate pass right now. Looking forward to welcoming you, Sir."
     },
 
-    // Tamil Scenarios (பல்லவி — Sarvam Bulbul v3 Tanglish)
+    // Tamil Scenarios (பிரியா — Sarvam Bulbul v3 Tanglish)
     ta_opener: {
       voice: 'tamil',
       audio_url: '/demos/ta_opener.mp3',
-      speaker: 'CLOSER AI (பல்லவி — Sweet Tanglish Closer):',
-      text: "வணக்கம் Sir! OMR கிராண்ட் பென்ட்ஹவுஸ்ல இருந்து பல்லவி பேசுறேங்க. நம்ம luxury 3BHK residences பத்தி தெரிஞ்சுக்க enquiry பண்ணியிருந்தீங்க. நீங்க ஃபேமிலியோட stay பண்ண பாக்குறீங்களா, இல்ல investment-க்காகவா Sir?"
+      speaker: 'CLOSER AI (பிரியா — Sarvam bulbul:v3 Tanglish):',
+      text: "வணக்கம் Sir! OMR கிராண்ட் பென்ட்ஹவுஸ்ல இருந்து பிரியா பேசுறேங்க. நம்ம luxury 3BHK residences பத்தி தெரிஞ்சுக்க enquiry பண்ணியிருந்தீங்க. நீங்க ஃபேமிலியோட stay பண்ண பாக்குறீங்களா, இல்ல investment-க்காகவா Sir?"
     },
     ta_objection: {
       voice: 'tamil',
       audio_url: '/demos/ta_objection.mp3',
-      speaker: 'CLOSER AI (பல்லவி — Sweet Tanglish Closer):',
-      text: "Sir, pricing மற்றும் special discount பத்தி நம்ம நேரடியா site visit வரும்போது developer approval-ஓட பேசிக்கலாமுங்க. இந்த வியாழக்கிழமை சாயங்காலம் 4 மணிக்கு பார்க்கலாமா, இல்ல சனிக்கிழமை காலைல பார்க்கலாமா Sir?"
+      speaker: 'CLOSER AI (பிரியா — Sarvam bulbul:v3 Tanglish):',
+      text: "Sir, pricing மற்றும் special discount பத்தி நம்ம நேரடியா VIP site visit வரும்போது developer approval-ஓட பேசிக்கலாமுங்க. இந்த வியாழக்கிழமை சாயங்காலம் 4 மணிக்கு பார்க்கலாமா, இல்ல சனிக்கிழமை காலைல பார்க்கலாமா Sir?"
     },
     ta_closing: {
       voice: 'tamil',
       audio_url: '/demos/ta_closing.mp3',
-      speaker: 'CLOSER AI (பல்லவி — Sweet Tanglish Closer):',
+      speaker: 'CLOSER AI (பிரியா — Sarvam bulbul:v3 Tanglish):',
       text: "ரொம்ப சந்தோஷம் Sir! இந்த சனிக்கிழமை காலைல 11 மணிக்கு உங்க VIP walkthrough slot book பண்ணிட்டேங்க. உங்க WhatsApp-க்கு location map மற்றும் gate pass உடனே அனுப்பிடுறேன் Sir. நன்றி!"
     },
 
-    // Hindi Scenarios (स्वाति — Sarvam Bulbul v3 Hinglish)
+    // Hindi Scenarios (रितु — Sarvam Bulbul v3 Hinglish)
     hi_opener: {
       voice: 'hindi',
       audio_url: '/demos/hi_opener.mp3',
-      speaker: 'CLOSER AI (स्वाति — Sweet Hinglish Closer):',
-      text: "नमस्ते सर! ग्रैंड OMR पेंटहाउस से स्वाति बात कर रही हूँ। आपने हमारी luxury 3BHK residences के लिए enquiry की थी। सर, आप अपने परिवार के साथ रहने के लिए देख रहे हैं या फिर high-yield investment के लिए?"
+      speaker: 'CLOSER AI (रितु — Sarvam bulbul:v3 Hinglish):',
+      text: "नमस्ते सर! ग्रैंड OMR पेंटहाउस से रितु बात कर रही हूँ। आपने हमारी luxury 3BHK residences के लिए enquiry की थी। सर, आप अपने परिवार के साथ रहने के लिए देख रहे हैं या फिर high-yield investment के लिए?"
     },
     hi_objection: {
       voice: 'hindi',
       audio_url: '/demos/hi_objection.mp3',
-      speaker: 'CLOSER AI (स्वाति — Sweet Hinglish Closer):',
+      speaker: 'CLOSER AI (रितु — Sarvam bulbul:v3 Hinglish):',
       text: "हाँजी बिल्कुल सर! डिस्काउंट और exclusive payment plan के बारे में हम site visit पर बैठकर developer के साथ final कर सकते हैं जी। क्या गुरुवार शाम 4 बजे या शनिवार सुबह का समय आपके लिए सुविधाजनक रहेगा?"
     },
     hi_closing: {
       voice: 'hindi',
       audio_url: '/demos/hi_closing.mp3',
-      speaker: 'CLOSER AI (स्वाति — Sweet Hinglish Closer):',
+      speaker: 'CLOSER AI (रितु — Sarvam bulbul:v3 Hinglish):',
       text: "बहुत बढ़िया सर! मैंने इस शनिवार सुबह 11 बजे आपका VIP private walkthrough confirm कर दिया है। लोकेशन और गेट पास आपके WhatsApp पर भेज रही हूँ जी। थैंक यू सो मच सर!"
     }
   };
@@ -1114,7 +1145,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (res.ok) {
           const data = await res.json();
           if (data.audio_base64) {
-            playAudioResponse(data.audio_base64, data.reply, resetStudioUI);
+            playAudioResponse(data.audio_base64, data.reply, resetStudioUI, data.audio_format || 'wav');
             return;
           }
         }

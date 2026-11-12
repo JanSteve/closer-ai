@@ -11,8 +11,13 @@ import sys
 from pathlib import Path
 
 ROOT_DIR = Path(__file__).resolve().parent
+if str(ROOT_DIR / "src") not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR / "src"))
+# Ensure top-level `closer` package (telephony, voice_engine, testing) takes precedence at index 0,
+# while `src.closer` remains importable from ROOT_DIR.
+if str(ROOT_DIR) in sys.path:
+    sys.path.remove(str(ROOT_DIR))
 sys.path.insert(0, str(ROOT_DIR))
-sys.path.insert(0, str(ROOT_DIR / "src"))
 
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
@@ -32,22 +37,50 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Engine instances for turn handling
+# Engine instances & bounded session store for turn handling
+_MAX_SESSIONS = 256
+_session_engines: dict = {}
+_live_leads: list = []
+
 try:
     from src.closer.agent.conversation import ConversationEngine
     from src.closer.voice.tts import EdgeTTSVoiceEngine
     from src.closer.llm.models import list_available_models, get_model_profile
     from src.closer.llm.router import OpenLLMRouter
     from src.closer.integrations.apilayer import APILayerUnifiedClient
+    from closer.telephony.indic_neural_engine import IndicNeuralVoiceEngine
+    from closer.telephony.dialect_prosody import IndicDialectProsodyEngine, SUPPORTED_DIALECTS
     _app_conversation_engine = ConversationEngine(market_mode="usa")
+    _session_engines["default"] = _app_conversation_engine
     _app_tts_engine = EdgeTTSVoiceEngine()
+    _app_indic_engine = IndicNeuralVoiceEngine()
     _app_llm_router = _app_conversation_engine.llm_router
     _app_apilayer_client = APILayerUnifiedClient()
 except Exception:
     _app_conversation_engine = None
     _app_tts_engine = None
+    _app_indic_engine = None
     _app_llm_router = None
     _app_apilayer_client = None
+
+
+def _get_session_engine(session_id: str = "default"):
+    """Retrieves or creates an isolated ConversationEngine per web session."""
+    global _app_conversation_engine
+    sid = (session_id or "default").strip()[:64] or "default"
+    if sid in _session_engines:
+        return _session_engines[sid]
+    if "ConversationEngine" not in globals():
+        return None
+    if len(_session_engines) >= _MAX_SESSIONS:
+        oldest = next((k for k in _session_engines if k != "default"), None)
+        if oldest:
+            del _session_engines[oldest]
+    eng = ConversationEngine(market_mode="usa")
+    _session_engines[sid] = eng
+    if sid == "default":
+        _app_conversation_engine = eng
+    return eng
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -143,36 +176,99 @@ async def serve_font(filename: str):
     return Response(status_code=404)
 
 
+@app.get("/api/health")
+async def get_health():
+    """Returns operational readiness, Indic GitHub TTS backend capabilities, and session telemetry."""
+    caps = {}
+    if _app_indic_engine:
+        try:
+            caps = _app_indic_engine.get_backend_capabilities()
+        except Exception:
+            caps = {}
+    return JSONResponse(content={
+        "status": "operational",
+        "active_sessions": len(_session_engines),
+        "live_leads_captured": len(_live_leads),
+        "tts_engine_ready": _app_tts_engine is not None or _app_indic_engine is not None,
+        "conversation_engine_ready": _app_conversation_engine is not None,
+        "indic_capabilities": caps,
+    })
+
+
+@app.get("/api/voices/capabilities")
+async def get_voice_capabilities():
+    """Exposes supported regional Hindi/Tamil dialects and open-source GitHub voice backends."""
+    caps = _app_indic_engine.get_backend_capabilities() if _app_indic_engine else {}
+    dialects = SUPPORTED_DIALECTS if "SUPPORTED_DIALECTS" in globals() else {}
+    return JSONResponse(content={
+        "dialects": dialects,
+        "capabilities": caps,
+    })
+
+
 @app.get("/api/leads")
 async def get_leads():
+    base = []
     try:
         from src.closer.web.dashboard import MOCK_LEADS
-        return JSONResponse(content=MOCK_LEADS)
+        base = list(MOCK_LEADS)
     except Exception:
-        return JSONResponse(content=[])
+        base = []
+    return JSONResponse(content=_live_leads + base)
 
 
-@app.post("/api/market_mode")
-async def set_market_mode(request: Request):
-    global _app_conversation_engine
+@app.post("/api/agent/configure")
+async def configure_agent(request: Request):
+    """Configures a user's business sector, brand name, and market language on their session."""
     try:
         data = await request.json()
     except Exception:
         data = {}
-    mode = data.get("mode", "usa").lower()
-    if _app_conversation_engine:
-        _app_conversation_engine.set_market_mode(mode)
-        greeting = _app_conversation_engine.get_initial_greeting()
-        dossier = _app_conversation_engine.export_dossier().model_dump()
+    session_id = str(data.get("session_id", "default"))
+    sector = str(data.get("sector", "real_estate"))
+    business_name = data.get("business_name")
+    market_mode = data.get("market_mode")
+
+    eng = _get_session_engine(session_id)
+    if not eng:
+        return JSONResponse(status_code=503, content={"error": "Conversation engine unavailable"})
+    if hasattr(eng, "configure_business"):
+        eng.configure_business(sector=sector, business_name=business_name)
+    if market_mode:
+        eng.set_market_mode(str(market_mode))
+    return JSONResponse(content={
+        "success": True,
+        "session_id": session_id,
+        "sector": getattr(eng, "sector", sector),
+        "business_name": getattr(eng, "business_name", business_name),
+        "market_mode": eng.market_mode,
+    })
+
+
+@app.post("/api/market_mode")
+async def set_market_mode(request: Request):
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+    session_id = str(data.get("session_id", "default"))
+    mode = str(data.get("mode", "usa")).lower()
+    eng = _get_session_engine(session_id)
+    if eng:
+        eng.set_market_mode(mode)
+        greeting = eng.get_initial_greeting()
+        dossier = eng.export_dossier().model_dump()
     else:
-        if mode == "hindi":
+        if mode == "tamil":
+            greeting = "வணக்கம் Sir... CLOSER AI-ல இருந்து பல்லவி பேசுறேங்க. உங்க enquiry பத்தி கொஞ்சம் பேசலாமா Sir?"
+        elif mode == "hindi":
             greeting = "नमस्ते जी! क्लोज़र एआई कस्टमर सपोर्ट में आपका स्वागत है। मैं आपकी प्रॉपर्टी सर्च और साइट विज़िट में किस प्रकार सहायता कर सकती हूँ?"
         elif mode == "india":
             greeting = "Namaste! How may I assist you with your luxury property or service inquiry today?"
         else:
             greeting = "Hello, this is CLOSER AI luxury real estate concierge. How can I assist you today?"
         dossier = {"market_mode": mode}
-    return JSONResponse(content={"success": True, "mode": mode, "greeting": greeting, "dossier": dossier})
+    return JSONResponse(content={"success": True, "session_id": session_id, "mode": mode, "greeting": greeting, "dossier": dossier})
 
 
 @app.get("/api/llm_models")
@@ -217,89 +313,176 @@ async def select_llm_model(request: Request):
 
 
 @app.post("/api/reset")
-async def reset_conversation():
+async def reset_conversation(request: Request = None):
     global _app_conversation_engine
+    session_id = "default"
+    mode = "usa"
+    sector = "real_estate"
+    business_name = None
+    if request is not None:
+        try:
+            body = await request.json()
+            if isinstance(body, dict):
+                session_id = str(body.get("session_id", "default"))
+                mode = str(body.get("market_mode", "usa"))
+                sector = str(body.get("sector", "real_estate"))
+                business_name = body.get("business_name")
+        except Exception:
+            pass
     try:
         from src.closer.agent.conversation import ConversationEngine
-        _app_conversation_engine = ConversationEngine(market_mode="usa")
-        greeting = _app_conversation_engine.get_initial_greeting()
-        dossier = _app_conversation_engine.export_dossier().model_dump()
+        fresh = ConversationEngine(market_mode=mode, sector=sector, business_name=business_name)
+        _session_engines[session_id] = fresh
+        if session_id == "default":
+            _app_conversation_engine = fresh
+        greeting = fresh.get_initial_greeting()
+        dossier = fresh.export_dossier().model_dump()
     except Exception:
         greeting = "Hello, this is CLOSER AI luxury real estate concierge. How can I assist you today?"
-        dossier = {"market_mode": "usa"}
-    return JSONResponse(content={"success": True, "greeting": greeting, "dossier": dossier})
+        dossier = {"market_mode": mode}
+    return JSONResponse(content={"success": True, "session_id": session_id, "greeting": greeting, "dossier": dossier})
+
+
+def _infer_indic_language(voice: str, utterance: str) -> str:
+    v_lower = (voice or "").lower()
+    if any(k in v_lower for k in ("tam", "pallavi", "valluvar", "ta-in", "priya")):
+        return "tamil"
+    if any(k in v_lower for k in ("hi", "swati", "swara", "madhur", "hin", "ritu")):
+        return "hindi"
+    if any(k in v_lower for k in ("neerja", "prabhat", "india", "en-in")):
+        return "india"
+    # Auto-detect Devanagari or Tamil script in customer utterance if generic voice passed
+    if any("\u0b80" <= ch <= "\u0bff" for ch in utterance):
+        return "tamil"
+    if any("\u0900" <= ch <= "\u097f" for ch in utterance):
+        return "hindi"
+    return "usa"
 
 
 @app.post("/api/turn")
 async def process_turn(request: Request):
-    global _app_conversation_engine, _app_tts_engine
+    global _app_conversation_engine, _app_tts_engine, _app_indic_engine
     try:
         data = await request.json()
     except Exception:
         data = {}
-    utterance = data.get("utterance", "")
-    voice = data.get("voice", "en-US-AriaNeural")
-    custom_text = data.get("text", "")
+
+    session_id = str(data.get("session_id", "default"))
+    utterance = str(data.get("utterance", "") or "")
+    voice = str(data.get("voice", "en-US-AriaNeural") or "en-US-AriaNeural")
+    custom_text = str(data.get("text", "") or "")
     rate = data.get("rate")
     pitch = data.get("pitch")
+    dialect = data.get("dialect")
+    tts_backend = str(data.get("tts_backend", "auto") or "auto")
+    sector = data.get("sector")
+    business_name = data.get("business_name")
+    explicit_mode = data.get("market_mode")
+
+    if not utterance.strip() and not custom_text.strip():
+        return JSONResponse(status_code=400, content={"error": "Utterance must not be empty"})
+    if len(utterance) > 2000 or len(custom_text) > 2000:
+        return JSONResponse(status_code=400, content={"error": "Utterance exceeds 2000 character limit"})
+
+    engine = _get_session_engine(session_id)
+    inferred_mode = str(explicit_mode).lower().strip() if explicit_mode else _infer_indic_language(voice, utterance)
+    if engine:
+        if sector or business_name:
+            engine.configure_business(
+                sector=str(sector or getattr(engine, "sector", "real_estate")),
+                business_name=business_name,
+            )
+        if inferred_mode in ("tamil", "hindi", "india", "usa") and engine.market_mode != inferred_mode:
+            engine.set_market_mode(inferred_mode)
 
     if utterance in ("PREVIEW_SAMPLE", "STUDIO_SAMPLE"):
         if custom_text:
             reply = custom_text
-        elif "tam" in voice.lower() or "pallavi" in voice.lower():
-            reply = "வணக்கம் Sir! OMR கிராண்ட் பென்ட்ஹவுஸ்ல இருந்து பல்லவி பேசுறேங்க. நம்ம luxury 3BHK residences பத்தி தெரிஞ்சுக்க enquiry பண்ணியிருந்தீங்க. நீங்க ஃபேமிலியோட stay பண்ண பாக்குறீங்களா, இல்ல investment-க்காகவா Sir?"
-        elif "hi" in voice.lower() or "swati" in voice.lower() or "swara" in voice.lower():
-            reply = "नमस्ते सर! ग्रैंड OMR पेंटहाउस से स्वाति बात कर रही हूँ। आपने हमारी luxury 3BHK residences के लिए enquiry की थी। सर, आप अपने परिवार के साथ रहने के लिए देख रहे हैं या फिर high-yield investment के लिए?"
+        elif inferred_mode == "tamil":
+            reply = "வணக்கம் Sir... OMR கிராண்ட் பென்ட்ஹவுஸ்ல இருந்து பிரியா பேசுறேங்க. நம்ம luxury 3BHK residences பத்தி தெரிஞ்சுக்க enquiry பண்ணியிருந்தீங்க — நீங்க ஃபேமிலியோட stay பண்ண பாக்குறீங்களா, இல்ல investment-க்காகவா Sir?"
+        elif inferred_mode == "hindi":
+            reply = "नमस्ते सर... ग्रैंड OMR पेंटहाउस से रितु बात कर रही हूँ। आपने हमारी luxury 3BHK residences के लिए enquiry की थी — आप अपने परिवार के साथ रहने के लिए देख रहे हैं या फिर high-yield investment के लिए?"
         else:
             reply = "Hey, good morning! Maya here from the Grand OMR Penthouse. I noticed you were exploring our private residences online. Quick question — are you looking for an investment or a spacious layout for your family?"
-    elif _app_conversation_engine:
-        reply = _app_conversation_engine.process_user_turn(utterance)
+    elif engine:
+        reply = engine.process_user_turn(utterance)
     else:
         reply = f"Thank you for your inquiry. CLOSER AI is processing: {utterance}"
 
-    # Map voice aliases to the 3 production models
-    v_lower = voice.lower()
-    if "tam" in v_lower or "pallavi" in v_lower:
-        actual_voice = "ta-IN-PallaviNeural"
-        rate = rate or "-3%"
-        pitch = pitch or "+1Hz"
+    audio_b64 = ""
+    audio_fmt = "wav"
+    tts_provider = "none"
+    tts_error = None
+
+    if inferred_mode in ("tamil", "hindi"):
         try:
-            from closer.telephony.phonetic_normalizer import IndicPhoneticNormalizer
-            reply = IndicPhoneticNormalizer.normalize(reply, "tamil")
-        except Exception:
-            pass
-    elif "hi" in v_lower or "swati" in v_lower or "swara" in v_lower:
-        actual_voice = "hi-IN-SwaraNeural"
-        rate = rate or "-4%"
-        pitch = pitch or "+1Hz"
-        try:
-            from closer.telephony.phonetic_normalizer import IndicPhoneticNormalizer
-            reply = IndicPhoneticNormalizer.normalize(reply, "hindi")
-        except Exception:
-            pass
+            indic_eng = _app_indic_engine or IndicNeuralVoiceEngine()
+            spoken_reply = IndicDialectProsodyEngine.humanize(
+                reply, language=inferred_mode, dialect=dialect, inject_pauses=True
+            )
+            audio_bytes, tts_provider, _, audio_fmt = await indic_eng.synthesize(
+                text=spoken_reply,
+                language=inferred_mode,
+                dialect=dialect,
+                backend=tts_backend,
+                rate=rate,
+                pitch=pitch,
+            )
+            reply = spoken_reply
+            audio_b64 = base64.b64encode(audio_bytes).decode("utf-8")
+        except Exception as exc:
+            tts_error = f"{type(exc).__name__}: {exc}"
     else:
-        actual_voice = "en-US-AriaNeural"
+        v_lower = voice.lower()
+        if "india" in v_lower or "neerja" in v_lower or inferred_mode == "india":
+            actual_voice = "en-IN-NeerjaExpressiveNeural"
+        elif "prabhat" in v_lower:
+            actual_voice = "en-IN-PrabhatNeural"
+        else:
+            actual_voice = voice if "-" in voice else "en-US-AriaNeural"
         rate = rate or "-3%"
         pitch = pitch or "+0Hz"
+        if _app_tts_engine:
+            try:
+                audio_bytes, _ = _app_tts_engine.synthesize_sync(reply, voice=actual_voice, rate=rate, pitch=pitch)
+                audio_b64 = base64.b64encode(audio_bytes).decode("utf-8")
+                tts_provider = getattr(_app_tts_engine, "last_provider_used", "EdgeTTSVoiceEngine")
+            except Exception as exc:
+                audio_b64 = ""
+                tts_error = f"{type(exc).__name__}: {exc}"
 
-    audio_b64 = ""
-    if _app_tts_engine:
-        try:
-            audio_bytes, _ = _app_tts_engine.synthesize_sync(reply, voice=actual_voice, rate=rate, pitch=pitch)
-            audio_b64 = base64.b64encode(audio_bytes).decode("utf-8")
-        except Exception:
-            audio_b64 = ""
+    dossier = engine.export_dossier().model_dump() if engine else {}
+    if dossier and (dossier.get("qualified") or dossier.get("appointment_datetime") or dossier.get("whatsapp_dispatched")):
+        lead_record = {
+            "session_id": session_id,
+            "full_name": dossier.get("full_name", "Web Lead"),
+            "market_region": dossier.get("market_region", inferred_mode.upper()),
+            "intent_score": dossier.get("intent_score", 0),
+            "qualified": dossier.get("qualified", False),
+            "appointment": dossier.get("appointment_datetime"),
+            "summary": dossier.get("summary", ""),
+        }
+        existing_idx = next((i for i, item in enumerate(_live_leads) if item.get("session_id") == session_id), None)
+        if existing_idx is not None:
+            _live_leads[existing_idx] = lead_record
+        else:
+            _live_leads.insert(0, lead_record)
 
-    dossier = _app_conversation_engine.export_dossier().model_dump() if _app_conversation_engine else {}
-    llm_info = _app_conversation_engine.llm_router.get_active_model_info() if (_app_conversation_engine and hasattr(_app_conversation_engine, "llm_router") and _app_conversation_engine.llm_router) else {
+    llm_info = engine.llm_router.get_active_model_info() if (engine and hasattr(engine, "llm_router") and engine.llm_router) else {
         "model_id": "llama-3.3-70b",
         "parameter_scale": "70 Billion",
         "target_latency_ms": 88,
         "last_tier_used": "reflex_edge"
     }
     return JSONResponse(content={
+        "session_id": session_id,
+        "market_mode": engine.market_mode if engine else inferred_mode,
+        "sector": getattr(engine, "sector", "real_estate") if engine else "real_estate",
         "reply": reply,
         "audio_base64": audio_b64,
+        "audio_format": audio_fmt,
+        "tts_provider": tts_provider,
+        "tts_error": tts_error,
         "dossier": dossier,
         "llm_model": llm_info.get("model_id"),
         "llm_parameters": llm_info.get("parameter_scale"),

@@ -340,3 +340,197 @@ class MiroFishSwarmSimulator:
             "archetypes": archetype_summary,
             "detailed_personas": results,
         }
+
+    # Real-World Multi-Sector & Dialect Personas for End-to-End Live Audit
+    LIVE_E2E_PERSONAS: List[Dict[str, object]] = [
+        {
+            "id": "e2e_chennai_tanglish_re",
+            "name": "Karthik Subramanian (Chennai IT Director)",
+            "language": "tamil",
+            "voice": "tamil",
+            "dialect": "chennai_tanglish",
+            "sector": "real_estate",
+            "business_name": "Grand OMR Residences",
+            "dialogues": [
+                "ஹலோ மேடம், OMR 3BHK விலை ரொம்ப ஜாஸ்தி சொல்றீங்களே, 10% டிஸ்கவுண்ட் கிடைக்குமா?",
+                "சரிங்க, இந்த சனிக்கிழமை காலைல 11 மணிக்கு நேர்ல வந்து பாக்குறேன்.",
+            ],
+        },
+        {
+            "id": "e2e_coimbatore_clinic_ta",
+            "name": "Dr. Aravind (Coimbatore Hair & Dental Lead)",
+            "language": "tamil",
+            "voice": "tamil",
+            "dialect": "coimbatore_tamil",
+            "sector": "healthcare",
+            "business_name": "Apollo Smile & Hair Clinic",
+            "dialogues": [
+                "நான் பிஸியா மீட்டிங்ல இருக்கேன், consultation details WhatsApp பண்ணுங்க.",
+                "நாளைக்கு காலைல 11:30 மணிக்கு பார்க்கலாம்.",
+            ],
+        },
+        {
+            "id": "e2e_delhi_solar_hi",
+            "name": "Rajesh Sharma (Rohini Homeowner)",
+            "language": "hindi",
+            "voice": "hindi",
+            "dialect": "delhi_hinglish",
+            "sector": "solar",
+            "business_name": "SuryaGrid Solar",
+            "dialogues": [
+                "भाई रेट बहुत ज्यादा लग रहा है, सब्सिडी और डिस्काउंट कितना मिलेगा?",
+                "ठीक है, कल सुबह 10:30 बजे रूफ सर्वे बुक कर दीजिए।",
+            ],
+        },
+        {
+            "id": "e2e_mumbai_edtech_hi",
+            "name": "Sneha Patil (Andheri Working Professional)",
+            "language": "hindi",
+            "voice": "hindi",
+            "dialect": "mumbai_hinglish",
+            "sector": "edtech",
+            "business_name": "SkillCraft Academy",
+            "dialogues": [
+                "फीस कितनी है और कोई डिस्काउंट ऑफर चल रहा है क्या?",
+                "हाँ शनिवार सुबह 11 बजे डेमो क्लास के लिए ठीक रहेगा।",
+            ],
+        },
+        {
+            "id": "e2e_us_luxury_en",
+            "name": "Jonathan Vance (Bel Air Buyer)",
+            "language": "english",
+            "voice": "english",
+            "dialect": "english_consultative",
+            "sector": "real_estate",
+            "business_name": "Daniel & Associates Luxury Realty",
+            "dialogues": [
+                "Looking for a $4.5M modern architectural estate in Bel Air, paying cash within 30 days.",
+                "Saturday at 11 AM works for a private tour.",
+            ],
+        },
+    ]
+
+    async def synthesize_fake_customer_audio(
+        self,
+        utterance: str,
+        language: str,
+        dialect: Optional[str] = None,
+    ) -> Dict[str, object]:
+        """Generates spoken fake-customer audio via Fish-Speech (if running) or Edge-TTS."""
+        from closer.telephony.indic_neural_engine import IndicNeuralVoiceEngine
+
+        engine = IndicNeuralVoiceEngine()
+        audio_bytes, provider, latency_s, fmt = await engine.synthesize(
+            text=utterance,
+            language=language,
+            dialect=dialect,
+            customer_mode=True,
+        )
+        return {
+            "provider": provider,
+            "format": fmt,
+            "bytes": len(audio_bytes),
+            "latency_ms": round(latency_s * 1000, 1),
+        }
+
+    def run_real_e2e_audit(self, with_audio: bool = True, include_customer_fish_voice: bool = False) -> Dict:
+        """Executes end-to-end fake-customer testing directly against the live FastAPI /api/turn app."""
+        import asyncio
+        import base64
+        import time
+        from fastapi.testclient import TestClient
+        import main
+
+        client = TestClient(main.app)
+        persona_reports = []
+        total_turns = 0
+        passed_turns = 0
+        audio_generated_turns = 0
+        latencies_ms: List[float] = []
+
+        for persona in self.LIVE_E2E_PERSONAS:
+            sid = f"mirofish_{persona['id']}"
+            client.post("/api/agent/configure", json={
+                "session_id": sid,
+                "sector": persona["sector"],
+                "business_name": persona["business_name"],
+                "market_mode": persona["language"],
+            })
+
+            turn_logs = []
+            for utt in persona["dialogues"]:
+                total_turns += 1
+                customer_voice_meta = None
+                if include_customer_fish_voice:
+                    customer_voice_meta = asyncio.run(
+                        self.synthesize_fake_customer_audio(
+                            utt, str(persona["language"]), str(persona["dialect"])
+                        )
+                    )
+
+                t0 = time.perf_counter()
+                resp = client.post("/api/turn", json={
+                    "session_id": sid,
+                    "utterance": utt,
+                    "voice": persona["voice"],
+                    "dialect": persona["dialect"],
+                    "sector": persona["sector"],
+                    "business_name": persona["business_name"],
+                })
+                elapsed_ms = round((time.perf_counter() - t0) * 1000, 1)
+                latencies_ms.append(elapsed_ms)
+
+                ok = resp.status_code == 200
+                data = resp.json() if ok else {}
+                reply = str(data.get("reply", ""))
+                b64 = str(data.get("audio_base64", ""))
+                audio_ok = False
+                if with_audio and b64:
+                    raw = base64.b64decode(b64)
+                    audio_ok = len(raw) > 500
+                    if audio_ok:
+                        audio_generated_turns += 1
+
+                # Verify language consistency: Tamil persona must NOT receive Bel Air English!
+                lang_ok = True
+                if persona["language"] == "tamil":
+                    lang_ok = any("\u0b80" <= c <= "\u0bff" for c in reply) and "Bel Air" not in reply
+                elif persona["language"] == "hindi":
+                    lang_ok = any("\u0900" <= c <= "\u097f" for c in reply) and "Bel Air" not in reply
+
+                turn_pass = ok and bool(reply) and lang_ok and (not with_audio or audio_ok)
+                if turn_pass:
+                    passed_turns += 1
+
+                turn_logs.append({
+                    "utterance": utt,
+                    "reply": reply,
+                    "http_status": resp.status_code,
+                    "market_mode": data.get("market_mode"),
+                    "tts_provider": data.get("tts_provider"),
+                    "audio_format": data.get("audio_format"),
+                    "audio_ok": audio_ok,
+                    "lang_ok": lang_ok,
+                    "latency_ms": elapsed_ms,
+                    "customer_voice": customer_voice_meta,
+                    "passed": turn_pass,
+                })
+
+            persona_reports.append({
+                "persona_id": persona["id"],
+                "name": persona["name"],
+                "sector": persona["sector"],
+                "language": persona["language"],
+                "dialect": persona["dialect"],
+                "turns": turn_logs,
+            })
+
+        return {
+            "total_personas": len(self.LIVE_E2E_PERSONAS),
+            "total_turns": total_turns,
+            "passed_turns": passed_turns,
+            "pass_rate": f"{(passed_turns / max(1, total_turns)) * 100:.1f}%",
+            "audio_turns_verified": audio_generated_turns,
+            "avg_latency_ms": round(sum(latencies_ms) / max(1, len(latencies_ms)), 1),
+            "personas": persona_reports,
+        }
