@@ -161,8 +161,20 @@ def process_tamil_turn(
             f"{cfg['slot_ta']} நேர்ல வந்து {cfg['offer_ta']} பார்க்கலாமா Sir?"
         )
 
+    try:
+        from src.closer.llm.router import OpenLLMRouter
+        from src.closer.agent.prompt import get_omni_gemini_prompt
+        router = OpenLLMRouter()
+        if router.api_key:
+            sys_prompt = get_omni_gemini_prompt("tamil", business_name, sec_key)
+            llm_reply, _ = router.route_reasoning(utterance, sys_prompt, [], market_mode="tamil")
+            if llm_reply and len(llm_reply.strip()) > 5:
+                return llm_reply.strip()
+    except Exception:
+        pass
+
     return (
-        f"வணக்கம் Sir... {business_name}-ல இருந்து பல்லவி பேசுறேங்க. "
+        f"வணக்கம் Sir... {business_name}-ல இருந்து பிரியா பேசுறேங்க. "
         f"உங்களுக்காக {cfg['offer_ta']} ரெடியா இருக்கு. "
         f"நீங்க உடனே start பண்ண பாக்குறீங்களா, இல்ல இந்த வீக்கெண்ட்ல பார்க்கலாமா Sir?"
     )
@@ -208,6 +220,18 @@ def process_non_realestate_sector_turn(
                 f"अरे कोई बात नहीं जी, आप काम कर लीजिए... मैंने {business_name} का पूरा ब्रोशर और {cfg['offer_hi']} व्हाट्सएप पर भेज दिया है। "
                 "शाम 6 बजे के बाद 2 मिनट कॉल कर लें?"
             )
+        try:
+            from src.closer.llm.router import OpenLLMRouter
+            from src.closer.agent.prompt import get_omni_gemini_prompt
+            router = OpenLLMRouter()
+            if router.api_key:
+                sys_prompt = get_omni_gemini_prompt("hindi", business_name, sec_key)
+                llm_reply, _ = router.route_reasoning(utterance, sys_prompt, [], market_mode="hindi")
+                if llm_reply and len(llm_reply.strip()) > 5:
+                    return llm_reply.strip()
+        except Exception:
+            pass
+
         return (
             f"नमस्ते सर... {business_name} से स्वाति बोल रही हूँ। "
             f"आपने हमारे {cfg['offer_hi']} के लिए इंक्वायरी की थी — क्या आप इसे इस हफ्ते प्लान कर रहे हैं?"
@@ -237,6 +261,19 @@ def process_non_realestate_sector_turn(
             f"Awesome — your {cfg['offer_en']} with {business_name} is locked in for {slot}! "
             "I've sent your confirmation pass and calendar invite directly to your WhatsApp."
         )
+
+    try:
+        from src.closer.llm.router import OpenLLMRouter
+        from src.closer.agent.prompt import get_omni_gemini_prompt
+        router = OpenLLMRouter()
+        if router.api_key:
+            sys_prompt = get_omni_gemini_prompt("english", business_name, sec_key)
+            llm_reply, _ = router.route_reasoning(utterance, sys_prompt, [], market_mode="india")
+            if llm_reply and len(llm_reply.strip()) > 5:
+                return llm_reply.strip()
+    except Exception:
+        pass
+
     return (
         f"Hi! Thanks for reaching out to {business_name}. We have your {cfg['offer_en']} ready — "
         f"would {cfg['slot_en']} work for a quick session?"

@@ -394,6 +394,21 @@ class ConversationEngine:
                 "to your WhatsApp number. Would you like to schedule a private site visit this weekend?"
             )
 
+        # Dynamic Gemini-grade foundation LLM reasoning for any unscripted user question
+        if self.llm_router and self.llm_router.api_key:
+            from src.closer.agent.prompt import get_omni_gemini_prompt
+            sys_prompt = get_omni_gemini_prompt(
+                language="english",
+                business_name=getattr(self, "business_name", settings.BROKERAGE_NAME),
+                sector=getattr(self, "sector", "real_estate"),
+            )
+            try:
+                llm_reply, _ = self.llm_router.route_reasoning(clean_input, sys_prompt, self.messages, market_mode="india")
+                if llm_reply and len(llm_reply.strip()) > 5:
+                    return llm_reply.strip()
+            except Exception:
+                pass
+
         return (
             "Thank you for sharing that! Our team is dedicated to providing you complete transparency and support. "
             "Shall I share the complete project details and pricing options directly on your WhatsApp?"
@@ -500,6 +515,21 @@ class ConversationEngine:
                 "शानदार! मैंने पूरा डिजिटल ब्रोशर, फ्लोर प्लान और कीमतें आपके वॉट्सऐप पर भेज दी हैं। "
                 "क्या आप इस वीकेंड हमारे साथ साइट विज़िट का समय रखना चाहेंगे?"
             )
+
+        # Dynamic Gemini-grade foundation LLM reasoning for any unscripted user question (general knowledge, science, casual, business)
+        if self.llm_router and self.llm_router.api_key:
+            from src.closer.agent.prompt import get_omni_gemini_prompt
+            sys_prompt = get_omni_gemini_prompt(
+                language="hindi",
+                business_name=getattr(self, "business_name", settings.BROKERAGE_NAME),
+                sector=getattr(self, "sector", "real_estate"),
+            )
+            try:
+                llm_reply, _ = self.llm_router.route_reasoning(clean_input, sys_prompt, self.messages, market_mode="hindi")
+                if llm_reply and len(llm_reply.strip()) > 5:
+                    return llm_reply.strip()
+            except Exception:
+                pass
 
         return (
             "जानकारी साझा करने के लिए बहुत धन्यवाद! हमारी टीम आपकी पूरी सहायता के लिए तैयार है। "
@@ -1130,6 +1160,27 @@ class ConversationEngine:
 
     def _generate_qualification_turn(self, clean_input: str) -> str:
         """Executes next conversational qualifying question."""
+        # Dynamic Gemini-grade response for general knowledge, questions, or unscripted non-qualification chatter
+        t = clean_input.lower()
+        is_general_knowledge_query = (
+            "?" in clean_input
+            or any(t.startswith(w) for w in ["what", "who", "why", "how", "where", "can you", "tell me", "explain", "is it", "do you know"])
+        ) and not any(w in t for w in ["budget", "million", "cash", "financing", "timeline", "month", "days", "bel air", "beverly hills", "tour", "showing", "appointment"])
+
+        if is_general_knowledge_query and self.llm_router and self.llm_router.api_key:
+            from src.closer.agent.prompt import get_omni_gemini_prompt
+            sys_prompt = get_omni_gemini_prompt(
+                language="english",
+                business_name=getattr(self, "business_name", settings.BROKERAGE_NAME),
+                sector=getattr(self, "sector", "real_estate"),
+            )
+            try:
+                llm_reply, _ = self.llm_router.route_reasoning(clean_input, sys_prompt, self.messages, market_mode="usa")
+                if llm_reply and len(llm_reply.strip()) > 5:
+                    return llm_reply.strip()
+            except Exception:
+                pass
+
         # Step A: Need budget
         if not self.dossier.budget_max:
             return (

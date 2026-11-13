@@ -42,8 +42,22 @@ class OpenLLMRouter:
     ):
         self.active_model_id = default_model if default_model in OPEN_SOURCE_LLM_CATALOG else "llama-3.3-70b"
         self.active_profile = get_model_profile(self.active_model_id)
-        self.api_base = api_base or getattr(settings, "OPENAI_API_BASE", None) or "https://api.groq.com/openai/v1"
-        self.api_key = api_key or getattr(settings, "GROQ_API_KEY", None) or getattr(settings, "OPENAI_API_KEY", None)
+        import os
+        env_openrouter = os.getenv("OPENROUTER_API_KEY") or (
+            os.getenv("ANTHROPIC_AUTH_TOKEN")
+            if (os.getenv("ANTHROPIC_AUTH_TOKEN") or "").startswith("sk-or-v1-")
+            else None
+        )
+        self.api_key = (
+            api_key
+            or getattr(settings, "GROQ_API_KEY", None)
+            or getattr(settings, "OPENAI_API_KEY", None)
+            or env_openrouter
+        )
+        if self.api_key and self.api_key.startswith("sk-or-v1-"):
+            self.api_base = api_base or "https://openrouter.ai/api/v1"
+        else:
+            self.api_base = api_base or getattr(settings, "OPENAI_API_BASE", None) or "https://api.groq.com/openai/v1"
         self.timeout_seconds = timeout_seconds
         self.total_routed_calls = 0
         self.last_latency_ms = 0
@@ -130,38 +144,52 @@ class OpenLLMRouter:
                 messages.append({"role": msg["role"], "content": msg["content"]})
         messages.append({"role": "user", "content": user_utterance})
 
-        # Map catalog profile to provider model ID if using Groq
-        model_name = self.active_profile.model_id
-        if "api.groq.com" in (self.api_base or ""):
+        # Map catalog profile to provider model ID if using Groq or OpenRouter
+        models_to_try = [self.active_profile.model_id]
+        if "openrouter.ai" in (self.api_base or ""):
+            models_to_try = ["google/gemini-2.5-flash", "meta-llama/llama-3.3-70b-instruct"]
+        elif "api.groq.com" in (self.api_base or ""):
             if "70b" in self.active_model_id:
-                model_name = "llama-3.3-70b-versatile"
+                models_to_try = ["llama-3.3-70b-versatile"]
             elif "qwen" in self.active_model_id:
-                model_name = "qwen-2.5-32b"
+                models_to_try = ["qwen-2.5-32b"]
             else:
-                model_name = "llama-3.3-70b-versatile"
+                models_to_try = ["llama-3.3-70b-versatile"]
 
         url = f"{self.api_base.rstrip('/')}/chat/completions"
-        payload = {
-            "model": model_name,
-            "messages": messages,
-            "temperature": 0.2,
-            "max_tokens": 160,
-        }
         headers = {
             "Content-Type": "application/json",
             "Authorization": f"Bearer {self.api_key}",
-            "User-Agent": "CLOSER-AI/1.0.0 (Awesome-Open-Source-LLMs-175B-Router)"
+            "User-Agent": "CLOSER-AI/1.0.0 (Gemini-Flash-LLM-Router)"
         }
 
-        req = urllib.request.Request(
-            url,
-            data=json.dumps(payload).encode("utf-8"),
-            headers=headers,
-            method="POST"
-        )
-        with urllib.request.urlopen(req, timeout=self.timeout_seconds) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
-            return data["choices"][0]["message"]["content"].strip()
+        last_err = None
+        for candidate_model in models_to_try:
+            payload = {
+                "model": candidate_model,
+                "messages": messages,
+                "temperature": 0.3,
+                "max_tokens": 250,
+            }
+            try:
+                req = urllib.request.Request(
+                    url,
+                    data=json.dumps(payload).encode("utf-8"),
+                    headers=headers,
+                    method="POST"
+                )
+                with urllib.request.urlopen(req, timeout=self.timeout_seconds) as resp:
+                    data = json.loads(resp.read().decode("utf-8"))
+                    content = data["choices"][0]["message"]["content"].strip()
+                    if content:
+                        return content
+            except Exception as e:
+                last_err = e
+                continue
+
+        if last_err:
+            raise last_err
+        raise RuntimeError("No candidate models returned content")
 
     def _generate_fallback_response(self, user_utterance: str, market_mode: str) -> str:
         """Deterministic context-aware fallback response generation."""
