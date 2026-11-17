@@ -44,24 +44,47 @@ _live_leads: list = []
 
 try:
     from src.closer.agent.conversation import ConversationEngine
-    from src.closer.voice.tts import EdgeTTSVoiceEngine
-    from src.closer.llm.models import list_available_models, get_model_profile
-    from src.closer.llm.router import OpenLLMRouter
-    from src.closer.integrations.apilayer import APILayerUnifiedClient
-    from closer.telephony.indic_neural_engine import IndicNeuralVoiceEngine
-    from closer.telephony.dialect_prosody import IndicDialectProsodyEngine, SUPPORTED_DIALECTS
-    _app_conversation_engine = ConversationEngine(market_mode="usa")
-    _session_engines["default"] = _app_conversation_engine
-    _app_tts_engine = EdgeTTSVoiceEngine()
-    _app_indic_engine = IndicNeuralVoiceEngine()
-    _app_llm_router = _app_conversation_engine.llm_router
-    _app_apilayer_client = APILayerUnifiedClient()
 except Exception:
-    _app_conversation_engine = None
-    _app_tts_engine = None
-    _app_indic_engine = None
-    _app_llm_router = None
-    _app_apilayer_client = None
+    ConversationEngine = None
+
+try:
+    from src.closer.voice.tts import EdgeTTSVoiceEngine
+except Exception:
+    EdgeTTSVoiceEngine = None
+
+try:
+    from src.closer.llm.models import list_available_models, get_model_profile
+except Exception:
+    list_available_models, get_model_profile = lambda: [], lambda m: {}
+
+try:
+    from src.closer.llm.router import OpenLLMRouter
+except Exception:
+    OpenLLMRouter = None
+
+try:
+    from src.closer.integrations.apilayer import APILayerUnifiedClient
+except Exception:
+    APILayerUnifiedClient = None
+
+try:
+    from closer.telephony.indic_neural_engine import IndicNeuralVoiceEngine
+except Exception:
+    IndicNeuralVoiceEngine = None
+
+try:
+    from closer.telephony.dialect_prosody import IndicDialectProsodyEngine, SUPPORTED_DIALECTS
+except Exception:
+    IndicDialectProsodyEngine = None
+    SUPPORTED_DIALECTS = {}
+
+_app_conversation_engine = ConversationEngine(market_mode="usa") if ConversationEngine else None
+if _app_conversation_engine:
+    _session_engines["default"] = _app_conversation_engine
+_app_tts_engine = EdgeTTSVoiceEngine() if EdgeTTSVoiceEngine else None
+_app_indic_engine = IndicNeuralVoiceEngine() if IndicNeuralVoiceEngine else None
+_app_llm_router = getattr(_app_conversation_engine, "llm_router", None) if _app_conversation_engine else None
+_app_apilayer_client = APILayerUnifiedClient() if APILayerUnifiedClient else None
 
 
 def _get_session_engine(session_id: str = "default"):
@@ -426,20 +449,26 @@ async def process_turn(request: Request):
 
         if inferred_mode in ("tamil", "hindi"):
             try:
-                indic_eng = _app_indic_engine or IndicNeuralVoiceEngine()
-                spoken_reply = IndicDialectProsodyEngine.humanize(
-                    reply, language=inferred_mode, dialect=dialect, inject_pauses=True
-                )
-                audio_bytes, tts_provider, _, audio_fmt = await indic_eng.synthesize(
-                    text=spoken_reply,
-                    language=inferred_mode,
-                    dialect=dialect,
-                    backend=tts_backend,
-                    rate=rate,
-                    pitch=pitch,
-                )
-                reply = spoken_reply
-                audio_b64 = base64.b64encode(audio_bytes).decode("utf-8")
+                indic_eng = _app_indic_engine or (IndicNeuralVoiceEngine() if IndicNeuralVoiceEngine else None)
+                if IndicDialectProsodyEngine:
+                    spoken_reply = IndicDialectProsodyEngine.humanize(
+                        reply, language=inferred_mode, dialect=dialect, inject_pauses=True
+                    )
+                else:
+                    spoken_reply = reply
+                if indic_eng:
+                    audio_bytes, tts_provider, _, audio_fmt = await indic_eng.synthesize(
+                        text=spoken_reply,
+                        language=inferred_mode,
+                        dialect=dialect,
+                        backend=tts_backend,
+                        rate=rate,
+                        pitch=pitch,
+                    )
+                    reply = spoken_reply
+                    audio_b64 = base64.b64encode(audio_bytes).decode("utf-8")
+                else:
+                    tts_provider = "browser_speech_synthesis"
             except Exception as exc:
                 tts_error = f"{type(exc).__name__}: {exc}"
         else:
