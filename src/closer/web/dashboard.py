@@ -2540,6 +2540,21 @@ class DashboardHTTPHandler(http.server.BaseHTTPRequestHandler):
                 "provider": "APILayer Unified Suite (Live API Key Connected)" if is_live else "CLOSER AI Intelligence Engine (High-Fidelity Simulation)",
                 "services": ["numverify", "mailboxlayer", "positionstack", "fixer", "currencylayer"]
             }).encode("utf-8"))
+        elif parsed.path == "/api/learning_stats":
+            from src.closer.memory.learning_db import get_learning_db
+            db = get_learning_db()
+            stats = db.get_stats()
+            recent_calls = db.get_recent_calls(5)
+            learned_topics = db.get_all_learned_knowledge()
+            self.send_response(200)
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.send_header("Content-Type", "application/json")
+            self.end_headers()
+            self.wfile.write(json.dumps({
+                "stats": stats,
+                "recent_calls": recent_calls,
+                "learned_topics": learned_topics
+            }).encode("utf-8"))
         else:
             self.send_response(404)
             self.end_headers()
@@ -2638,6 +2653,14 @@ class DashboardHTTPHandler(http.server.BaseHTTPRequestHandler):
                 latency_tts = 0.05
 
             dossier = self.conversation_engine.export_dossier()
+            # Autonomously record call & extract continuous learning
+            learning_res = {}
+            if hasattr(self.conversation_engine, "save_and_learn_from_call"):
+                try:
+                    learning_res = self.conversation_engine.save_and_learn_from_call()
+                except Exception as e:
+                    learning_res = {"status": "error", "error": str(e)}
+
             llm_info = self.conversation_engine.llm_router.get_active_model_info() if hasattr(self.conversation_engine, "llm_router") and self.conversation_engine.llm_router else {
                 "model_id": "llama-3.3-70b",
                 "parameter_scale": "70 Billion",
@@ -2651,6 +2674,7 @@ class DashboardHTTPHandler(http.server.BaseHTTPRequestHandler):
                 "voice_provider": voice_provider_label,
                 "voice_latency_ms": round(latency_tts * 1000, 1),
                 "dossier": dossier.model_dump(),
+                "learning": learning_res,
                 "llm_model": llm_info.get("model_id"),
                 "llm_parameters": llm_info.get("parameter_scale"),
                 "llm_latency_ms": llm_info.get("target_latency_ms") or 88,

@@ -7,9 +7,10 @@ import re
 import json
 import logging
 from typing import List, Dict, Any, Optional, Tuple
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from src.closer.config import settings
+from src.closer.memory.learning_db import get_learning_db
 from src.closer.agent.prompt import (
     ISA_SYSTEM_PROMPT,
     OBJECTION_PLAYBOOK,
@@ -97,6 +98,12 @@ class ConversationEngine:
         self.llm_router = OpenLLMRouter()
         self.dossier.active_llm_model = self.llm_router.active_model_id
         self.dossier.llm_parameter_scale = self.llm_router.active_profile.parameter_scale
+
+        # Persistent Learning Memory & Call Recording DB
+        self.learning_db = get_learning_db()
+        lead_id = getattr(self.lead, "lead_id", "sim_lead")
+        ts = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+        self.call_id = f"call_{ts}_{lead_id}"
 
     @property
     def market_mode(self) -> str:
@@ -1233,3 +1240,20 @@ class ConversationEngine:
                 f"Appointment: {self.dossier.appointment_datetime or 'Pending follow-up'}.{ticket_str}{notes_str}"
             )
         return self.dossier
+
+    def save_and_learn_from_call(self) -> Dict[str, Any]:
+        """
+        Persists the complete turn-by-turn call recording into SQLite
+        and runs autonomous knowledge extraction to learn new insights.
+        """
+        dossier_data = self.export_dossier().model_dump()
+        return self.learning_db.record_call(
+            call_id=self.call_id,
+            customer_name=self.lead.full_name or "Anonymous Customer",
+            customer_phone=self.lead.phone_number or "Unknown Phone",
+            market_mode=self.market_mode,
+            sector=getattr(self, "sector", "real_estate"),
+            business_name=getattr(self, "business_name", settings.BROKERAGE_NAME),
+            transcript=self.messages,
+            dossier=dossier_data,
+        )

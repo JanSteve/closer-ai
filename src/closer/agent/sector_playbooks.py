@@ -125,6 +125,17 @@ def process_tamil_turn(
             f"சாயங்காலம் 6 மணிக்கு அப்புறம் ஒரு 2 நிமிஷம் பேசலாமா Sir?"
         )
 
+    # Check learned knowledge base for specific verified customer inquiries (UDS, water, RERA, etc.)
+    try:
+        from src.closer.memory.learning_db import get_learning_db
+        learned_ans = get_learning_db().find_learned_response(utterance, sector=sec_key)
+        if learned_ans and not _is_tamil_slot_confirm(t) and not _is_tamil_price_query(t):
+            if "Domain query answered" not in getattr(dossier, "objections_handled", []):
+                dossier.objections_handled.append("Domain query answered")
+            return f"{learned_ans} {cfg['slot_ta']} நேர்ல வந்து விசிட் பண்ணலாமா Sir?"
+    except Exception:
+        pass
+
     if _is_tamil_price_query(t):
         if "Price deflection" not in dossier.objections_handled:
             dossier.objections_handled.append("Price deflection & value anchor")
