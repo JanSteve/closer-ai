@@ -404,13 +404,27 @@ async def process_turn(request: Request):
         business_name = data.get("business_name")
         explicit_mode = data.get("market_mode")
 
+        if not utterance.strip() and custom_text.strip():
+            utterance = custom_text.strip()
+
         if not utterance.strip() and not custom_text.strip():
             return JSONResponse(status_code=400, content={"error": "Utterance must not be empty"})
         if len(utterance) > 2000 or len(custom_text) > 2000:
             return JSONResponse(status_code=400, content={"error": "Utterance exceeds 2000 character limit"})
 
         engine = _get_session_engine(session_id)
-        inferred_mode = str(explicit_mode).lower().strip() if explicit_mode else _infer_indic_language(voice, utterance)
+        if explicit_mode:
+            raw_mode = str(explicit_mode).lower().strip()
+            if raw_mode in ("chennai", "tamil", "ta"):
+                inferred_mode = "tamil"
+            elif raw_mode in ("delhi", "mumbai", "hindi", "hi"):
+                inferred_mode = "hindi"
+            elif raw_mode in ("india", "en-in"):
+                inferred_mode = "india"
+            else:
+                inferred_mode = raw_mode
+        else:
+            inferred_mode = _infer_indic_language(voice, utterance)
         if engine:
             if sector or business_name:
                 engine.configure_business(
