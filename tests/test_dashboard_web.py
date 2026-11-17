@@ -51,7 +51,7 @@ class TestWebDashboardConsole(unittest.TestCase):
         handler.send_header.assert_called_with("Content-Type", "text/html; charset=utf-8")
         body = handler.wfile.getvalue().decode("utf-8")
         self.assertIn("CLOSER AI", body)
-        self.assertIn("Never Miss a ₹50 Lakh Buyer After 8 PM", body)
+        self.assertIn("Intelligence Designed To Evolve", body)
 
     def test_get_console_route(self):
         """Verifies GET /console and /dashboard return 200 with Executive Console HTML."""

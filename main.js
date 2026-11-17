@@ -312,8 +312,15 @@ document.addEventListener('DOMContentLoaded', () => {
       offlineReplies: {
         estate: 'Splendid. We have an architectural estate on Bellagio Road in Bel Air listed at $6.85M with panoramic ocean and city views. Would you like to schedule a private walkthrough?',
         showing: 'Your private VIP tour has been confirmed for Thursday at 2:00 PM. A confirmation packet has been dispatched to your mobile via WhatsApp.',
+        site_visit: 'Your private VIP tour has been confirmed for Thursday at 2:00 PM. A confirmation packet has been dispatched to your mobile via WhatsApp.',
         meeting: 'I completely respect your busy schedule. I will follow up with you tomorrow afternoon at your convenience. Have a productive day.',
-        price: 'Fair question. Unlike neighboring inventory, this penthouse features double-height 22ft ceilings, a private rooftop lap pool, and 4 dedicated basement parking slots with EV supercharging.'
+        schedule: 'I completely respect your busy schedule. I will follow up with you tomorrow afternoon at your convenience. Have a productive day.',
+        price: 'Fair question. Unlike neighboring inventory, this penthouse features double-height 22ft ceilings, a private rooftop lap pool, and 4 dedicated basement parking slots with EV supercharging.',
+        bhk: 'Our prime residences feature 3 spacious ensuite bedrooms, floor-to-ceiling glass, and dual car parks starting from $1.85M. Would you like a private walkthrough?',
+        rera: 'All listings in our portfolio have fully verified titles, approved permits, and pre-sanctioned jumbo lending tie-ups.',
+        whatsapp: 'A detailed brochure with floor plans and private pricing has been dispatched to your WhatsApp.',
+        who_are_you: 'Hello! I am CLOSER AI, your 24/7 autonomous luxury real estate concierge. How can I assist you with your property inquiry today?',
+        default: 'Hello! I am CLOSER AI, your 24/7 autonomous luxury real estate concierge. How can I assist you with your property inquiry today?'
       }
     },
     tamil: {
@@ -336,8 +343,14 @@ document.addEventListener('DOMContentLoaded', () => {
       offlineReplies: {
         estate: 'கிராண்ட் பென்ட்ஹவுஸ் 3BHK ரெசிடென்ஸ் ₹2.85 கோடியில் இருந்து தொடங்குகிறது. இதில் 100% பிரைவேட் டெரஸ் கார்டன் மற்றும் பே-வியூ பால்கனி அடங்கும்.',
         meeting: 'கண்டிப்பா புரிஞ்சுக்க முடியுதுங்க. நாளைக்கு உங்களுக்கு சௌகரியமான நேரத்துல கூப்பிடுறேன். நல்ல நாளாக அமையட்டும்!',
+        schedule: 'கண்டிப்பா புரிஞ்சுக்க முடியுதுங்க. நாளைக்கு உங்களுக்கு சௌகரியமான நேரத்துல கூப்பிடுறேன். நல்ல நாளாக அமையட்டும்!',
         showing: 'நிச்சயமாக! வரும் சனிக்கிழமை காலை 11 மணிக்கு உங்களுக்கான விஐபி சைட் விசிட் ஸ்லாட் உறுதி செய்யப்பட்டுள்ளது. கேட் பாஸ் வாட்ஸ்அப்பில் அனுப்பப்பட்டுள்ளது.',
-        rera: 'ஆமாங்க Sir, இந்த திட்டம் 100% RERA பதிவு செய்யப்பட்டது மற்றும் HDFC, SBI வங்கிகளில் முன்-அங்கீகரிக்கப்பட்ட வீட்டுக் கடன் வசதி உள்ளது.'
+        site_visit: 'நிச்சயமாக! வரும் சனிக்கிழமை காலை 11 மணிக்கு உங்களுக்கான விஐபி சைட் விசிட் ஸ்லாட் உறுதி செய்யப்பட்டுள்ளது. கேட் பாஸ் வாட்ஸ்அப்பில் அனுப்பப்பட்டுள்ளது.',
+        rera: 'ஆமாங்க Sir, இந்த திட்டம் 100% RERA பதிவு செய்யப்பட்டது மற்றும் HDFC, SBI வங்கிகளில் முன்-அங்கீகரிக்கப்பட்ட வீட்டுக் கடன் வசதி உள்ளது.',
+        bhk: 'நம்ம கிராண்ட் ரெசிடென்ஸ்ல 2BHK ₹95 லட்சத்திலிருந்தும், 3BHK ₹1.65 கோடியிலிருந்தும் தொடங்குதுங்க. இந்த சனிக்கிழமை நேர்ல வந்து பார்க்கலாமா Sir?',
+        whatsapp: 'கண்டிப்பா Sir! புராஜெக்ட் ப்ரோஷர் மற்றும் ஃப்ளோர் பிளான் விபரங்களை உங்க வாட்ஸ்அப் எண்ணுக்கு உடனடியாக அனுப்பிட்டோமுங்க.',
+        who_are_you: 'வணக்கம் Sir! நான் CLOSER AI வாய்ஸ் மேனேஜர். நம்ம ரியல் எஸ்டேட் புராஜெக்ட் விபரங்கள் மற்றும் சைட் விசிட் புக் பண்ண நான் உதவி செய்றேன் Sir.',
+        default: 'வணக்கம் Sir! OMR கிராண்ட் பென்ட்ஹவுஸ் மற்றும் Green Valley-ல் 2BHK மற்றும் 3BHK ரெடி-டூ-மூவ் யூனிட்கள் ரெடியாக இருக்குங்க. சைட் விசிட் புக் பண்ணலாமா Sir?'
       }
     },
     hindi: {
@@ -360,8 +373,14 @@ document.addEventListener('DOMContentLoaded', () => {
       offlineReplies: {
         estate: 'नमस्ते सर! 3 BHK अल्ट्रा-लक्ज़री पेंटहाउस ₹2.85 करोड़ से शुरू होता है, जिसमें क्लब हाउस मेंबरशिप और 2 कवर्ड कार पार्किंग शामिल हैं।',
         meeting: 'बिल्कुल सर, मैं आपका समय समझती हूँ। मैं कल दोपहर ठीक 3:00 बजे आपको दोबारा संपर्क करूँगी। आपका दिन शुभ हो!',
+        schedule: 'बिल्कुल सर, मैं आपका समय समझती हूँ। मैं कल दोपहर ठीक 3:00 बजे आपको दोबारा संपर्क करूँगी। आपका दिन शुभ हो!',
         showing: 'बहुत बढ़िया सर! इस रविवार सुबह 11:00 बजे का VIP साइट विज़िट स्लॉट आपके नाम से लॉक कर दिया गया है। गेट पास व्हाट्सएप पर भेज दिया गया है।',
-        rera: 'जी हाँ सर, यह प्रोजेक्ट 100% RERA रजिस्टर्ड है और SBI, HDFC तथा ICICI बैंक से प्री-अप्रूव्ड होम लोन सुविधा उपलब्ध है।'
+        site_visit: 'बहुत बढ़िया सर! इस रविवार सुबह 11:00 बजे का VIP साइट विज़िट स्लॉट आपके नाम से लॉक कर दिया गया है। गेट पास व्हाट्सएप पर भेज दिया गया है।',
+        rera: 'जी हाँ सर, यह प्रोजेक्ट 100% RERA रजिस्टर्ड है और SBI, HDFC तथा ICICI बैंक से प्री-अप्रूव्ड होम लोन सुविधा उपलब्ध है।',
+        bhk: 'नमस्ते सर! हमारे पास 2 BHK ₹95 लाख से और 3 BHK ₹1.65 करोड़ से उपलब्ध हैं। क्या इस रविवार सुबह 11 बजे आप साइट विज़िट के लिए आ सकते हैं?',
+        whatsapp: 'जी बिल्कुल सर! प्रोजेक्ट का पूरा ब्रोशर, फ्लोर प्लान और प्राइस शीट मैंने आपके व्हाट्सएप पर भेज दी है।',
+        who_are_you: 'नमस्ते सर! मैं CLOSER AI की ऑटोमेटेड वॉइस असिस्टेंट हूँ। मैं प्रोजेक्ट की जानकारी देने और आपकी साइट विज़िट बुक करने के लिए बात कर रही हूँ।',
+        default: 'जी सर! हमारे पास 2BHK और 3BHK रेडी-टू-मूव यूनिट्स उपलब्ध हैं। आप प्रोजेक्ट के बारे में और क्या जानकारी चाहते हैं सर?'
       }
     }
   };
@@ -859,18 +878,33 @@ document.addEventListener('DOMContentLoaded', () => {
           modalIntentFill.style.width = '95%';
           modalIntentText.textContent = '95% High Intent (Site Visit)';
         }
+      } else if (lower.includes('who are you') || lower.includes('कौन') || lower.includes('யாரு') || lower.includes('who')) {
+        fallbackReply = config.offlineReplies.who_are_you;
+        if (modalDossierStatus) {
+          modalDossierStatus.textContent = 'CONCIERGE IDENTIFIED';
+          modalDossierStatus.className = 'dossier-badge green';
+        }
+        if (modalDossierAction) modalDossierAction.textContent = 'AI Voice Concierge Introduced';
+        if (modalIntentFill) {
+          modalIntentFill.style.width = '80%';
+          modalIntentText.textContent = '80% In Conversation';
+        }
       } else {
-        fallbackReply = config.offlineReplies.bhk;
+        fallbackReply = config.offlineReplies.bhk || config.offlineReplies.default || config.offlineReplies.estate;
         if (modalDossierStatus) {
           modalDossierStatus.textContent = 'INVENTORY MATCH';
           modalDossierStatus.className = 'dossier-badge';
         }
-        if (modalDossierAction) modalDossierAction.textContent = 'Matched: Whitefield 3 BHK (₹2.45 Cr)';
+        if (modalDossierAction) modalDossierAction.textContent = 'Matched: Prime 3 BHK Residences';
         if (modalIntentFill) {
           modalIntentFill.style.width = '85%';
           modalIntentText.textContent = '85% In Conversation';
         }
       }
+    }
+
+    if (!fallbackReply || fallbackReply === 'undefined') {
+      fallbackReply = (config && config.offlineReplies && config.offlineReplies.default) || (config && config.initialGreeting) || "Hello! CLOSER AI is ready to assist you.";
     }
 
     if (modalAIText) modalAIText.textContent = `"${fallbackReply}"`;
