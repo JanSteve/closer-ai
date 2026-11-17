@@ -79,7 +79,8 @@ class TestVercelAppEntrypoint(unittest.TestCase):
         self.assertTrue(any(m.get("type") == "http.response.start" and m.get("status") == 200 for m in messages))
         body_parts = [m.get("body", b"") for m in messages if m.get("type") == "http.response.body"]
         full_body = b"".join(body_parts).decode("utf-8", errors="ignore")
-        self.assertIn("Intelligence Designed To Evolve", full_body)
+        self.assertIn("CLOSER AI", full_body)
+        self.assertIn("Never Miss a ₹50 Lakh Buyer After 8 PM", full_body)
 
         # Test styles.css
         messages = asyncio.run(run_asgi("/styles.css"))

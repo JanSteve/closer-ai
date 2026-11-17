@@ -187,7 +187,7 @@ class TestUserReadyAPIAndSessionIsolation:
         html = (root / "index.html").read_text(encoding="utf-8")
         js = (root / "main.js").read_text(encoding="utf-8")
 
-        for token in ("priya_ta", "ritu_hi", "demoDialectSelect", "demoSectorSelect", "Sarvam bulbul:v3"):
+        for token in ("btnLangTamil", "btnLangHindi", "btnLangEnglish", "btnStartVoiceCall"):
             assert token in html
         for token in ("priya_ta", "ritu_hi", "dialect: selectedDialect", "sector: selectedSector"):
             assert token in js
