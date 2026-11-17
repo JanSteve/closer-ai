@@ -409,6 +409,14 @@ async def process_turn(request: Request):
     else:
         reply = f"Thank you for your inquiry. CLOSER AI is processing: {utterance}"
 
+    if not reply or str(reply).strip() in ("", "None", "undefined"):
+        if inferred_mode == "tamil":
+            reply = "வணக்கம் Sir! Green Valley Porur-ல் 2BHK மற்றும் 3BHK flats ரெடியாக இருக்கு. சனிக்கிழமை நேர்ல வந்து சைட் விசிட் பார்க்கலாமா Sir?"
+        elif inferred_mode == "hindi":
+            reply = "नमस्ते सर! ग्रीन वैली प्रोजेक्ट में 2BHK और 3BHK रेडी-टू-मूव फ्लैट्स उपलब्ध हैं। क्या इस शनिवार आप साइट विज़िट के लिए आ सकते हैं?"
+        else:
+            reply = "Hello! I am CLOSER AI, your 24/7 autonomous real estate concierge. How can I assist you with your property inquiry today?"
+
     audio_b64 = ""
     audio_fmt = "wav"
     tts_provider = "none"
