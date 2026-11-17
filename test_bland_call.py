@@ -17,7 +17,7 @@ from closer.telephony.bland_engine import BlandTelephonyEngine
 async def main():
     parser = argparse.ArgumentParser(description="Dispatch Bland AI phone call")
     parser.add_argument("--to", required=True, help="Destination phone number in E.164 format (+91... / +1...)")
-    parser.add_argument("--agent", choices=["tamil", "hindi", "english"], default="tamil", help="Closer language")
+    parser.add_argument("--agent", choices=["multilingual", "tamil", "hindi", "english"], default="multilingual", help="Closer language (default: multilingual)")
     parser.add_argument("--duration", type=int, default=3, help="Max duration in minutes (default: 3)")
     args = parser.parse_args()
 
