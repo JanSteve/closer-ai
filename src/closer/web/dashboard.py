@@ -674,6 +674,38 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
             opacity: 0.95;
         }
 
+        .btn-voice-call {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            color: white;
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 13.5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.3);
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-voice-call:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(16, 185, 129, 0.45);
+        }
+        .btn-voice-call.listening {
+            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%) !important;
+            border-color: rgba(239, 68, 68, 0.6) !important;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.6) !important;
+            animation: micPulse 1.4s infinite;
+        }
+        @keyframes micPulse {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1.03); box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+
         /* Quick Scenarios */
         .quick-chips-wrap {
             display: flex;
@@ -1156,9 +1188,12 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
             </div>
 
             <!-- Spoken Input Row -->
-            <div class="input-row">
-                <input type="text" id="userInput" placeholder="Speak or type buyer reply (e.g. 'Today is not good, I will come tomorrow')..." onkeydown="if(event.key==='Enter') sendTurn()">
-                <button class="btn-send" onclick="sendTurn()">Speak / Send</button>
+            <div class="input-row" style="display:flex; gap:10px; align-items:center;">
+                <button id="voiceCallBtn" class="btn-voice-call" onclick="toggleHandsFreeVoiceCall()">
+                    <span id="voiceCallIcon">🎙️</span> <span id="voiceCallText">Start Live Voice Call</span>
+                </button>
+                <input type="text" id="userInput" placeholder="Speak into mic or type reply..." onkeydown="if(event.key==='Enter') sendTurn()">
+                <button class="btn-send" onclick="sendTurn()">Send</button>
             </div>
 
             <!-- Luxury Quick Test Chips -->
@@ -1846,6 +1881,101 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
             }
         }
 
+        let isVoiceCallActive = false;
+        let recognition = null;
+        let isAiSpeaking = false;
+
+        function initSpeechEngine() {
+            const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRec) {
+                alert("Your browser does not support Web Speech Recognition. Please open this in Google Chrome, Edge, or Safari for voice calling.");
+                return null;
+            }
+            const rec = new SpeechRec();
+            rec.continuous = false;
+            rec.interimResults = false;
+
+            rec.onstart = function() {
+                const btn = document.getElementById('voiceCallBtn');
+                if (btn && isVoiceCallActive) {
+                    btn.classList.add('listening');
+                    document.getElementById('voiceCallIcon').innerText = '🔴';
+                    document.getElementById('voiceCallText').innerText = 'Listening (Speak)...';
+                }
+                setVadState('speaking');
+            };
+
+            rec.onresult = function(e) {
+                if (!e.results || !e.results[0] || !e.results[0][0]) return;
+                const transcript = e.results[0][0].transcript;
+                console.log("Customer spoken:", transcript);
+                document.getElementById('userInput').value = transcript;
+                sendTurn();
+            };
+
+            rec.onerror = function(e) {
+                console.warn("Speech recognition notice:", e.error);
+                if (isVoiceCallActive && !isAiSpeaking) {
+                    setTimeout(() => {
+                        if (isVoiceCallActive && !isAiSpeaking) {
+                            try { rec.start(); } catch(err){}
+                        }
+                    }, 500);
+                }
+            };
+
+            rec.onend = function() {
+                const btn = document.getElementById('voiceCallBtn');
+                if (btn) btn.classList.remove('listening');
+                if (isVoiceCallActive && !isAiSpeaking) {
+                    document.getElementById('voiceCallIcon').innerText = '🎙️';
+                    document.getElementById('voiceCallText').innerText = 'Voice Active (Speak)';
+                }
+            };
+
+            return rec;
+        }
+
+        function toggleHandsFreeVoiceCall() {
+            const btn = document.getElementById('voiceCallBtn');
+            if (!isVoiceCallActive) {
+                isVoiceCallActive = true;
+                if (!recognition) recognition = initSpeechEngine();
+                if (!recognition) {
+                    isVoiceCallActive = false;
+                    return;
+                }
+
+                recognition.lang = currentMarket === 'tamil' ? 'ta-IN' : (currentMarket === 'hindi' ? 'hi-IN' : 'en-IN');
+                btn.style.background = 'linear-gradient(135deg, #dc2626 0%, #ef4444 100%)';
+                document.getElementById('voiceCallIcon').innerText = '🔴';
+                document.getElementById('voiceCallText').innerText = 'Connecting Call...';
+
+                startListening();
+            } else {
+                isVoiceCallActive = false;
+                stopCurrentAudio();
+                if (recognition) {
+                    try { recognition.abort(); } catch(e){}
+                }
+                btn.style.background = 'linear-gradient(135deg, #059669 0%, #10b981 100%)';
+                btn.classList.remove('listening');
+                document.getElementById('voiceCallIcon').innerText = '🎙️';
+                document.getElementById('voiceCallText').innerText = 'Start Live Voice Call';
+                setVadState('listening');
+            }
+        }
+
+        function startListening() {
+            if (!isVoiceCallActive || isAiSpeaking) return;
+            if (!recognition) recognition = initSpeechEngine();
+            if (!recognition) return;
+            recognition.lang = currentMarket === 'tamil' ? 'ta-IN' : (currentMarket === 'hindi' ? 'hi-IN' : 'en-IN');
+            try {
+                recognition.start();
+            } catch(e) {}
+        }
+
         function sendTurn() {
             const input = document.getElementById('userInput');
             const text = input.value.trim();
@@ -1979,6 +2109,10 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
             if (btnDl) btnDl.style.display = 'inline-flex';
 
             setVadState('speaking');
+            isAiSpeaking = true;
+            if (recognition) {
+                try { recognition.abort(); } catch(e){}
+            }
 
             // 1. Try modern Web Audio API decodeAudioData (handles MP3 & WAV in-memory without MIME mismatch or data-URI limits)
             try {
@@ -2010,8 +2144,12 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
                         source.onended = () => {
                             if (activeAudioSource === source) {
                                 activeAudioSource = null;
+                                isAiSpeaking = false;
                                 stopWaveformVisualizer();
                                 setVadState('listening');
+                                if (isVoiceCallActive) {
+                                    setTimeout(startListening, 300);
+                                }
                             }
                         };
 
@@ -2032,6 +2170,7 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
 
         function playWithAudioElement(b64) {
             try {
+                isAiSpeaking = true;
                 const isWav = b64.startsWith('UklGR');
                 const mimeType = isWav ? 'audio/wav' : 'audio/mpeg';
                 const binaryStr = atob(b64);
@@ -2048,13 +2187,18 @@ HTML_TEMPLATE = r"""<!DOCTYPE html>
                 audio.onended = () => {
                     URL.revokeObjectURL(blobUrl);
                     currentAudio = null;
+                    isAiSpeaking = false;
                     stopWaveformVisualizer();
                     setVadState('listening');
+                    if (isVoiceCallActive) {
+                        setTimeout(startListening, 300);
+                    }
                 };
                 audio.onerror = (e) => {
                     console.error("Audio element error:", e);
                     URL.revokeObjectURL(blobUrl);
                     currentAudio = null;
+                    isAiSpeaking = false;
                     stopWaveformVisualizer();
                     setVadState('listening');
                 };
