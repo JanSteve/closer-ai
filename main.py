@@ -360,6 +360,7 @@ def _infer_indic_language(voice: str, utterance: str) -> str:
 
 
 @app.post("/api/turn")
+@app.post("/turn")
 async def process_turn(request: Request):
     global _app_conversation_engine, _app_tts_engine, _app_indic_engine
     try:

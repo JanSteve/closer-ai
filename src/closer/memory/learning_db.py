@@ -15,7 +15,19 @@ from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
 
-DEFAULT_DB_PATH = Path("data/closer_learning.db")
+def _resolve_default_db_path() -> Path:
+    """Returns a serverless-safe DB path (/tmp for Vercel/Lambda, data/ locally)."""
+    if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
+        return Path("/tmp/closer_learning.db")
+    try:
+        data_dir = Path("data")
+        data_dir.mkdir(parents=True, exist_ok=True)
+        return data_dir / "closer_learning.db"
+    except (OSError, PermissionError):
+        return Path("/tmp/closer_learning.db")
+
+
+DEFAULT_DB_PATH = _resolve_default_db_path()
 
 
 class LearningMemoryDB:
@@ -24,9 +36,16 @@ class LearningMemoryDB:
     Records every call transcript and extracts reusable insights, FAQs, and objections.
     """
 
-    def __init__(self, db_path: Optional[Path] = None):
-        self.db_path = Path(db_path or DEFAULT_DB_PATH)
-        self.db_path.parent.mkdir(parents=True, exist_ok=True)
+    def __init__(self, db_path: Optional[Path | str] = None):
+        if db_path is not None:
+            self.db_path = Path(db_path)
+        else:
+            self.db_path = _resolve_default_db_path()
+        try:
+            if self.db_path.parent:
+                self.db_path.parent.mkdir(parents=True, exist_ok=True)
+        except (OSError, PermissionError):
+            self.db_path = Path("/tmp/closer_learning.db")
         self._init_db()
 
     def _get_connection(self) -> sqlite3.Connection:

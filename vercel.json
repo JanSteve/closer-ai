@@ -1,20 +1,26 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "/api/index.py"
+    }
+  ],
   "redirects": [
     {
       "source": "/console",
-      "destination": "/#voice-studio",
+      "destination": "/#voice-test",
       "permanent": false
     },
     {
       "source": "/dashboard",
-      "destination": "/#voice-studio",
+      "destination": "/#voice-test",
       "permanent": false
     },
     {
       "source": "/admin",
-      "destination": "/#voice-studio",
+      "destination": "/#voice-test",
       "permanent": false
     }
   ]
