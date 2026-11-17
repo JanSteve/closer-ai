@@ -1201,11 +1201,15 @@
             </div>
           </div>
 
-          <div class="demo-input-row">
-            <input type="text" id="demoUtteranceInput" class="demo-input" placeholder="Type buyer reply or schedule constraint (e.g., 'In a meeting, call tomorrow')..." />
+          <div class="demo-input-row" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <button id="btnLiveVoiceCall" class="demo-action-btn live-voice-btn" type="button" title="Speak into microphone">
+              <i class="fa-solid fa-microphone" id="liveVoiceIcon"></i>
+              <span id="liveVoiceText">Start Voice Call (Speak)</span>
+            </button>
+            <input type="text" id="demoUtteranceInput" class="demo-input" style="flex:1; min-width:200px;" placeholder="Speak into mic or type reply..." />
             <button id="demoSendBtn" class="demo-action-btn" type="button">
               <i class="fa-solid fa-paper-plane"></i>
-              <span>Simulate Turn</span>
+              <span>Send</span>
             </button>
           </div>
 

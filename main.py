@@ -468,6 +468,13 @@ async def process_turn(request: Request):
         else:
             _live_leads.insert(0, lead_record)
 
+    # Autonomously record call & extract continuous learning into SQLite
+    if engine and hasattr(engine, "save_and_learn_from_call"):
+        try:
+            engine.save_and_learn_from_call()
+        except Exception:
+            pass
+
     llm_info = engine.llm_router.get_active_model_info() if (engine and hasattr(engine, "llm_router") and engine.llm_router) else {
         "model_id": "llama-3.3-70b",
         "parameter_scale": "70 Billion",

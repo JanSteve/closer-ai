@@ -576,7 +576,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  let isVoiceCallActive = false;
+  let recognition = null;
+  let isAiSpeaking = false;
+
   function playAudioResponse(audioBase64, fallbackText, onEndedCallback, audioFormat = 'wav') {
+    isAiSpeaking = true;
+    if (recognition) {
+      try { recognition.abort(); } catch {}
+    }
+
     if (audioBase64) {
       lastAudioBase64 = audioBase64;
       if (btnReplayAudio) btnReplayAudio.style.display = 'inline-flex';
@@ -591,7 +600,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       demoAudioPlayer.onended = () => {
         stopSpeakingUI();
+        isAiSpeaking = false;
         if (onEndedCallback) onEndedCallback();
+        if (isVoiceCallActive) {
+          setTimeout(startListening, 300);
+        }
       };
       demoAudioPlayer.onerror = () => {
         stopSpeakingUI();
@@ -605,10 +618,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function speakBrowserTTS(text, onEndedCallback) {
     if (!('speechSynthesis' in window)) {
+      isAiSpeaking = false;
       if (onEndedCallback) onEndedCallback();
+      if (isVoiceCallActive) setTimeout(startListening, 300);
       return;
     }
     window.speechSynthesis.cancel();
+    isAiSpeaking = true;
 
     const cleanText = text.replace(/₹/g, 'Rupees ').replace(/\$/g, 'Dollars ');
     const utterance = new SpeechSynthesisUtterance(cleanText);
@@ -629,11 +645,15 @@ document.addEventListener('DOMContentLoaded', () => {
     utterance.onstart = () => startSpeakingUI();
     utterance.onend = () => {
       stopSpeakingUI();
+      isAiSpeaking = false;
       if (onEndedCallback) onEndedCallback();
+      if (isVoiceCallActive) setTimeout(startListening, 300);
     };
     utterance.onerror = () => {
       stopSpeakingUI();
+      isAiSpeaking = false;
       if (onEndedCallback) onEndedCallback();
+      if (isVoiceCallActive) setTimeout(startListening, 300);
     };
 
     window.speechSynthesis.speak(utterance);
@@ -872,6 +892,99 @@ document.addEventListener('DOMContentLoaded', () => {
     demoUtteranceInput.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
         executeTurn(demoUtteranceInput.value);
+      }
+    });
+  }
+
+  // Live Hands-Free Voice-to-Voice Calling System
+  const btnLiveVoiceCall = document.getElementById('btnLiveVoiceCall');
+  const liveVoiceIcon = document.getElementById('liveVoiceIcon');
+  const liveVoiceText = document.getElementById('liveVoiceText');
+
+  function initSpeechEngine() {
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRec) {
+      alert("Your browser does not support Web Speech Recognition. Please open this in Google Chrome, Edge, or Safari to speak directly into your microphone.");
+      return null;
+    }
+    const rec = new SpeechRec();
+    rec.continuous = false;
+    rec.interimResults = false;
+
+    rec.onstart = () => {
+      if (btnLiveVoiceCall && isVoiceCallActive) {
+        btnLiveVoiceCall.classList.add('listening');
+        if (liveVoiceIcon) liveVoiceIcon.className = 'fa-solid fa-circle-dot';
+        if (liveVoiceText) liveVoiceText.textContent = 'Listening (Speak Now)...';
+      }
+      startSpeakingUI();
+      if (modalVadStatus) {
+        modalVadStatus.textContent = '● LISTENING (MIC ACTIVE)';
+        modalVadStatus.style.color = '#ef4444';
+      }
+    };
+
+    rec.onresult = (e) => {
+      if (!e.results || !e.results[0] || !e.results[0][0]) return;
+      const transcript = e.results[0][0].transcript;
+      if (demoUtteranceInput) demoUtteranceInput.value = transcript;
+      executeTurn(transcript);
+    };
+
+    rec.onerror = (e) => {
+      console.warn("Speech recognition notice:", e.error);
+      if (isVoiceCallActive && !isAiSpeaking) {
+        setTimeout(() => {
+          if (isVoiceCallActive && !isAiSpeaking) {
+            try { rec.start(); } catch {}
+          }
+        }, 500);
+      }
+    };
+
+    rec.onend = () => {
+      if (btnLiveVoiceCall) btnLiveVoiceCall.classList.remove('listening');
+      if (isVoiceCallActive && !isAiSpeaking) {
+        if (liveVoiceIcon) liveVoiceIcon.className = 'fa-solid fa-microphone';
+        if (liveVoiceText) liveVoiceText.textContent = 'Voice Call Active (Speak)';
+      }
+    };
+
+    return rec;
+  }
+
+  function startListening() {
+    if (!isVoiceCallActive || isAiSpeaking) return;
+    if (!recognition) recognition = initSpeechEngine();
+    if (!recognition) return;
+    recognition.lang = currentMarket === 'tamil' ? 'ta-IN' : (currentMarket === 'hindi' ? 'hi-IN' : 'en-US');
+    try {
+      recognition.start();
+    } catch {}
+  }
+
+  if (btnLiveVoiceCall) {
+    btnLiveVoiceCall.addEventListener('click', () => {
+      if (!isVoiceCallActive) {
+        isVoiceCallActive = true;
+        if (!recognition) recognition = initSpeechEngine();
+        if (!recognition) {
+          isVoiceCallActive = false;
+          return;
+        }
+        btnLiveVoiceCall.classList.add('listening');
+        if (liveVoiceText) liveVoiceText.textContent = 'Connecting Mic...';
+        startListening();
+      } else {
+        isVoiceCallActive = false;
+        if (demoAudioPlayer) demoAudioPlayer.pause();
+        if (recognition) {
+          try { recognition.abort(); } catch {}
+        }
+        btnLiveVoiceCall.classList.remove('listening');
+        if (liveVoiceIcon) liveVoiceIcon.className = 'fa-solid fa-microphone';
+        if (liveVoiceText) liveVoiceText.textContent = 'Start Voice Call (Speak)';
+        stopSpeakingUI();
       }
     });
   }
