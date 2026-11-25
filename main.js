@@ -970,19 +970,39 @@ document.addEventListener('DOMContentLoaded', () => {
   const liveVoiceIcon = document.getElementById('liveVoiceIcon');
   const liveVoiceText = document.getElementById('liveVoiceText');
 
+  let micStream = null;
+
+  async function ensureMicPermission() {
+    if (micStream && micStream.active) return true;
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return false;
+    try {
+      micStream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+      });
+      return true;
+    } catch (err) {
+      if (modalVadStatus) {
+        modalVadStatus.textContent = `● MIC PERMISSION NEEDED (${err.name || 'Blocked'}) — ALLOW MIC OR TYPE BELOW`;
+        modalVadStatus.style.color = '#f87171';
+      }
+      return false;
+    }
+  }
+
   function initSpeechEngine() {
     const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRec) {
       if (modalVadStatus) {
-        modalVadStatus.textContent = '● MIC UNAVAILABLE IN THIS VIEW — TYPE BELOW & CLICK SEND';
+        modalVadStatus.textContent = '● BROWSER SPEECH API UNAVAILABLE — TYPE BELOW & CLICK SEND';
         modalVadStatus.style.color = '#fbbf24';
       }
       if (demoUtteranceInput) demoUtteranceInput.focus();
       return null;
     }
     const rec = new SpeechRec();
-    rec.continuous = false;
-    rec.interimResults = false;
+    rec.continuous = true;
+    rec.interimResults = true;
+    rec.maxAlternatives = 1;
 
     rec.onstart = () => {
       if (btnLiveVoiceCall && isVoiceCallActive) {
@@ -992,34 +1012,66 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       startSpeakingUI();
       if (modalVadStatus) {
-        modalVadStatus.textContent = '● LISTENING (MIC ACTIVE)';
+        modalVadStatus.textContent = '● LISTENING (MIC ACTIVE — SAY "HELLO")';
         modalVadStatus.style.color = '#ef4444';
       }
     };
 
     rec.onresult = (e) => {
-      if (!e.results || !e.results[0] || !e.results[0][0]) return;
-      const transcript = e.results[0][0].transcript;
-      if (demoUtteranceInput) demoUtteranceInput.value = transcript;
-      executeTurn(transcript);
+      let interimText = '';
+      let finalText = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const chunk = e.results[i][0] ? e.results[i][0].transcript : '';
+        if (e.results[i].isFinal) {
+          finalText += chunk + ' ';
+        } else {
+          interimText += chunk;
+        }
+      }
+      if (demoUtteranceInput) {
+        demoUtteranceInput.value = (finalText || interimText).trim();
+      }
+      // Mid-speech barge-in if user starts speaking clearly while AI is talking
+      if ((interimText.trim().length > 2 || finalText.trim().length > 0) && isAiSpeaking) {
+        interruptCurrentSpeech();
+      }
+      if (finalText.trim()) {
+        const cleanFinal = finalText.trim();
+        try { rec.stop(); } catch {}
+        executeTurn(cleanFinal);
+      }
     };
 
     rec.onerror = (e) => {
-      console.warn("Speech recognition notice:", e.error);
-      if (isVoiceCallActive && !isAiSpeaking) {
-        setTimeout(() => {
-          if (isVoiceCallActive && !isAiSpeaking) {
-            try { rec.start(); } catch {}
-          }
-        }, 500);
+      console.warn('Speech recognition notice:', e.error);
+      if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+        isVoiceCallActive = false;
+        if (btnLiveVoiceCall) btnLiveVoiceCall.classList.remove('listening');
+        if (liveVoiceIcon) liveVoiceIcon.className = 'fa-solid fa-microphone';
+        if (liveVoiceText) liveVoiceText.textContent = 'Start Voice Call (Speak)';
+        if (modalVadStatus) {
+          modalVadStatus.textContent = '● MIC BLOCKED — ENABLE MIC PERMISSION IN BROWSER OR TYPE BELOW';
+          modalVadStatus.style.color = '#f87171';
+        }
+        return;
+      }
+      if (e.error === 'network' && modalVadStatus) {
+        modalVadStatus.textContent = '● SPEECH SERVICE NETWORK ISSUE — USE CHROME OR TYPE BELOW';
+        modalVadStatus.style.color = '#fbbf24';
       }
     };
 
     rec.onend = () => {
-      if (btnLiveVoiceCall) btnLiveVoiceCall.classList.remove('listening');
       if (isVoiceCallActive && !isAiSpeaking) {
+        setTimeout(() => {
+          if (isVoiceCallActive && !isAiSpeaking) {
+            startListening();
+          }
+        }, 250);
+      } else if (!isVoiceCallActive) {
+        if (btnLiveVoiceCall) btnLiveVoiceCall.classList.remove('listening');
         if (liveVoiceIcon) liveVoiceIcon.className = 'fa-solid fa-microphone';
-        if (liveVoiceText) liveVoiceText.textContent = 'Voice Call Active (Speak)';
+        if (liveVoiceText) liveVoiceText.textContent = 'Start Voice Call (Speak)';
       }
     };
 
@@ -1030,16 +1082,22 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!isVoiceCallActive || isAiSpeaking) return;
     if (!recognition) recognition = initSpeechEngine();
     if (!recognition) return;
-    recognition.lang = currentMarket === 'tamil' ? 'ta-IN' : (currentMarket === 'hindi' ? 'hi-IN' : 'en-US');
+    recognition.lang = currentMarket === 'tamil' ? 'ta-IN' : (currentMarket === 'hindi' ? 'hi-IN' : 'en-IN');
     try {
       recognition.start();
     } catch {}
   }
 
   if (btnLiveVoiceCall) {
-    btnLiveVoiceCall.addEventListener('click', () => {
+    btnLiveVoiceCall.addEventListener('click', async () => {
+      unlockAudioOnGesture();
       if (!isVoiceCallActive) {
         interruptCurrentSpeech();
+        const hasMic = await ensureMicPermission();
+        if (!hasMic) {
+          isVoiceCallActive = false;
+          return;
+        }
         isVoiceCallActive = true;
         if (!recognition) recognition = initSpeechEngine();
         if (!recognition) {
@@ -1054,6 +1112,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (demoAudioPlayer) demoAudioPlayer.pause();
         if (recognition) {
           try { recognition.abort(); } catch {}
+        }
+        if (micStream) {
+          micStream.getTracks().forEach((t) => t.stop());
+          micStream = null;
         }
         btnLiveVoiceCall.classList.remove('listening');
         if (liveVoiceIcon) liveVoiceIcon.className = 'fa-solid fa-microphone';

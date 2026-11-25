@@ -790,6 +790,56 @@ async def send_doctor_call_summary(request: Request):
     return JSONResponse(content=result)
 
 
+@app.post("/api/stt")
+async def speech_to_text_fallback(request: Request):
+    """Server-side STT fallback for browsers/webviews where Web Speech API is unavailable."""
+    try:
+        form = await request.form()
+        audio_file = form.get("audio")
+        language = str(form.get("language", "en") or "en")
+        if not audio_file:
+            return JSONResponse(status_code=400, content={"error": "No audio uploaded", "transcript": ""})
+        raw_bytes = await audio_file.read()
+        if not raw_bytes or len(raw_bytes) < 200:
+            return JSONResponse(content={"transcript": "", "provider": "none"})
+
+        import tempfile as _tmp
+        with _tmp.NamedTemporaryFile(suffix=".webm", delete=False) as tf:
+            tf.write(raw_bytes)
+            tmp_path = tf.name
+
+        transcript = ""
+        provider = "none"
+        try:
+            groq_key = os.getenv("GROQ_API_KEY", "")
+            openai_key = os.getenv("OPENAI_API_KEY", "")
+            if groq_key or openai_key:
+                import httpx
+                api_url = "https://api.groq.com/openai/v1/audio/transcriptions" if groq_key else "https://api.openai.com/v1/audio/transcriptions"
+                key = groq_key or openai_key
+                model_name = "whisper-large-v3-turbo" if groq_key else "whisper-1"
+                async with httpx.AsyncClient(timeout=12.0) as client:
+                    with open(tmp_path, "rb") as af:
+                        resp = await client.post(
+                            api_url,
+                            headers={"Authorization": f"Bearer {key}"},
+                            data={"model": model_name, "language": language[:2]},
+                            files={"file": ("speech.webm", af, "audio/webm")},
+                        )
+                    if resp.status_code == 200:
+                        transcript = (resp.json().get("text") or "").strip()
+                        provider = model_name
+        finally:
+            try:
+                os.remove(tmp_path)
+            except OSError:
+                pass
+
+        return JSONResponse(content={"transcript": transcript, "provider": provider})
+    except Exception as exc:
+        return JSONResponse(content={"transcript": "", "provider": "error", "detail": str(exc)})
+
+
 # -----------------------------------------------------------------------------
 # APILayer Unified Suite / Public-APIs Verification & Enrichment Endpoints
 # -----------------------------------------------------------------------------
