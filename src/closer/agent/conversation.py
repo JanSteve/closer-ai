@@ -555,10 +555,12 @@ class ConversationEngine:
                 return play["response"]
 
         # 2. Direct Hindi Slot Confirmation (prioritize explicit slot booking over generic info)
-        if any(w in t for w in ["शनिवार", "रविवार", "saturday", "sunday", "11 am", "11:00", "3 pm", "3:00", "2 pm", "2:00", "बुक"]):
-            if any(w in t for w in ["शनिवार", "रविवार", "saturday", "sunday", "11 am", "11:00", "3 pm", "3:00", "2 pm", "2:00", "11", "3", "2"]):
+        if any(w in t for w in ["शनिवार", "रविवार", "कल", "saturday", "sunday", "tomorrow", "11 am", "11:00", "3 pm", "3:00", "2 pm", "2:00", "बुक", "अपॉइंटमेंट", "appointment"]):
+            if any(w in t for w in ["शनिवार", "रविवार", "कल", "saturday", "sunday", "tomorrow", "11 am", "11:00", "3 pm", "3:00", "2 pm", "2:00", "11", "3", "2", "अपॉइंटमेंट", "appointment"]):
                 if "2" in t and ("शनिवार" in t or "saturday" in t):
                     day = "शनिवार दोपहर 2:00 बजे IST"
+                elif any(x in t for x in ["कल", "tomorrow"]) and not any(x in t for x in ["शनिवार", "रविवार", "saturday", "sunday"]):
+                    day = "कल सुबह 11:30 बजे IST"
                 elif any(x in t for x in ["शनिवार", "saturday", "11"]):
                     day = "शनिवार सुबह 11:00 बजे IST"
                 else:
@@ -1170,7 +1172,7 @@ class ConversationEngine:
     def _parse_preferred_slot(self, text: str) -> str:
         """Parses an appointment or callback slot string with IST default."""
         t = text.lower()
-        tz_label = "PST" if self.market_mode == "usa" else "IST"
+        tz_label = "IST" if (getattr(self, "sector", "healthcare") == "healthcare" or self.market_mode != "usa") else "PST"
 
         min_match = re.search(r"\bin\s+(\d+)\s*(?:mins?|minutes?)\b", t)
         if min_match:

@@ -110,8 +110,8 @@ def _is_tamil_busy_query(t: str) -> bool:
     return any(
         k in t
         for k in (
-            "busy", "meeting", "later", "tomorrow", "driving", "call me", "whatsapp",
-            "மீட்டிங்", "பிஸி", "நாளைக்கு", "நேரமில்லை", "அப்புறம்", "வாட்ஸ்அப்", "அனுப்பி",
+            "busy", "meeting", "later", "driving", "call me", "whatsapp",
+            "மீட்டிங்", "பிஸி", "நேரமில்லை", "அப்புறம்", "வாட்ஸ்அப்", "அனுப்பி",
         )
     )
 
@@ -120,8 +120,8 @@ def _is_tamil_slot_confirm(t: str) -> bool:
     return any(
         k in t
         for k in (
-            "saturday", "sunday", "thursday", "friday", "11", "4", "3", "5", "6",
-            "சனிக்கிழமை", "ஞாயிறு", "வியாழன்", "வெள்ளி", "ஓகே", "பார்க்கலாம்", "வர்றேன்", "புக்",
+            "saturday", "sunday", "thursday", "friday", "tomorrow", "appointment", "consult", "book", "venum", "11", "4", "3", "5", "6",
+            "சனிக்கிழமை", "ஞாயிறு", "வியாழன்", "வெள்ளி", "நாளை", "நாளைக்கு", "ஓகே", "பார்க்கலாம்", "வர்றேன்", "புக்",
         )
     )
 

@@ -607,6 +607,21 @@ document.addEventListener('DOMContentLoaded', () => {
   let activeTurnAbortController = null;
   let lastEmotionProsody = { rate: 1.0, pitch: 1.0 };
 
+  function unlockAudioOnGesture() {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtx && !window._closerAudioCtx) {
+        window._closerAudioCtx = new AudioCtx();
+      }
+      if (window._closerAudioCtx && window._closerAudioCtx.state === 'suspended') {
+        window._closerAudioCtx.resume().catch(() => {});
+      }
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.getVoices();
+      }
+    } catch {}
+  }
+
   function interruptCurrentSpeech() {
     const wasSpeaking = isAiSpeaking || (demoAudioPlayer && !demoAudioPlayer.paused);
     const interrupted = wasSpeaking ? currentAiSpeechText : '';
@@ -727,26 +742,23 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Voice Sample Preview Button (Instant Direct Audio for Maya, Pallavi, Swati)
+  // Voice Sample Preview Button (Instant Direct Audio for Maya, Priya, Ritu)
   if (btnVoicePreview) {
     btnVoicePreview.addEventListener('click', async () => {
+      unlockAudioOnGesture();
       const selectedVoice = voiceSelector ? voiceSelector.value : 'maya_en';
       startSpeakingUI();
 
-      let audioSrc = '/demos/en_opener.wav';
       let sampleMsg = 'Hello! Maya calling from Amura Health Patient Care in Velachery, Chennai. I saw you requested a metabolic consultation—are you looking into diabetes reversal, thyroid care, or a specialist OPD visit?';
 
       if (selectedVoice === 'priya_ta' || selectedVoice === 'pallavi_ta' || selectedVoice.includes('ta') || selectedVoice.includes('tamil')) {
-        audioSrc = '/demos/ta_opener.mp3';
         sampleMsg = 'வணக்கம் Sir! வேளச்சேரி Amura Health-ல இருந்து பிரியா பேசுறேங்க. சுகர், தைராய்டு அல்லது PCOD மேனேஜ்மென்ட் பத்தி doctor consultation கேட்டிருந்தீங்க—உங்களுக்கு இப்போ என்ன health goal இருக்கு Sir?';
       } else if (selectedVoice === 'ritu_hi' || selectedVoice === 'swati_hi' || selectedVoice.includes('hi') || selectedVoice.includes('hindi')) {
-        audioSrc = '/demos/hi_opener.mp3';
         sampleMsg = 'नमस्ते जी! Amura Health पेशेंट केयर से रितु बात कर रही हूँ। आपने मेटाबोलिक और क्रॉनिक केयर कंसल्टेशन के लिए रिक्वेस्ट की थी—क्या आप डायबिटीज, थायरॉइड या किसी स्पेशलिस्ट OPD के लिए देख रहे हैं?';
       }
 
       if (modalAIText) modalAIText.textContent = `"${sampleMsg}"`;
 
-      // Prefer live API neural TTS for up-to-date Amura Health speech, fallback to browser TTS
       try {
         const res = await fetch('/api/turn', {
           method: 'POST',
@@ -756,24 +768,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (res.ok) {
           const data = await res.json();
           if (data.audio_base64) {
-            playAudioResponse(data.audio_base64, data.reply || sampleMsg, null, data.audio_format || 'wav');
+            playAudioResponse(data.audio_base64, data.reply || sampleMsg, null, data.audio_format || 'mp3');
             return;
           }
         }
       } catch {}
 
-      try {
-        const audio = new Audio(audioSrc);
-        audio.onended = () => stopSpeakingUI();
-        audio.onerror = () => {
-          stopSpeakingUI();
-          speakBrowserTTS(sampleMsg);
-        };
-        await audio.play();
-        return;
-      } catch {
-        speakBrowserTTS(sampleMsg);
-      }
+      speakBrowserTTS(sampleMsg);
     });
   }
 
@@ -782,6 +783,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // -------------------------------------------------------------------------
   async function executeTurn(utteranceText) {
     if (!utteranceText || !utteranceText.trim()) return;
+    unlockAudioOnGesture();
     const text = utteranceText.trim();
     const { wasInterrupted, interruptedText } = interruptCurrentSpeech();
     const selectedVoice = voiceSelector ? voiceSelector.value : 'maya_en';
@@ -868,7 +870,7 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
 
-        playAudioResponse(data.audio_base64, data.reply, null, data.audio_format || 'wav');
+        playAudioResponse(data.audio_base64, data.reply, null, data.audio_format || 'mp3');
         if (demoSendBtn) {
           demoSendBtn.disabled = false;
           demoSendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> <span>Send</span>';
@@ -971,7 +973,11 @@ document.addEventListener('DOMContentLoaded', () => {
   function initSpeechEngine() {
     const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRec) {
-      alert("Your browser does not support Web Speech Recognition. Please open this in Google Chrome, Edge, or Safari to speak directly into your microphone.");
+      if (modalVadStatus) {
+        modalVadStatus.textContent = '● MIC UNAVAILABLE IN THIS VIEW — TYPE BELOW & CLICK SEND';
+        modalVadStatus.style.color = '#fbbf24';
+      }
+      if (demoUtteranceInput) demoUtteranceInput.focus();
       return null;
     }
     const rec = new SpeechRec();
@@ -1277,6 +1283,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   window.runStudioSimulation = async function () {
+    unlockAudioOnGesture();
     const item = STUDIO_SCENARIOS[studioSelectedScenario] || STUDIO_SCENARIOS['en_opener'];
     const waveform = document.getElementById('studioWaveform');
     const statusEl = document.getElementById('studioStatus');
@@ -1295,54 +1302,30 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     };
 
-    if (item.audio_url) {
-      try {
-        const audio = new Audio(item.audio_url);
-        audio.onended = resetStudioUI;
-        audio.onerror = () => { fallbackToTurn(); };
-        audio.play();
-        return;
-      } catch (e) {
-        console.warn("Direct audio play error:", e);
-      }
-    }
+    try {
+      const res = await fetch('/api/turn', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          utterance: 'STUDIO_SAMPLE',
+          text: item.text,
+          voice: studioSelectedVoice,
+          rate: studioSelectedRate,
+          model_id: studioSelectedLLM,
+          sector: 'healthcare'
+        })
+      });
 
-    fallbackToTurn();
-
-    async function fallbackToTurn() {
-      try {
-        const res = await fetch('/api/turn', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            utterance: 'STUDIO_SAMPLE',
-            text: item.text,
-            voice: studioSelectedVoice,
-            rate: studioSelectedRate,
-            model_id: studioSelectedLLM
-          })
-        });
-
-        if (res.ok) {
-          const data = await res.json();
-          if (data.audio_base64) {
-            playAudioResponse(data.audio_base64, data.reply, resetStudioUI, data.audio_format || 'wav');
-            return;
-          }
+      if (res.ok) {
+        const data = await res.json();
+        if (data.audio_base64) {
+          playAudioResponse(data.audio_base64, data.reply, resetStudioUI, data.audio_format || 'mp3');
+          return;
         }
-      } catch {}
-
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        const utter = new SpeechSynthesisUtterance(item.text);
-        utter.lang = studioSelectedVoice === 'tamil' ? 'ta-IN' : (studioSelectedVoice === 'hindi' ? 'hi-IN' : 'en-US');
-        utter.onend = resetStudioUI;
-        utter.onerror = resetStudioUI;
-        window.speechSynthesis.speak(utter);
-      } else {
-        setTimeout(resetStudioUI, 2500);
       }
-    }
+    } catch {}
+
+    speakBrowserTTS(item.text, resetStudioUI);
   };
 
   // -------------------------------------------------------------------------

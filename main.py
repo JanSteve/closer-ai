@@ -498,14 +498,13 @@ async def process_turn(request: Request):
         tts_error = None
 
         if inferred_mode in ("tamil", "hindi"):
+            spoken_reply = reply
             try:
                 indic_eng = _app_indic_engine or (IndicNeuralVoiceEngine() if IndicNeuralVoiceEngine else None)
                 if IndicDialectProsodyEngine:
                     spoken_reply = IndicDialectProsodyEngine.humanize(
                         reply, language=inferred_mode, dialect=dialect, inject_pauses=True
                     )
-                else:
-                    spoken_reply = reply
                 if indic_eng:
                     audio_bytes, tts_provider, _, audio_fmt = await indic_eng.synthesize(
                         text=spoken_reply,
@@ -516,11 +515,27 @@ async def process_turn(request: Request):
                         pitch=pitch,
                     )
                     reply = spoken_reply
-                    audio_b64 = base64.b64encode(audio_bytes).decode("utf-8")
-                else:
-                    tts_provider = "browser_speech_synthesis"
+                    if audio_bytes:
+                        audio_b64 = base64.b64encode(audio_bytes).decode("utf-8")
+                        audio_fmt = "wav" if audio_bytes[:4] == b"RIFF" else "mp3"
             except Exception as exc:
                 tts_error = f"{type(exc).__name__}: {exc}"
+
+            if not audio_b64 and _app_tts_engine:
+                try:
+                    indic_voice = "ta-IN-PallaviNeural" if inferred_mode == "tamil" else "hi-IN-SwaraNeural"
+                    audio_bytes, _ = _app_tts_engine.synthesize_sync(
+                        spoken_reply, voice=indic_voice, rate=rate or "-3%", pitch=pitch or "+0Hz"
+                    )
+                    if audio_bytes:
+                        audio_b64 = base64.b64encode(audio_bytes).decode("utf-8")
+                        audio_fmt = "wav" if audio_bytes[:4] == b"RIFF" else "mp3"
+                        tts_provider = f"Neural Voice ({indic_voice})"
+                        tts_error = None
+                except Exception as exc2:
+                    tts_error = f"{type(exc2).__name__}: {exc2}"
+            if not audio_b64 and tts_provider == "none":
+                tts_provider = "browser_speech_synthesis"
         else:
             v_lower = voice.lower()
             if "india" in v_lower or "neerja" in v_lower or inferred_mode == "india":
@@ -534,7 +549,9 @@ async def process_turn(request: Request):
             if _app_tts_engine:
                 try:
                     audio_bytes, _ = _app_tts_engine.synthesize_sync(reply, voice=actual_voice, rate=rate, pitch=pitch)
-                    audio_b64 = base64.b64encode(audio_bytes).decode("utf-8")
+                    if audio_bytes:
+                        audio_b64 = base64.b64encode(audio_bytes).decode("utf-8")
+                        audio_fmt = "wav" if audio_bytes[:4] == b"RIFF" else "mp3"
                     tts_provider = getattr(_app_tts_engine, "last_provider_used", "EdgeTTSVoiceEngine")
                 except Exception as exc:
                     audio_b64 = ""
