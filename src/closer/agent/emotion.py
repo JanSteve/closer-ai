@@ -35,9 +35,9 @@ class EmotionAssessment:
 
 _PROSODY_MAP: Dict[PatientEmotion, Dict[str, object]] = {
     PatientEmotion.PAIN_DISTRESS: {
-        "tts_rate": "-10%",
-        "tts_pitch": "-2Hz",
-        "sarvam_pace": 0.90,
+        "tts_rate": "-6%",
+        "tts_pitch": "-3Hz",
+        "sarvam_pace": 0.92,
         "voice_style": "calm_reassuring",
         "directive": (
             "Respond with immediate gentle calm, validate physical discomfort first, "
@@ -45,9 +45,9 @@ _PROSODY_MAP: Dict[PatientEmotion, Dict[str, object]] = {
         ),
     },
     PatientEmotion.URGENT: {
-        "tts_rate": "+4%",
-        "tts_pitch": "+1Hz",
-        "sarvam_pace": 1.03,
+        "tts_rate": "+6%",
+        "tts_pitch": "+2Hz",
+        "sarvam_pace": 1.04,
         "voice_style": "urgent_clear",
         "directive": (
             "Respond briskly, clearly, and action-first with zero filler so the patient "
@@ -55,9 +55,9 @@ _PROSODY_MAP: Dict[PatientEmotion, Dict[str, object]] = {
         ),
     },
     PatientEmotion.ANXIOUS: {
-        "tts_rate": "-8%",
+        "tts_rate": "-5%",
         "tts_pitch": "-2Hz",
-        "sarvam_pace": 0.92,
+        "sarvam_pace": 0.94,
         "voice_style": "empathetic",
         "directive": (
             "Lead with warm reassurance, steady unhurried cadence, and remind the patient "
@@ -65,9 +65,9 @@ _PROSODY_MAP: Dict[PatientEmotion, Dict[str, object]] = {
         ),
     },
     PatientEmotion.FRUSTRATED: {
-        "tts_rate": "-6%",
-        "tts_pitch": "-1Hz",
-        "sarvam_pace": 0.94,
+        "tts_rate": "-3%",
+        "tts_pitch": "-2Hz",
+        "sarvam_pace": 0.96,
         "voice_style": "warm_patient",
         "directive": (
             "Acknowledge frustration sincerely without defensiveness, take ownership, "
@@ -75,9 +75,9 @@ _PROSODY_MAP: Dict[PatientEmotion, Dict[str, object]] = {
         ),
     },
     PatientEmotion.CONFUSED: {
-        "tts_rate": "-7%",
+        "tts_rate": "-4%",
         "tts_pitch": "+0Hz",
-        "sarvam_pace": 0.93,
+        "sarvam_pace": 0.95,
         "voice_style": "warm_patient",
         "directive": (
             "Use simple, jargon-free explanation with warm patience and check understanding "
@@ -85,8 +85,8 @@ _PROSODY_MAP: Dict[PatientEmotion, Dict[str, object]] = {
         ),
     },
     PatientEmotion.CALM: {
-        "tts_rate": "+0%",
-        "tts_pitch": "+0Hz",
+        "tts_rate": "+2%",
+        "tts_pitch": "+1Hz",
         "sarvam_pace": 1.00,
         "voice_style": "empathetic",
         "directive": (

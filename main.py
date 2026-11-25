@@ -500,37 +500,27 @@ async def process_turn(request: Request):
         if inferred_mode in ("tamil", "hindi"):
             spoken_reply = reply
             try:
-                indic_eng = _app_indic_engine or (IndicNeuralVoiceEngine() if IndicNeuralVoiceEngine else None)
                 if IndicDialectProsodyEngine:
                     spoken_reply = IndicDialectProsodyEngine.humanize(
-                        reply, language=inferred_mode, dialect=dialect, inject_pauses=True
+                        reply, language=inferred_mode, dialect=dialect, inject_pauses=False
                     )
-                if indic_eng:
-                    audio_bytes, tts_provider, _, audio_fmt = await indic_eng.synthesize(
-                        text=spoken_reply,
-                        language=inferred_mode,
-                        dialect=dialect,
-                        backend=tts_backend,
-                        rate=rate,
-                        pitch=pitch,
-                    )
-                    reply = spoken_reply
-                    if audio_bytes:
-                        audio_b64 = base64.b64encode(audio_bytes).decode("utf-8")
-                        audio_fmt = "wav" if audio_bytes[:4] == b"RIFF" else "mp3"
-            except Exception as exc:
-                tts_error = f"{type(exc).__name__}: {exc}"
+                # Remove artificial ellipsis/em-dash pauses so words flow naturally combined like human speech
+                spoken_reply = spoken_reply.replace("...", ",").replace("—", ",")
+                reply = spoken_reply
+            except Exception:
+                pass
 
-            if not audio_b64 and _app_tts_engine:
+            # Single continuous connected neural synthesis pass (zero robotic mid-sentence gaps)
+            if _app_tts_engine:
                 try:
                     indic_voice = "ta-IN-PallaviNeural" if inferred_mode == "tamil" else "hi-IN-SwaraNeural"
                     audio_bytes, _ = _app_tts_engine.synthesize_sync(
-                        spoken_reply, voice=indic_voice, rate=rate or "-3%", pitch=pitch or "+0Hz"
+                        spoken_reply, voice=indic_voice, rate=rate or "+0%", pitch=pitch or "+0Hz"
                     )
                     if audio_bytes:
                         audio_b64 = base64.b64encode(audio_bytes).decode("utf-8")
                         audio_fmt = "wav" if audio_bytes[:4] == b"RIFF" else "mp3"
-                        tts_provider = f"Neural Voice ({indic_voice})"
+                        tts_provider = f"Neural Expressive ({indic_voice})"
                         tts_error = None
                 except Exception as exc2:
                     tts_error = f"{type(exc2).__name__}: {exc2}"
@@ -543,16 +533,17 @@ async def process_turn(request: Request):
             elif "prabhat" in v_lower:
                 actual_voice = "en-IN-PrabhatNeural"
             else:
-                actual_voice = voice if "-" in voice else "en-US-AriaNeural"
-            rate = rate or "-3%"
+                actual_voice = voice if "-" in voice else "en-IN-NeerjaExpressiveNeural"
+            spoken_en = reply.replace("...", ",").replace("—", ",")
+            rate = rate or "+1%"
             pitch = pitch or "+0Hz"
             if _app_tts_engine:
                 try:
-                    audio_bytes, _ = _app_tts_engine.synthesize_sync(reply, voice=actual_voice, rate=rate, pitch=pitch)
+                    audio_bytes, _ = _app_tts_engine.synthesize_sync(spoken_en, voice=actual_voice, rate=rate, pitch=pitch)
                     if audio_bytes:
                         audio_b64 = base64.b64encode(audio_bytes).decode("utf-8")
                         audio_fmt = "wav" if audio_bytes[:4] == b"RIFF" else "mp3"
-                    tts_provider = getattr(_app_tts_engine, "last_provider_used", "EdgeTTSVoiceEngine")
+                    tts_provider = getattr(_app_tts_engine, "last_provider_used", f"Neural Expressive ({actual_voice})")
                 except Exception as exc:
                     audio_b64 = ""
                     tts_error = f"{type(exc).__name__}: {exc}"

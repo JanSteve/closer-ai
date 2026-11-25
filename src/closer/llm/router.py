@@ -42,6 +42,7 @@ class OpenLLMRouter:
         env_gemini = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY") or getattr(settings, "GEMINI_API_KEY", None)
         env_groq = os.getenv("GROQ_API_KEY") or getattr(settings, "GROQ_API_KEY", None)
         env_openai = os.getenv("OPENAI_API_KEY") or getattr(settings, "OPENAI_API_KEY", None)
+        env_github = os.getenv("GITHUB_TOKEN")
         env_openrouter = (
             os.getenv("OPENROUTER_API_KEY")
             or getattr(settings, "OPENROUTER_API_KEY", None)
@@ -53,7 +54,7 @@ class OpenLLMRouter:
         )
 
         self.gemini_api_key = env_gemini
-        self.api_key = api_key or env_groq or env_openai or env_openrouter or env_gemini
+        self.api_key = api_key or env_groq or env_openai or env_openrouter or env_gemini or env_github
 
         if api_base:
             self.api_base = api_base
@@ -64,6 +65,8 @@ class OpenLLMRouter:
             if default_model == "llama-3.3-70b":
                 self.active_model_id = "gemini-2.5-flash"
                 self.active_profile = get_model_profile("gemini-2.5-flash")
+        elif self.api_key and self.api_key == env_github and not (env_groq or env_openai or env_openrouter or env_gemini):
+            self.api_base = "https://models.inference.ai.azure.com"
         else:
             self.api_base = os.getenv("OPENAI_API_BASE") or getattr(settings, "OPENAI_API_BASE", None) or "https://api.groq.com/openai/v1"
 
@@ -115,7 +118,25 @@ class OpenLLMRouter:
         start_time = time.perf_counter()
         self.total_routed_calls += 1
 
-        if force_tier == "deterministic_fallback" or not self.api_key:
+        if force_tier == "deterministic_fallback":
+            reply = self._generate_fallback_response(user_utterance, market_mode)
+            elapsed_ms = int((time.perf_counter() - start_time) * 1000)
+            self.last_latency_ms = elapsed_ms
+            self.last_tier_used = "deterministic_fallback"
+            return reply, self._build_telemetry(elapsed_ms, "deterministic_fallback")
+
+        if not self.api_key:
+            # Try free zero-key open LLM endpoint (Pollinations OpenAI-compatible) unless offline-only
+            if os.getenv("CLOSER_OFFLINE_ONLY") != "1":
+                try:
+                    reply = self._call_free_open_brain(system_prompt, conversation_history, user_utterance)
+                    if reply and reply.strip().lower() not in ("", "none", "undefined"):
+                        elapsed_ms = int((time.perf_counter() - start_time) * 1000)
+                        self.last_latency_ms = elapsed_ms
+                        self.last_tier_used = "free_open_llm"
+                        return reply, self._build_telemetry(elapsed_ms, "free_open_llm")
+                except Exception:
+                    pass
             reply = self._generate_fallback_response(user_utterance, market_mode)
             elapsed_ms = int((time.perf_counter() - start_time) * 1000)
             self.last_latency_ms = elapsed_ms
@@ -202,6 +223,37 @@ class OpenLLMRouter:
         if last_err:
             raise last_err
         raise RuntimeError("No candidate models returned content")
+
+    def _call_free_open_brain(
+        self,
+        system_prompt: str,
+        conversation_history: List[Dict[str, str]],
+        user_utterance: str,
+    ) -> str:
+        """Calls the free, zero-key open-access OpenAI-compatible endpoint (Pollinations AI)."""
+        messages = [{"role": "system", "content": system_prompt}]
+        for msg in conversation_history[-6:]:
+            if msg.get("role") in ("user", "assistant") and msg.get("content"):
+                messages.append({"role": msg["role"], "content": msg["content"]})
+        messages.append({"role": "user", "content": user_utterance})
+
+        req = urllib.request.Request(
+            "https://text.pollinations.ai/openai",
+            data=json.dumps({
+                "model": "openai",
+                "messages": messages,
+                "temperature": 0.35,
+                "max_tokens": 180,
+            }).encode("utf-8"),
+            headers={
+                "Content-Type": "application/json",
+                "User-Agent": "CLOSER-AI/2.0.0 (Amura-Health-Open-Brain)",
+            },
+            method="POST",
+        )
+        with urllib.request.urlopen(req, timeout=4.0) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            return (data["choices"][0]["message"]["content"] or "").strip()
 
     def _generate_fallback_response(self, user_utterance: str, market_mode: str) -> str:
         """Deterministic healthcare-safe fallback response generation for Amura Health."""

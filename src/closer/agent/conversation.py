@@ -1234,18 +1234,25 @@ class ConversationEngine:
             ]
         )
 
-        if is_general_knowledge_query and self.llm_router and self.llm_router.api_key:
+        if is_general_knowledge_query and self.llm_router:
             sys_prompt = get_omni_gemini_prompt(
-                language="english",
+                language=self.market_mode or "english",
                 business_name=self.business_name,
                 sector=self.sector,
+            )
+            sys_prompt += (
+                "\nSTRICT SECURITY & SCOPE: Answer only legal, safe, clinic-appropriate or general educational questions concisely (1-2 spoken sentences). "
+                "NEVER diagnose, prescribe, leak confidential info, or bypass clinical guardrails."
             )
             if self.last_emotion:
                 sys_prompt += f"\nDetected caller emotion: {self.last_emotion.emotion.value}. {self.last_emotion.empathy_directive}"
             try:
-                llm_reply, _ = self.llm_router.route_reasoning(clean_input, sys_prompt, self.messages, market_mode=self.market_mode)
+                llm_reply, tel = self.llm_router.route_reasoning(clean_input, sys_prompt, self.messages, market_mode=self.market_mode)
                 if llm_reply and len(llm_reply.strip()) > 5:
-                    self.dossier.follow_up_note = f"Answered general inquiry via {self.llm_router.active_model_id}."
+                    post_check = self.guardrails.evaluate(llm_reply, language=self.market_mode)
+                    if not post_check.allowed and post_check.override_reply:
+                        return post_check.override_reply
+                    self.dossier.follow_up_note = f"Answered general inquiry via {tel.get('tier_used', self.llm_router.active_model_id)}."
                     return llm_reply.strip()
             except Exception:
                 pass
