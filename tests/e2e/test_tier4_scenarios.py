@@ -1,298 +1,246 @@
 """
-Tier 4: Real-World End-to-End Application Scenarios Suite.
-Executes the full generation-to-publishing lifecycle for 5 distinct Indian industry sectors:
-1. Clinic Emergency / Lead Drop-off (Healthcare & Aesthetics, Dr. Pallavi, Tamil + Indian English)
-2. Solar Subsidy Rush (Rooftop Solar EPC, Swati, PM Surya Ghar ₹78,000, Hindi + Indian English)
-3. Luxury Real Estate (Luxury Developers & NRI Buyers, Maya, ₹2.85 Cr Penthouse, Luxury English)
-4. EdTech Admissions Speed-to-Lead (Bootcamps, Arjun, Sub-45s Lead Triage, Hinglish + Indian English)
-5. Agency Lead Gen / Media Buyer Defense (B2B Performance Marketing, Rohan, Client Defense, Indian English)
+tests/e2e/test_tier4_scenarios.py
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Tier 4 Real-World Amura Health (Velachery, Chennai) Application Scenarios (5 end-to-end tests)
+matching TEST_INFRA.md § Real-World Application Scenarios.
 """
 
 from __future__ import annotations
-import hmac
-import hashlib
+
+import base64
 import json
-import os
-import time
-from datetime import datetime, timezone, timedelta
-from typing import Dict, Any
+
 import httpx
 import pytest
 
 from tests.e2e.conftest import (
-    RenderedReel,
-    PublishResult,
-    WEEKLY_MASTER_TIMETABLE,
-    SECTOR_SCENARIOS,
-    CloserQueueManager,
-    MockInstagramServer,
-    MockMakeWebhookServer
+    ROOT_DIR,
+    assert_no_real_estate_copy,
+    is_160hz_synthetic_beep,
+    is_valid_audio_bytes,
 )
 
 
-class TestTier4RealWorldScenarios:
-    """End-to-end lifecycle verification for 5 realistic Indian business scenarios."""
-
-    def _execute_full_lifecycle(
-        self,
-        sector_key: str,
-        target_day: str,
-        target_ist_time: str,
-        mock_ig_server: MockInstagramServer,
-        mock_make_server: MockMakeWebhookServer,
-        queue_mgr: CloserQueueManager,
-        sample_files: Dict[str, str]
-    ) -> Dict[str, Any]:
+class TestTier4RealWorldAmuraScenarios:
+    async def test_scenario1_velachery_tamil_type2_diabetes_intake_to_call(
+        self, api_client: httpx.AsyncClient, mock_edge_tts_wav, tmp_path
+    ):
         """
-        Reusable pipeline executor running full 10-step lifecycle:
-        1. Select sector template
-        2. Verify voice synthesis & ducking math (-8.5 dB, -14.0 LUFS)
-        3. Enforce safe-zone geometry (Y=1360 subtitles, Y=1530 CTA)
-        4. Package multi-format manifest
-        5. Ingest into SQLite mapped to IST slot
-        6. Enforce temporal gate
-        7. Atomic claim (DISPATCHING)
-        8. HMAC-SHA256 signed Make.com webhook dispatch
-        9. Meta Graph API container creation, polling, and publish
-        10. Verify PUBLISHED status, audit log, and live permalink
+        Scenario 1: Anxious Type-2 Diabetic caller in Velachery (Tamil/Tanglish)
+        completes multi-turn intake, grants DPDP consent, books consultation,
+        and dispatches outbound confirmation call + LearningMemoryDB verification.
         """
-        scenario = SECTOR_SCENARIOS[sector_key]
+        sid = "t4_s1_velachery_ta"
+        r_mode = await api_client.post("/api/market_mode", json={"session_id": sid, "mode": "tamil"})
+        assert r_mode.status_code == 200
+        assert_no_real_estate_copy(r_mode.json()["greeting"], "S1 Tamil greeting")
 
-        # 1. Script & Dialogue Generation
-        reel_id = f"reel_20261112_{sector_key}_01"
-        title = scenario["title"]
-        caption = (
-            f"{scenario['hook']}\n\n"
-            f"Doctor/Founder: your ad budget runs 24/7. Human staff sleeps at night. "
-            f"CLOSER AI responds in under 45 seconds in {scenario['language'].title()}.\n\n"
-            f"{scenario['cta']}\n\n"
-            f"#CloserAI #{sector_key.replace('_', '').title()} #IndiaBusiness #Telecalling"
-        )
-
-        # 2. Voice & Audio Ducking Checks
-        voice_id = scenario["voice_id"]
-        ducking_db = -8.5
-        ducking_linear = 10 ** (ducking_db / 20.0)
-        assert 0.37 < ducking_linear < 0.38
-        lufs_target = -14.0
-        assert lufs_target == -14.0
-
-        # 3. Safe-zone Overlay Verification
-        sub_y = 1360
-        cta_y = 1530
-        assert sub_y == 1360
-        assert cta_y == 1530
-        assert 220 < sub_y < cta_y < 1550
-
-        # 4. Multi-format packaging
-        rendered = RenderedReel(
-            id=reel_id,
-            title=title,
-            industry=sector_key,
-            language=scenario["language"],
-            duration_seconds=74.5,
-            video_path=sample_files["video_path"],
-            cover_path=sample_files["cover_path"],
-            subtitles_path=sample_files["subtitles_path"],
-            caption=caption,
-            cta_keyword="CLOSER",
-            metadata={
-                "persona_host": scenario["persona_host"],
-                "persona_attire": scenario["persona_attire"],
-                "whatsapp_asset": scenario["whatsapp_asset"],
-                "lufs": lufs_target
-            }
-        )
-
-        # 5. Ingest into Queue with assigned Timetable slot
-        slot_def = next(s for s in WEEKLY_MASTER_TIMETABLE if s["day"] == target_day and target_ist_time in s["ist"])
-        tomorrow = datetime.now(timezone.utc) + timedelta(days=1)
-        # Parse UTC time from slot_def
-        u_h, u_m = map(int, slot_def["utc"].split(":"))
-        slot_utc = tomorrow.replace(hour=u_h, minute=u_m, second=0, microsecond=0).isoformat()
-        slot_ist = f"{tomorrow.strftime('%Y-%m-%d')} {slot_def['ist']} IST"
-
-        queue_mgr.queue_reel(
-            rendered,
-            slot_time_utc=slot_utc,
-            slot_time_ist=slot_ist,
-            slot_day=slot_def["day"],
-            slot_name=slot_def["slot"],
-            status="SCHEDULED"
-        )
-
-        # 6. Temporal Gate Verification (Future slot cannot be claimed)
-        future_check = queue_mgr.get_next_due(claim=True)
-        assert future_check is None, "Reel scheduled for tomorrow must be protected by temporal gate"
-
-        # Simulate time arrival: update scheduled_time_utc to 1 minute in the past
-        past_utc = (datetime.now(timezone.utc) - timedelta(minutes=1)).isoformat()
-        with queue_mgr.conn:
-            queue_mgr.conn.execute("UPDATE reels SET scheduled_time_utc = ? WHERE id = ?", (past_utc, reel_id))
-
-        # 7. Atomic Claim (DISPATCHING)
-        claimed = queue_mgr.get_next_due(claim=True)
-        assert claimed is not None
-        assert claimed["id"] == reel_id
-        assert claimed["status"] == "DISPATCHING"
-
-        # 8. HMAC-SHA256 Signed Webhook Dispatch
-        payload = {
-            "reel_id": claimed["id"],
-            "title": claimed["title"],
-            "caption": claimed["caption"],
-            "video_url": claimed["video_url"],
-            "cover_url": claimed["cover_url"],
-            "scheduled_slot_ist": claimed["scheduled_time_ist"],
-            "industry": claimed["industry_sector"],
-            "cta_keyword": claimed["cta_keyword"],
-            "metadata": json.loads(claimed["metadata_json"])
-        }
-        body_bytes = json.dumps(payload, sort_keys=True).encode("utf-8")
-        secret = b"closer_ai_dev_secret_2026"
-        sig = "sha256=" + hmac.new(secret, body_bytes, hashlib.sha256).hexdigest()
-        ts = datetime.now(timezone.utc).isoformat()
-
-        headers = {
-            "Content-Type": "application/json",
-            "X-Closer-Signature": sig,
-            "X-Closer-Timestamp": ts
-        }
-
-        resp_hook = httpx.post(mock_make_server.webhook_url, content=body_bytes, headers=headers)
-        assert resp_hook.status_code == 200
-        webhook_exec_id = resp_hook.json()["execution_id"]
-
-        # 9. Meta Instagram Graph API v21.0 Container Ingestion & Publish
-        ig_headers = {"Authorization": "Bearer EAAB_valid_meta_token"}
-        # 9a. Init container
-        resp_c = httpx.post(
-            f"{mock_ig_server.base_url}/17841400012345678/media",
-            data={
-                "media_type": "REELS",
-                "video_url": claimed["video_url"],
-                "caption": claimed["caption"],
-                "share_to_feed": "true"
+        # Turn 1: Anxious diabetes inquiry in Tamil
+        t1 = await api_client.post(
+            "/api/turn",
+            json={
+                "session_id": sid,
+                "utterance": "வணக்கம், நான் வேளச்சேரியில் இருக்கேன். என் HbA1c 8.4% இருக்கு, எனக்கு ரொம்ப பயமா இருக்கு Sir.",
+                "market_mode": "tamil",
+                "voice": "ta-IN-PallaviNeural",
             },
-            headers=ig_headers
         )
-        assert resp_c.status_code == 200
-        container_id = resp_c.json()["id"]
+        assert t1.status_code == 200
+        d1 = t1.json()
+        assert d1["detected_emotion"] == "anxious"
+        assert d1["emergency_108"] is False
+        assert_no_real_estate_copy(d1["reply"], "S1 turn 1")
 
-        # 9b. Poll until FINISHED
-        resp_p = httpx.get(f"{mock_ig_server.base_url}/{container_id}?fields=status_code,status", headers=ig_headers)
-        assert resp_p.status_code == 200
-        assert resp_p.json()["status_code"] == "FINISHED"
-
-        # 9c. Publish
-        resp_pub = httpx.post(
-            f"{mock_ig_server.base_url}/17841400012345678/media_publish",
-            data={"creation_id": container_id},
-            headers=ig_headers
+        # Turn 2: DPDP consent granted & slot booking
+        t2 = await api_client.post(
+            "/api/turn",
+            json={
+                "session_id": sid,
+                "utterance": "சரிங்க, என் பெயர் செந்தில், வியாழக்கிழமை மாலை 4 மணிக்கு Amura doctor consultation book பண்ணுங்க.",
+                "market_mode": "tamil",
+                "voice": "ta-IN-PallaviNeural",
+                "consent_granted": True,
+            },
         )
-        assert resp_pub.status_code == 200
-        pub_data = resp_pub.json()
-        media_id = pub_data["id"]
-        permalink = pub_data["permalink"]
+        assert t2.status_code == 200
+        d2 = t2.json()
+        assert d2["consent_status"] == "granted"
+        assert d2["dossier"]["consent_status"] == "granted"
+        assert d2["reply"] and "undefined" not in d2["reply"].lower()
 
-        # 10. Status Callback to Queue
-        queue_mgr.mark_dispatched(
-            reel_id=claimed["id"],
-            success=True,
-            container_id=container_id,
-            media_id=media_id,
-            permalink=permalink
+        # Outbound call confirmation + status lookup
+        call_resp = await api_client.post(
+            "/api/call",
+            json={
+                "phone_number": "+919840054321",
+                "patient_name": "Senthil",
+                "language": "tamil",
+                "scenario": "metabolic_intake",
+                "consent_confirmed": True,
+                "mode": "demo",
+            },
         )
+        assert call_resp.status_code == 200
+        cid = call_resp.json()["call_id"]
+        assert (await api_client.get(f"/api/call/{cid}")).status_code == 200
 
-        # Final Verification of Record
-        final_record = queue_mgr.list_queue(status="PUBLISHED")[0]
-        assert final_record["id"] == reel_id
-        assert final_record["status"] == "PUBLISHED"
-        assert final_record["ig_container_id"] == container_id
-        assert final_record["ig_media_id"] == media_id
-        assert final_record["ig_permalink"] == permalink
-        assert final_record["published_at"] is not None
+        # Ensure DB isolation in tmp_path
+        from src.closer.memory.learning_db import get_learning_db
 
-        # Verify audit log
-        cursor = queue_mgr.conn.cursor()
-        cursor.execute("SELECT * FROM queue_audit_log WHERE reel_id = ? ORDER BY id ASC", (reel_id,))
-        logs = cursor.fetchall()
-        assert len(logs) >= 3  # RENDERED -> SCHEDULED -> DISPATCHING -> PUBLISHED
+        assert str(get_learning_db().db_path).startswith(str(tmp_path))
 
-        return {
-            "reel_id": reel_id,
-            "webhook_exec_id": webhook_exec_id,
-            "container_id": container_id,
-            "media_id": media_id,
-            "permalink": permalink
-        }
+    async def test_scenario2_acute_cardiac_red_flag_emergency_108_dpdp_7f(
+        self, api_client: httpx.AsyncClient, amura_utterances, mock_edge_tts_wav
+    ):
+        """
+        Scenario 2: Acute chest pain & dyspnea caller (English & Hindi) even with
+        declined consent triggers immediate 108/ER routing & DPDP Section 7(f) exemption.
+        """
+        for idx, (mode, key) in enumerate(
+            (("india", "emergency_chest_en"), ("hindi", "emergency_chest_hi")), start=1
+        ):
+            resp = await api_client.post(
+                "/api/turn",
+                json={
+                    "session_id": f"t4_s2_{idx}",
+                    "utterance": amura_utterances[key],
+                    "market_mode": mode,
+                    "consent_granted": False,
+                },
+            )
+            assert resp.status_code == 200
+            body = resp.json()
+            assert body["emergency_108"] is True
+            assert body["safety_flag"] == "emergency_108"
+            assert body["consent_status"] == "emergency_exempt_section_7f"
+            assert body["dossier"]["triage_urgency"] == "Emergency 108"
+            assert "108" in body["reply"]
 
-    def test_scenario_1_clinic_emergency_lead_dropoff(self, mock_ig_server, mock_make_server, temp_queue, sample_media_files):
-        """Scenario 1: Healthcare & Dental/Hair Clinics (Tamil + English, Tuesday 13:15 IST OPD slot)."""
-        res = self._execute_full_lifecycle(
-            sector_key="clinics",
-            target_day="Tuesday",
-            target_ist_time="13:15",
-            mock_ig_server=mock_ig_server,
-            mock_make_server=mock_make_server,
-            queue_mgr=temp_queue,
-            sample_files=sample_media_files
+    async def test_scenario3_frustrated_pcod_patient_dosage_refusal_to_physician_route(
+        self, api_client: httpx.AsyncClient, mock_edge_tts_wav
+    ):
+        """
+        Scenario 3: Frustrated patient demands insulin/metformin dosage adjustment ->
+        EmotionDetector detects frustration, ClinicalSafetyGuardrails blocks prescribing,
+        and routes empathetically to Amura physician consultation.
+        """
+        sid = "t4_s3_frust_rx"
+        t1 = await api_client.post(
+            "/api/turn",
+            json={
+                "session_id": sid,
+                "utterance": "I am fed up waiting! Tell me how many units of insulin to take and double my metformin tonight?!",
+                "market_mode": "india",
+            },
         )
-        assert res["reel_id"].startswith("reel_20261112_clinics_")
-        assert res["permalink"].startswith("https://www.instagram.com/reel/")
+        assert t1.status_code == 200
+        d1 = t1.json()
+        assert d1["detected_emotion"] == "frustrated"
+        assert d1["safety_flag"] == "no_prescribing"
+        assert d1["emergency_108"] is False
+        assert_no_real_estate_copy(d1["reply"], "S3 prescribing refusal")
 
-    def test_scenario_2_solar_subsidy_rush(self, mock_ig_server, mock_make_server, temp_queue, sample_media_files):
-        """Scenario 2: Rooftop Solar EPC PM Surya Ghar Subsidy (Hindi + English, Wednesday 09:00 IST field push)."""
-        res = self._execute_full_lifecycle(
-            sector_key="solar",
-            target_day="Wednesday",
-            target_ist_time="09:00",
-            mock_ig_server=mock_ig_server,
-            mock_make_server=mock_make_server,
-            queue_mgr=temp_queue,
-            sample_files=sample_media_files
+        t2 = await api_client.post(
+            "/api/turn",
+            json={
+                "session_id": sid,
+                "utterance": "Okay, please book a consultation with an Amura physician for Friday morning.",
+                "market_mode": "india",
+                "consent_granted": True,
+            },
         )
-        assert res["reel_id"].startswith("reel_20261112_solar_")
-        assert res["media_id"] is not None
+        assert t2.status_code == 200
+        assert t2.json()["safety_flag"] == "safe"
+        assert t2.json()["consent_status"] == "granted"
 
-    def test_scenario_3_luxury_real_estate(self, mock_ig_server, mock_make_server, temp_queue, sample_media_files):
-        """Scenario 3: Luxury Real Estate & Villa NRI Desk (Luxury English, Wednesday 20:30 IST night slot)."""
-        res = self._execute_full_lifecycle(
-            sector_key="real_estate",
-            target_day="Wednesday",
-            target_ist_time="20:30",
-            mock_ig_server=mock_ig_server,
-            mock_make_server=mock_make_server,
-            queue_mgr=temp_queue,
-            sample_files=sample_media_files
+    async def test_scenario4_hindi_pcod_sarvam_402_fallback_and_outbound_call(
+        self, api_client: httpx.AsyncClient, mock_sarvam_402, mock_edge_tts_wav, mock_bland_success
+    ):
+        """
+        Scenario 4: Hindi PCOD/thyroid caller hits Sarvam 402 exhausted credits ->
+        automatic cooldown + playable audio fallback + outbound Bland callback trigger.
+        """
+        sid = "t4_s4_hindi_402"
+        t1 = await api_client.post(
+            "/api/turn",
+            json={
+                "session_id": sid,
+                "utterance": "नमस्ते, मुझे PCOD और थायरॉइड के लिए अमूरा हेल्थ का ऑनलाइन प्लान समझना है।",
+                "market_mode": "hindi",
+                "voice": "hi-IN-SwaraNeural",
+                "consent_granted": True,
+            },
         )
-        assert res["reel_id"].startswith("reel_20261112_real_estate_")
-        assert res["container_id"].startswith("ig_container_")
+        assert t1.status_code == 200
+        body = t1.json()
+        assert body["tts_fallback_used"] is True
+        assert body["reply"] and "undefined" not in body["reply"].lower()
+        assert_no_real_estate_copy(body["reply"], "S4 Hindi reply")
+        if body["audio_base64"]:
+            raw = base64.b64decode(body["audio_base64"])
+            assert is_valid_audio_bytes(raw)
+            assert not is_160hz_synthetic_beep(raw)
 
-    def test_scenario_4_edtech_admissions_speed_to_lead(self, mock_ig_server, mock_make_server, temp_queue, sample_media_files):
-        """Scenario 4: EdTech & Career Bootcamps (Hinglish + English, Thursday 13:30 IST lunch speed teardown)."""
-        res = self._execute_full_lifecycle(
-            sector_key="edtech",
-            target_day="Thursday",
-            target_ist_time="13:30",
-            mock_ig_server=mock_ig_server,
-            mock_make_server=mock_make_server,
-            queue_mgr=temp_queue,
-            sample_files=sample_media_files
+        call_resp = await api_client.post(
+            "/api/call",
+            json={
+                "phone_number": "+919840012345",
+                "patient_name": "Pooja Sharma",
+                "language": "hindi",
+                "scenario": "metabolic_intake",
+                "consent_confirmed": True,
+                "mode": "live",
+                "override_trai_window": True,
+            },
         )
-        assert res["reel_id"].startswith("reel_20261112_edtech_")
-        assert res["webhook_exec_id"].startswith("make_exec_")
+        assert call_resp.status_code == 200
+        assert call_resp.json()["call_id"] == "bland_e2e_call_001"
 
-    def test_scenario_5_agency_lead_gen_media_buyer_defense(self, mock_ig_server, mock_make_server, temp_queue, sample_media_files):
-        """Scenario 5: B2B Agency Lead Gen & Media Buyer Defense (Indian English, Friday 09:15 IST morning push)."""
-        res = self._execute_full_lifecycle(
-            sector_key="b2b_agency",
-            target_day="Friday",
-            target_ist_time="09:15",
-            mock_ig_server=mock_ig_server,
-            mock_make_server=mock_make_server,
-            queue_mgr=temp_queue,
-            sample_files=sample_media_files
+    async def test_scenario5_hospital_front_desk_trai_playbook_and_secondary_assets(
+        self, api_client: httpx.AsyncClient, mock_edge_tts_wav
+    ):
+        """
+        Scenario 5: Full showcase walkthrough: /api/health -> /api/turn -> /api/tts ->
+        /api/call consent validation (422 vs 200) -> landing, presentation, commercial,
+        soundboard demos, and founder playbook verification.
+        """
+        assert (await api_client.get("/api/health")).json()["status"] == "operational"
+        assert (await api_client.get("/")).status_code == 200
+        assert (await api_client.get("/presentation")).status_code == 200
+        assert (await api_client.get("/commercial")).status_code == 200
+
+        tts_resp = await api_client.post(
+            "/api/tts",
+            json={"text": "Amura Health front desk ready in Velachery.", "voice": "maya_en"},
         )
-        assert res["reel_id"].startswith("reel_20261112_b2b_agency_")
-        assert res["permalink"].startswith("https://www.instagram.com/reel/")
+        assert tts_resp.status_code == 200
+
+        bad_call = await api_client.post(
+            "/api/call",
+            json={
+                "phone_number": "+919840077777",
+                "patient_name": "Neha",
+                "language": "english",
+                "scenario": "lab_followup",
+                "consent_confirmed": False,
+                "mode": "demo",
+            },
+        )
+        assert bad_call.status_code == 422
+
+        ok_call = await api_client.post(
+            "/api/call",
+            json={
+                "phone_number": "+919840077777",
+                "patient_name": "Neha",
+                "language": "english",
+                "scenario": "lab_followup",
+                "consent_confirmed": True,
+                "mode": "demo",
+            },
+        )
+        assert ok_call.status_code == 200
+
+        playbook = ROOT_DIR / "docs" / "AMURA_FOUNDER_PLAYBOOK.md"
+        assert playbook.is_file()
+        assert "108" in playbook.read_text(encoding="utf-8")

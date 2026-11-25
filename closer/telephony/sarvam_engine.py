@@ -54,8 +54,11 @@ _SARVAM_TAMIL_SCRIPT_LOANWORDS = (
 class SarvamVoiceEngine:
     """Enterprise voice & speech-to-text engine using Sarvam AI Bulbul and Saaras."""
 
+    _quota_exhausted: bool = False
+
     def __init__(self, api_key: Optional[str] = None):
         # Load from argument, env variable, or fallback .env
+        self._explicit_key = api_key is not None
         self.api_key = api_key or os.getenv("SARVAM_API_KEY", "")
         if not self.api_key:
             env_path = Path(__file__).resolve().parent.parent.parent / ".env"
@@ -91,6 +94,9 @@ class SarvamVoiceEngine:
         """Synthesizes natural conversational speech via Sarvam AI Bulbul v3 REST API."""
         if not self.is_configured:
             return False
+        if SarvamVoiceEngine._quota_exhausted and not self._explicit_key:
+            self.last_status_code = 402
+            return False
 
         self.last_status_code = None
         t_low = target_language.lower()
@@ -115,7 +121,7 @@ class SarvamVoiceEngine:
         }
 
         try:
-            async with httpx.AsyncClient(timeout=15.0) as client:
+            async with httpx.AsyncClient(timeout=5.0) as client:
                 resp = await client.post(SARVAM_TTS_URL, json=payload, headers=headers)
                 self.last_status_code = resp.status_code
                 if resp.status_code == 200:
@@ -127,6 +133,8 @@ class SarvamVoiceEngine:
                             f.write(raw_bytes)
                         return True
                 else:
+                    if resp.status_code == 402 and not self._explicit_key:
+                        SarvamVoiceEngine._quota_exhausted = True
                     print(f"[SarvamVoice] Warning: API status {resp.status_code}: {resp.text[:140]}")
                     return False
         except Exception as e:

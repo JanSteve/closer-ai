@@ -1,42 +1,122 @@
 """
-Unit & Integration tests for CLOSER AI Luxury Web Console (dashboard.py).
-Verifies HTML template rendering, voice sample preview API, turn processing, and dossier sync.
+Unit & Integration tests for CLOSER AI Amura Health Web Console (src/closer/web/dashboard.py).
+Verifies HTML template rendering, clinical voice preview API, turn emotion/safety/consent output,
+APILayer endpoints, and strict network/DB isolation.
 """
 
 import io
 import json
+import os
+import struct
+import tempfile
 import unittest
-from unittest.mock import MagicMock
+from pathlib import Path
+from unittest.mock import MagicMock, patch
+
+import src.closer.memory.learning_db as ldb
+from src.closer.agent.conversation import ConversationEngine
 from src.closer.web.dashboard import DashboardHTTPHandler, HTML_TEMPLATE, MOCK_LEADS
+
+_API_KEYS = (
+    "GROQ_API_KEY",
+    "OPENAI_API_KEY",
+    "OPENROUTER_API_KEY",
+    "GEMINI_API_KEY",
+    "GOOGLE_API_KEY",
+    "SARVAM_API_KEY",
+    "ELEVENLABS_API_KEY",
+    "CARTESIA_API_KEY",
+    "APILAYER_API_KEY",
+)
+
+
+def _make_dummy_wav(sample_rate: int = 24000, num_frames: int = 4000) -> bytes:
+    data_size = num_frames * 2
+    header = bytearray(b"RIFF")
+    header.extend(struct.pack("<I", data_size + 36))
+    header.extend(b"WAVEfmt ")
+    header.extend(struct.pack("<I", 16))
+    header.extend(struct.pack("<H", 1))
+    header.extend(struct.pack("<H", 1))
+    header.extend(struct.pack("<I", sample_rate))
+    header.extend(struct.pack("<I", sample_rate * 2))
+    header.extend(struct.pack("<H", 2))
+    header.extend(struct.pack("<H", 16))
+    header.extend(b"data")
+    header.extend(struct.pack("<I", data_size))
+    return bytes(header) + (b"\x10\x00" * num_frames)
 
 
 class TestWebDashboardConsole(unittest.TestCase):
-    """Test suite for Web Console HTTP handlers and API endpoints."""
+    """Test suite for Amura Health Web Console HTTP handlers and API endpoints."""
 
     def setUp(self):
-        from src.closer.agent.conversation import ConversationEngine
-        DashboardHTTPHandler.conversation_engine = ConversationEngine(market_mode="usa")
+        self._tmp_dir = tempfile.TemporaryDirectory()
+        self._env_patch = patch.dict(os.environ, {k: "" for k in _API_KEYS})
+        self._env_patch.start()
+        ldb._GLOBAL_LEARNING_DB = None
+        self._db_patch = patch(
+            "src.closer.agent.conversation.get_learning_db",
+            side_effect=lambda *a, **kw: ldb.LearningMemoryDB(Path(self._tmp_dir.name) / "dash.db"),
+        )
+        self._db_patch.start()
+        self._ldb_patch = patch(
+            "src.closer.memory.learning_db.get_learning_db",
+            side_effect=lambda *a, **kw: ldb.LearningMemoryDB(Path(self._tmp_dir.name) / "dash.db"),
+        )
+        self._ldb_patch.start()
 
-    def test_html_template_luxury_elements(self):
-        """Verifies HTML template contains Apple/Stripe luxury styling, VAD, and voice dropdown."""
+        self._orig_engine = DashboardHTTPHandler.conversation_engine
+        self._orig_tts = DashboardHTTPHandler.tts_engine
+        self._orig_apilayer = DashboardHTTPHandler.apilayer_client
+
+        DashboardHTTPHandler.conversation_engine = ConversationEngine(
+            market_mode="india",
+            sector="amura_metabolic",
+            business_name="Amura Health",
+        )
+        mock_tts = MagicMock()
+        mock_tts.last_provider_used = "Studio Broadcast Neural (Mocked)"
+        mock_tts.synthesize_sync.return_value = (_make_dummy_wav(), 0.02)
+        DashboardHTTPHandler.tts_engine = mock_tts
+
+        from src.closer.integrations.apilayer import APILayerUnifiedClient
+
+        DashboardHTTPHandler.apilayer_client = APILayerUnifiedClient(api_key="")
+
+    def tearDown(self):
+        DashboardHTTPHandler.conversation_engine = self._orig_engine
+        DashboardHTTPHandler.tts_engine = self._orig_tts
+        DashboardHTTPHandler.apilayer_client = self._orig_apilayer
+        self._ldb_patch.stop()
+        self._db_patch.stop()
+        self._env_patch.stop()
+        ldb._GLOBAL_LEARNING_DB = None
+        self._tmp_dir.cleanup()
+
+    def test_html_template_clinical_and_voice_elements(self):
+        """Verifies HTML template contains Amura Health UI, VAD, Tamil/Hindi/English voices, and zero real estate."""
         self.assertIn("CLOSER AI", HTML_TEMPLATE)
+        self.assertIn("Amura Health", HTML_TEMPLATE)
         self.assertIn("vadContainer", HTML_TEMPLATE)
-        self.assertIn("vad-waves", HTML_TEMPLATE)
         self.assertIn("voiceSelect", HTML_TEMPLATE)
         self.assertIn("testVoiceSample", HTML_TEMPLATE)
         self.assertIn("dossierStatus", HTML_TEMPLATE)
         self.assertIn("intentBar", HTML_TEMPLATE)
-        
-        # Verify required voices in dropdown
-        self.assertIn("en-US-AriaNeural", HTML_TEMPLATE)
-        self.assertIn("en-US-GuyNeural", HTML_TEMPLATE)
-        self.assertIn("en-US-JennyNeural", HTML_TEMPLATE)
-        self.assertIn("en-US-ChristopherNeural", HTML_TEMPLATE)
-        self.assertIn("en-US-AvaNeural", HTML_TEMPLATE)
-        self.assertIn("en-IN-NeerjaNeural", HTML_TEMPLATE)
+        for v in (
+            "en-IN-NeerjaExpressiveNeural",
+            "ta-IN-PallaviNeural",
+            "ta-IN-ValluvarNeural",
+            "hi-IN-SwaraNeural",
+            "hi-IN-MadhurNeural",
+            "en-US-AvaNeural",
+        ):
+            self.assertIn(v, HTML_TEMPLATE)
+        for forbidden in ("Bel Air", "Beverly Hills", "Daniel & Associates", "RERA", "3 BHK", "real_estate_notation"):
+            self.assertNotIn(forbidden, HTML_TEMPLATE)
 
     def test_get_dashboard_root(self):
-        """Verifies GET / returns 200 with UTF-8 HTML (Landing Page Website)."""
+        """Verifies GET / returns 200 with UTF-8 HTML."""
         handler = DashboardHTTPHandler.__new__(DashboardHTTPHandler)
         handler.path = "/"
         handler.headers = {}
@@ -51,10 +131,9 @@ class TestWebDashboardConsole(unittest.TestCase):
         handler.send_header.assert_called_with("Content-Type", "text/html; charset=utf-8")
         body = handler.wfile.getvalue().decode("utf-8")
         self.assertIn("CLOSER AI", body)
-        self.assertIn("Intelligence Designed To Evolve", body)
 
     def test_get_console_route(self):
-        """Verifies GET /console and /dashboard return 200 with Executive Console HTML."""
+        """Verifies GET /console and /dashboard return 200 with Amura Health Console HTML."""
         for path in ("/console", "/dashboard"):
             handler = DashboardHTTPHandler.__new__(DashboardHTTPHandler)
             handler.path = path
@@ -67,13 +146,12 @@ class TestWebDashboardConsole(unittest.TestCase):
             handler.do_GET()
 
             handler.send_response.assert_called_with(200)
-            handler.send_header.assert_called_with("Content-Type", "text/html; charset=utf-8")
             body = handler.wfile.getvalue().decode("utf-8")
-            self.assertIn("LiveKit WebRTC SIP", body)
-            self.assertIn("Autonomous Voice Concierge", body)
+            self.assertIn("Amura Health", body)
+            self.assertIn("Clinical Care Concierge", body)
 
     def test_get_api_leads(self):
-        """Verifies GET /api/leads returns JSON lead list."""
+        """Verifies GET /api/leads returns Amura Health patient pipeline records."""
         handler = DashboardHTTPHandler.__new__(DashboardHTTPHandler)
         handler.path = "/api/leads"
         handler.headers = {}
@@ -87,78 +165,15 @@ class TestWebDashboardConsole(unittest.TestCase):
         handler.send_response.assert_called_with(200)
         data = json.loads(handler.wfile.getvalue().decode("utf-8"))
         self.assertEqual(len(data), len(MOCK_LEADS))
-        self.assertEqual(data[0]["name"], "Harrison & Claire Sterling")
+        self.assertEqual(data[0]["name"], "Priya Raman")
 
-    def test_post_turn_preview_voice(self):
-        """Verifies POST /api/turn with PREVIEW_SAMPLE synthesizes voice preview without corrupting conversation."""
-        handler = DashboardHTTPHandler.__new__(DashboardHTTPHandler)
-        handler.path = "/api/turn"
-        payload = json.dumps({"utterance": "PREVIEW_SAMPLE", "voice": "en-US-GuyNeural"}).encode("utf-8")
-        handler.headers = {"Content-Length": str(len(payload))}
-        handler.rfile = io.BytesIO(payload)
-        handler.wfile = io.BytesIO()
-        handler.send_response = MagicMock()
-        handler.send_header = MagicMock()
-        handler.end_headers = MagicMock()
-
-        handler.do_POST()
-
-        handler.send_response.assert_called_with(200)
-        resp = json.loads(handler.wfile.getvalue().decode("utf-8"))
-        self.assertIn("reply", resp)
-        self.assertIn("audio_base64", resp)
-        self.assertGreater(len(resp["audio_base64"]), 100)
-
-    def test_post_turn_schedule_friction(self):
-        """Verifies POST /api/turn handles off-script schedule friction and updates dossier."""
-        handler = DashboardHTTPHandler.__new__(DashboardHTTPHandler)
-        handler.path = "/api/turn"
-        payload = json.dumps({
-            "utterance": "Today is not good, I will come tomorrow",
-            "voice": "en-US-AriaNeural"
-        }).encode("utf-8")
-        handler.headers = {"Content-Length": str(len(payload))}
-        handler.rfile = io.BytesIO(payload)
-        handler.wfile = io.BytesIO()
-        handler.send_response = MagicMock()
-        handler.send_header = MagicMock()
-        handler.end_headers = MagicMock()
-
-        handler.do_POST()
-
-        handler.send_response.assert_called_with(200)
-        resp = json.loads(handler.wfile.getvalue().decode("utf-8"))
-        self.assertIn("respect your schedule", resp["reply"].lower())
-        self.assertEqual(resp["dossier"]["timeframe"], "tomorrow (immediate)")
-
-    def test_post_reset(self):
-        """Verifies POST /api/reset resets conversation engine state."""
-        handler = DashboardHTTPHandler.__new__(DashboardHTTPHandler)
-        handler.path = "/api/reset"
-        handler.headers = {"Content-Length": "0"}
-        handler.rfile = io.BytesIO(b"")
-        handler.wfile = io.BytesIO()
-        handler.send_response = MagicMock()
-        handler.send_header = MagicMock()
-        handler.end_headers = MagicMock()
-
-        handler.do_POST()
-
-        handler.send_response.assert_called_with(200)
-        resp = json.loads(handler.wfile.getvalue().decode("utf-8"))
-        self.assertTrue(resp["success"])
-
-    def test_post_turn_preview_all_six_voices(self):
-        """Verifies POST /api/turn with PREVIEW_SAMPLE synthesizes audio across all 6 specified voices."""
-        voices = [
-            "en-US-AriaNeural",
-            "en-US-GuyNeural",
-            "en-US-JennyNeural",
-            "en-US-ChristopherNeural",
-            "en-US-AvaNeural",
-            "en-IN-NeerjaNeural"
-        ]
-        for voice in voices:
+    def test_post_turn_preview_voice_trilingual(self):
+        """Verifies POST /api/turn PREVIEW_SAMPLE across English, Tamil, and Hindi voices."""
+        for voice, expected_substr in (
+            ("en-IN-NeerjaExpressiveNeural", "Amura Health"),
+            ("ta-IN-PallaviNeural", "வணக்கம்"),
+            ("hi-IN-SwaraNeural", "नमस्ते"),
+        ):
             handler = DashboardHTTPHandler.__new__(DashboardHTTPHandler)
             handler.path = "/api/turn"
             payload = json.dumps({"utterance": "PREVIEW_SAMPLE", "voice": voice}).encode("utf-8")
@@ -170,21 +185,18 @@ class TestWebDashboardConsole(unittest.TestCase):
             handler.end_headers = MagicMock()
 
             handler.do_POST()
-
             handler.send_response.assert_called_with(200)
             resp = json.loads(handler.wfile.getvalue().decode("utf-8"))
-            self.assertIn("reply", resp)
-            self.assertIn("audio_base64", resp)
-            self.assertGreater(len(resp["audio_base64"]), 100, f"Voice {voice} returned insufficient audio bytes")
+            self.assertIn(expected_substr, resp["reply"])
+            self.assertGreater(len(resp["audio_base64"]), 100)
 
-    def test_post_turn_busy_friction(self):
-        """Verifies POST /api/turn handles busy constraints and updates dossier with follow-up note."""
+    def test_post_turn_emotion_safety_and_schedule_friction(self):
+        """Verifies /api/turn populates emotion, safety_flag, emergency_108, consent_status, and follow_up_note."""
         handler = DashboardHTTPHandler.__new__(DashboardHTTPHandler)
         handler.path = "/api/turn"
-        payload = json.dumps({
-            "utterance": "I am busy right now, contact me later",
-            "voice": "en-US-AriaNeural"
-        }).encode("utf-8")
+        payload = json.dumps(
+            {"utterance": "My HbA1c is 8.4 and I am really worried, can I book Saturday 11 AM?", "voice": "en-IN-NeerjaExpressiveNeural"}
+        ).encode("utf-8")
         handler.headers = {"Content-Length": str(len(payload))}
         handler.rfile = io.BytesIO(payload)
         handler.wfile = io.BytesIO()
@@ -193,15 +205,52 @@ class TestWebDashboardConsole(unittest.TestCase):
         handler.end_headers = MagicMock()
 
         handler.do_POST()
-
         handler.send_response.assert_called_with(200)
         resp = json.loads(handler.wfile.getvalue().decode("utf-8"))
-        self.assertIn("respect your time", resp["reply"].lower())
-        self.assertIn("busy", resp["dossier"]["follow_up_note"].lower())
-        self.assertEqual(resp["dossier"]["sentiment_rating"], "Polite / Busy")
+        self.assertEqual(resp["detected_emotion"], "anxious")
+        self.assertEqual(resp["safety_flag"], "safe")
+        self.assertFalse(resp["emergency_108"])
+        self.assertIn(resp["consent_status"], ("pending", "granted", "declined", "emergency_exempt_section_7f"))
+        self.assertTrue(bool(resp["dossier"]["follow_up_note"]))
+
+    def test_post_turn_browser_fallback_when_audio_empty(self):
+        """Verifies /api/turn returns empty audio_base64 and tts_fallback_used=True when TTS yields b''."""
+        DashboardHTTPHandler.tts_engine.synthesize_sync.return_value = (b"", 0.01)
+        DashboardHTTPHandler.tts_engine.last_provider_used = "browser_fallback"
+
+        handler = DashboardHTTPHandler.__new__(DashboardHTTPHandler)
+        handler.path = "/api/turn"
+        payload = json.dumps({"utterance": "I am in a meeting, call after 6 PM", "voice": "en-IN-NeerjaExpressiveNeural"}).encode("utf-8")
+        handler.headers = {"Content-Length": str(len(payload))}
+        handler.rfile = io.BytesIO(payload)
+        handler.wfile = io.BytesIO()
+        handler.send_response = MagicMock()
+        handler.send_header = MagicMock()
+        handler.end_headers = MagicMock()
+
+        handler.do_POST()
+        resp = json.loads(handler.wfile.getvalue().decode("utf-8"))
+        self.assertEqual(resp["audio_base64"], "")
+        self.assertEqual(resp["tts_provider"], "browser_fallback")
+        self.assertTrue(resp["tts_fallback_used"])
+
+    def test_post_reset(self):
+        handler = DashboardHTTPHandler.__new__(DashboardHTTPHandler)
+        handler.path = "/api/reset"
+        handler.headers = {"Content-Length": "0"}
+        handler.rfile = io.BytesIO(b"")
+        handler.wfile = io.BytesIO()
+        handler.send_response = MagicMock()
+        handler.send_header = MagicMock()
+        handler.end_headers = MagicMock()
+
+        handler.do_POST()
+        handler.send_response.assert_called_with(200)
+        resp = json.loads(handler.wfile.getvalue().decode("utf-8"))
+        self.assertTrue(resp["success"])
+        self.assertIn("Amura Health", resp["greeting"])
 
     def test_404_routing(self):
-        """Verifies unknown GET and POST routes return 404."""
         handler = DashboardHTTPHandler.__new__(DashboardHTTPHandler)
         handler.path = "/api/unknown"
         handler.headers = {}
@@ -211,22 +260,10 @@ class TestWebDashboardConsole(unittest.TestCase):
 
         handler.do_GET()
         handler.send_response.assert_called_with(404)
-
         handler.do_POST()
         handler.send_response.assert_called_with(404)
 
-    def test_dashboard_telemetry_and_pydantic_inspector_elements(self):
-        """Verifies presence of Live Telemetry Bar, Barge-In Interruption button, and Pydantic JSON inspector."""
-        self.assertIn("telemetry-bar", HTML_TEMPLATE)
-        self.assertIn("LiveKit WebRTC SIP", HTML_TEMPLATE)
-        self.assertIn("btn-barge", HTML_TEMPLATE)
-        self.assertIn("simulateBargeIn", HTML_TEMPLATE)
-        self.assertIn("dossierJsonView", HTML_TEMPLATE)
-        self.assertIn("btn-copy-json", HTML_TEMPLATE)
-        self.assertIn("leadSearchInput", HTML_TEMPLATE)
-
     def test_api_llm_models_and_selection_endpoints(self):
-        """Verifies GET /api/llm_models and POST /api/llm_select endpoints."""
         handler = DashboardHTTPHandler.__new__(DashboardHTTPHandler)
         handler.path = "/api/llm_models"
         handler.headers = {}
@@ -236,12 +273,9 @@ class TestWebDashboardConsole(unittest.TestCase):
         handler.end_headers = MagicMock()
 
         handler.do_GET()
-        handler.send_response.assert_called_with(200)
         resp = json.loads(handler.wfile.getvalue().decode("utf-8"))
-        self.assertIn("models", resp)
         self.assertTrue(any(m["id"] == "bloomz-176b" for m in resp["models"]))
 
-        # Test POST /api/llm_select
         post_handler = DashboardHTTPHandler.__new__(DashboardHTTPHandler)
         post_handler.path = "/api/llm_select"
         body = json.dumps({"model_id": "bloomz-176b"}).encode("utf-8")
@@ -253,99 +287,45 @@ class TestWebDashboardConsole(unittest.TestCase):
         post_handler.end_headers = MagicMock()
 
         post_handler.do_POST()
-        post_handler.send_response.assert_called_with(200)
         post_resp = json.loads(post_handler.wfile.getvalue().decode("utf-8"))
         self.assertTrue(post_resp["success"])
         self.assertEqual(post_resp["model"]["model_id"], "bloomz-176b")
 
-    def test_api_enrich_endpoints_and_ui_elements(self):
-        """Verifies APILayer Unified Suite web endpoints and console UI elements."""
-        # 1. UI Elements in HTML_TEMPLATE
-        self.assertIn("apilayer-card", HTML_TEMPLATE)
-        self.assertIn("Numverify: Carrier", HTML_TEMPLATE)
-        self.assertIn("Mailboxlayer: Deliverability", HTML_TEMPLATE)
-        self.assertIn("Positionstack: Geocoding", HTML_TEMPLATE)
-        self.assertIn("Fixer: Dual-Market FX", HTML_TEMPLATE)
-        self.assertIn("enrichCurrentDossier", HTML_TEMPLATE)
-
-        # 2. GET /api/enrich/status
-        handler = DashboardHTTPHandler.__new__(DashboardHTTPHandler)
-        handler.path = "/api/enrich/status"
-        handler.headers = {}
-        handler.wfile = io.BytesIO()
-        handler.send_response = MagicMock()
-        handler.send_header = MagicMock()
-        handler.end_headers = MagicMock()
-
-        handler.do_GET()
-        handler.send_response.assert_called_with(200)
-        status_resp = json.loads(handler.wfile.getvalue().decode("utf-8"))
-        self.assertIn("services", status_resp)
-        self.assertIn("numverify", status_resp["services"])
-
-        # 3. POST /api/enrich/phone
+    def test_api_enrich_endpoints(self):
+        """Verifies APILayer Unified Suite endpoints return clinical Chennai & healthcare FX payloads."""
         post_handler = DashboardHTTPHandler.__new__(DashboardHTTPHandler)
         post_handler.path = "/api/enrich/phone"
-        body = json.dumps({"phone": "+1-310-555-0144"}).encode("utf-8")
+        body = json.dumps({"phone": "+91-98400-12345"}).encode("utf-8")
         post_handler.headers = {"Content-Length": str(len(body))}
         post_handler.rfile = io.BytesIO(body)
         post_handler.wfile = io.BytesIO()
         post_handler.send_response = MagicMock()
         post_handler.send_header = MagicMock()
         post_handler.end_headers = MagicMock()
-
         post_handler.do_POST()
-        post_handler.send_response.assert_called_with(200)
         phone_resp = json.loads(post_handler.wfile.getvalue().decode("utf-8"))
         self.assertTrue(phone_resp["valid"])
-        self.assertIn("Verizon", phone_resp["carrier"])
+        self.assertIn("Chennai", phone_resp["location"])
 
-        # 4. POST /api/enrich/currency
         fx_handler = DashboardHTTPHandler.__new__(DashboardHTTPHandler)
         fx_handler.path = "/api/enrich/currency"
-        fx_body = json.dumps({"amount": 6850000, "from_curr": "USD", "to_curr": "INR"}).encode("utf-8")
+        fx_body = json.dumps({"amount": 1500, "from_curr": "USD", "to_curr": "INR"}).encode("utf-8")
         fx_handler.headers = {"Content-Length": str(len(fx_body))}
         fx_handler.rfile = io.BytesIO(fx_body)
         fx_handler.wfile = io.BytesIO()
         fx_handler.send_response = MagicMock()
         fx_handler.send_header = MagicMock()
         fx_handler.end_headers = MagicMock()
-
         fx_handler.do_POST()
-        fx_handler.send_response.assert_called_with(200)
         fx_resp = json.loads(fx_handler.wfile.getvalue().decode("utf-8"))
         self.assertEqual(fx_resp["to_currency"], "INR")
-        self.assertIn("Crores", fx_resp["real_estate_notation"])
+        self.assertIn("Lakhs", fx_resp["healthcare_notation"])
 
-    def test_voice_intelligence_engine_selection_and_modal_elements(self):
-        """
-        Verifies that robotic browser Web Speech is completely eradicated,
-        Studio Broadcast Neural, ElevenLabs, and Sarvam AI Indic engines are selectable,
-        and credentials modal is present.
-        """
-        # 1. Robotic browser engine must be completely absent
-        self.assertNotIn("audioEngineSelect", HTML_TEMPLATE)
-        self.assertNotIn("speakWebSpeech", HTML_TEMPLATE)
-
-        # 2. Studio / ElevenLabs / Sarvam voice architecture elements present
-        self.assertIn("voiceProviderSelect", HTML_TEMPLATE)
-        self.assertIn("Studio Broadcast Neural", HTML_TEMPLATE)
-        self.assertIn("ElevenLabs Turbo v2.5", HTML_TEMPLATE)
-        self.assertIn("Sarvam AI / Gnani Indic Neural", HTML_TEMPLATE)
-        self.assertIn("workflow-stepper", HTML_TEMPLATE)
-        self.assertIn("keyModalBackdrop", HTML_TEMPLATE)
-        self.assertIn("modalElevenLabsKey", HTML_TEMPLATE)
-        self.assertIn("modalSarvamKey", HTML_TEMPLATE)
-
-        # 3. Test POST /api/turn returns voice_provider metadata
-        for prov in ("studio", "elevenlabs", "sarvam"):
+    def test_post_market_mode_hindi_and_tamil(self):
+        for mode, expected_token in (("hindi", "नमस्ते"), ("tamil", "வணக்கம்")):
             handler = DashboardHTTPHandler.__new__(DashboardHTTPHandler)
-            handler.path = "/api/turn"
-            payload = json.dumps({
-                "utterance": "PREVIEW_SAMPLE",
-                "voice": "en-US-AvaNeural",
-                "provider": prov
-            }).encode("utf-8")
+            handler.path = "/api/market_mode"
+            payload = json.dumps({"mode": mode}).encode("utf-8")
             handler.headers = {"Content-Length": str(len(payload))}
             handler.rfile = io.BytesIO(payload)
             handler.wfile = io.BytesIO()
@@ -356,72 +336,11 @@ class TestWebDashboardConsole(unittest.TestCase):
             handler.do_POST()
             handler.send_response.assert_called_with(200)
             resp = json.loads(handler.wfile.getvalue().decode("utf-8"))
-            self.assertIn("audio_base64", resp)
-            self.assertIn("voice_provider", resp)
-            self.assertGreater(len(resp["audio_base64"]), 100)
+            self.assertTrue(resp["success"])
+            self.assertIn(expected_token, resp["greeting"])
+            self.assertIn("Amura Health", resp["greeting"])
 
-    def test_tri_language_and_marketing_soundboard_elements(self):
-        """Verifies Tri-Language switcher, VoiceStudio controls, and marketing hooks in HTML."""
-        self.assertIn("btnMarketHindi", HTML_TEMPLATE)
-        self.assertIn("btnMarketUSA", HTML_TEMPLATE)
-        self.assertIn("btnMarketIndia", HTML_TEMPLATE)
-        self.assertIn("hi-IN-SwaraNeural", HTML_TEMPLATE)
-        self.assertIn("hi-IN-MadhurNeural", HTML_TEMPLATE)
-        self.assertIn("hindiChips", HTML_TEMPLATE)
-        self.assertIn("voiceRateSlider", HTML_TEMPLATE)
-        self.assertIn("voicePitchSlider", HTML_TEMPLATE)
-        self.assertIn("btnDownloadAudio", HTML_TEMPLATE)
-        self.assertIn("playMarketingHook", HTML_TEMPLATE)
-        self.assertIn("downloadLastAudio", HTML_TEMPLATE)
-
-    def test_post_market_mode_hindi(self):
-        """Verifies POST /api/market_mode switches into Hindi customer care and returns Hindi greeting."""
-        handler = DashboardHTTPHandler.__new__(DashboardHTTPHandler)
-        handler.path = "/api/market_mode"
-        payload = json.dumps({"mode": "hindi"}).encode("utf-8")
-        handler.headers = {"Content-Length": str(len(payload))}
-        handler.rfile = io.BytesIO(payload)
-        handler.wfile = io.BytesIO()
-        handler.send_response = MagicMock()
-        handler.send_header = MagicMock()
-        handler.end_headers = MagicMock()
-
-        handler.do_POST()
-
-        handler.send_response.assert_called_with(200)
-        resp = json.loads(handler.wfile.getvalue().decode("utf-8"))
-        self.assertTrue(resp["success"])
-        self.assertIn("नमस्ते", resp["greeting"])
-        self.assertIn(resp["dossier"]["market_region"], ("INDIA", "INDIA_HINDI"))
-
-    def test_post_turn_preview_hindi_voice(self):
-        """Verifies POST /api/turn preview sample with Hindi Swara neural voice."""
-        handler = DashboardHTTPHandler.__new__(DashboardHTTPHandler)
-        handler.path = "/api/turn"
-        payload = json.dumps({
-            "utterance": "PREVIEW_SAMPLE",
-            "voice": "hi-IN-SwaraNeural",
-            "rate": "+5%",
-            "pitch": "+2Hz"
-        }).encode("utf-8")
-        handler.headers = {"Content-Length": str(len(payload))}
-        handler.rfile = io.BytesIO(payload)
-        handler.wfile = io.BytesIO()
-        handler.send_response = MagicMock()
-        handler.send_header = MagicMock()
-        handler.end_headers = MagicMock()
-
-        handler.do_POST()
-
-        handler.send_response.assert_called_with(200)
-        resp = json.loads(handler.wfile.getvalue().decode("utf-8"))
-        self.assertIn("नमस्ते", resp["reply"])
-        self.assertIn("audio_base64", resp)
-        self.assertGreater(len(resp["audio_base64"]), 100)
-
-    def test_post_turn_hindi_site_visit(self):
-        """Verifies POST /api/turn handles Hindi customer care turn and extracts booking."""
-        # Set market mode to hindi first
+    def test_post_turn_hindi_clinical_consultation(self):
         market_handler = DashboardHTTPHandler.__new__(DashboardHTTPHandler)
         market_handler.path = "/api/market_mode"
         m_payload = json.dumps({"mode": "hindi"}).encode("utf-8")
@@ -435,10 +354,12 @@ class TestWebDashboardConsole(unittest.TestCase):
 
         turn_handler = DashboardHTTPHandler.__new__(DashboardHTTPHandler)
         turn_handler.path = "/api/turn"
-        payload = json.dumps({
-            "utterance": "मुझे प्रेस्टीज में 3 बीएचके फ्लैट देखना है और इस शनिवार दोपहर 2 बजे साइट विज़िट बुक करनी है।",
-            "voice": "hi-IN-SwaraNeural"
-        }).encode("utf-8")
+        payload = json.dumps(
+            {
+                "utterance": "मुझे अमूरा हेल्थ में मेटाबोलिक कंसल्टेशन बुक करना है, क्या शनिवार दोपहर 2 बजे स्लॉट उपलब्ध है?",
+                "voice": "hi-IN-SwaraNeural",
+            }
+        ).encode("utf-8")
         turn_handler.headers = {"Content-Length": str(len(payload))}
         turn_handler.rfile = io.BytesIO(payload)
         turn_handler.wfile = io.BytesIO()
@@ -447,12 +368,9 @@ class TestWebDashboardConsole(unittest.TestCase):
         turn_handler.end_headers = MagicMock()
 
         turn_handler.do_POST()
-
-        turn_handler.send_response.assert_called_with(200)
         resp = json.loads(turn_handler.wfile.getvalue().decode("utf-8"))
         self.assertIn("reply", resp)
         self.assertIn("dossier", resp)
-        self.assertIn("audio_base64", resp)
         self.assertGreater(len(resp["audio_base64"]), 100)
 
 

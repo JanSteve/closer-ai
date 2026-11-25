@@ -118,7 +118,7 @@ class TestLandingPage(unittest.TestCase):
         """Verifies trust pill, headline lines, subhead copy, and CTA."""
         html = self.index_file.read_text(encoding="utf-8")
 
-        self.assertIn("Trusted by 2000+ Enterprises", html)
+        self.assertIn("Amura Health Ready", html)
         self.assertIn(">Intelligence<", html)
         self.assertIn(">Designed To Evolve<", html)
         self.assertIn("Build applications that reason", html)
@@ -308,9 +308,11 @@ class TestLandingPage(unittest.TestCase):
         self.assertIn('id="roi"', html)
         self.assertIn('id="contact"', html)
 
-        self.assertIn("The 4-Stage Autonomous Telephony Pipeline", html)
-        self.assertIn("Sub-120ms Neural Latency", html)
-        self.assertIn("Deterministic Pydantic Dossiers", html)
+        self.assertIn("The 4-Stage Autonomous Patient Care Pipeline", html)
+        self.assertIn("Emotion-Aware Expressive Voice", html)
+        self.assertIn("Clinical Safety &amp; Pydantic Dossiers", html)
+        self.assertIn('id="demoCallTriggerBtn"', html)
+        self.assertIn('id="modalEmotionBadge"', html)
 
     def test_soundboard_and_roi_calculator_elements(self):
         """Verifies interactive soundboard controls and ROI calculator inputs."""

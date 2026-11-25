@@ -1,30 +1,41 @@
 """
-Continuous Learning & Call Recording Database for CLOSER AI.
-Stores full customer call recordings, transcripts, and extracts continuous knowledge
-so CLOSER AI autonomously learns from every customer interaction.
+Continuous Learning & Call Recording Database for CLOSER AI (Amura Health).
+Stores patient call recordings, transcripts, and extracts reusable clinical FAQs
+without mutating repository data/ files during tests.
 """
 
 from __future__ import annotations
-import os
+
 import json
-import sqlite3
 import logging
-from pathlib import Path
-from typing import Dict, Any, List, Optional
+import os
+import sqlite3
+import tempfile
 from datetime import datetime, timezone
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
 
+
 def _resolve_default_db_path() -> Path:
-    """Returns a serverless-safe DB path (/tmp for Vercel/Lambda, data/ locally)."""
+    """
+    Returns an isolated temp DB path by default so automated tests never mutate repo data/.
+    Set CLOSER_MEMORY_DB_PATH for an explicit path, or CLOSER_PERSIST_LOCAL_DB=1 to use data/.
+    """
+    explicit = os.environ.get("CLOSER_MEMORY_DB_PATH")
+    if explicit:
+        return Path(explicit)
     if os.environ.get("VERCEL") or os.environ.get("AWS_LAMBDA_FUNCTION_NAME"):
-        return Path("/tmp/closer_learning.db")
-    try:
-        data_dir = Path("data")
-        data_dir.mkdir(parents=True, exist_ok=True)
-        return data_dir / "closer_learning.db"
-    except (OSError, PermissionError):
-        return Path("/tmp/closer_learning.db")
+        return Path(tempfile.gettempdir()) / "closer_learning.db"
+    if os.environ.get("CLOSER_PERSIST_LOCAL_DB") == "1":
+        try:
+            data_dir = Path("data")
+            data_dir.mkdir(parents=True, exist_ok=True)
+            return data_dir / "closer_learning.db"
+        except (OSError, PermissionError):
+            pass
+    return Path(tempfile.gettempdir()) / "closer_learning.db"
 
 
 DEFAULT_DB_PATH = _resolve_default_db_path()
@@ -32,33 +43,50 @@ DEFAULT_DB_PATH = _resolve_default_db_path()
 
 class LearningMemoryDB:
     """
-    SQLite-backed memory and autonomous knowledge base for CLOSER AI.
-    Records every call transcript and extracts reusable insights, FAQs, and objections.
+    SQLite-backed memory and autonomous clinical knowledge base for CLOSER AI (Amura Health).
+    Supports temp-file SQLite and persistent single-connection ':memory:'.
     """
 
     def __init__(self, db_path: Optional[Path | str] = None):
-        if db_path is not None:
-            self.db_path = Path(db_path)
+        self._is_memory = False
+        self._mem_conn: Optional[sqlite3.Connection] = None
+
+        if db_path is not None and str(db_path) == ":memory:":
+            self._is_memory = True
+            self.db_path = Path(":memory:")
+            self._mem_conn = sqlite3.connect(":memory:")
+            self._mem_conn.row_factory = sqlite3.Row
         else:
-            self.db_path = _resolve_default_db_path()
-        try:
-            if self.db_path.parent:
-                self.db_path.parent.mkdir(parents=True, exist_ok=True)
-        except (OSError, PermissionError):
-            self.db_path = Path("/tmp/closer_learning.db")
+            self.db_path = Path(db_path) if db_path is not None else _resolve_default_db_path()
+            try:
+                if self.db_path.parent:
+                    self.db_path.parent.mkdir(parents=True, exist_ok=True)
+            except (OSError, PermissionError):
+                self.db_path = Path(tempfile.gettempdir()) / "closer_learning.db"
+
         self._init_db()
 
     def _get_connection(self) -> sqlite3.Connection:
+        if self._is_memory and self._mem_conn is not None:
+            return self._mem_conn
         conn = sqlite3.connect(str(self.db_path))
         conn.row_factory = sqlite3.Row
         return conn
 
+    def close(self) -> None:
+        if self._mem_conn is not None:
+            try:
+                self._mem_conn.close()
+            except Exception:
+                pass
+            self._mem_conn = None
+
     def _init_db(self) -> None:
-        """Initializes tables for call records and learned knowledge."""
+        """Initializes tables for call records and learned clinical knowledge."""
         with self._get_connection() as conn:
             cursor = conn.cursor()
-            # 1. Call Records table
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS call_records (
                     call_id TEXT PRIMARY KEY,
                     timestamp TEXT NOT NULL,
@@ -74,10 +102,10 @@ class LearningMemoryDB:
                     appointment_slot TEXT,
                     turn_count INTEGER
                 )
-            """)
-
-            # 2. Learned Knowledge & FAQs table
-            cursor.execute("""
+                """
+            )
+            cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS learned_knowledge (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     topic TEXT NOT NULL,
@@ -91,73 +119,74 @@ class LearningMemoryDB:
                     source_call_id TEXT,
                     UNIQUE(topic, sector)
                 )
-            """)
-
-            # 3. Seed baseline verified knowledge for Tamil Real Estate & Indian Inbound
+                """
+            )
             cursor.execute("SELECT COUNT(*) FROM learned_knowledge")
             if cursor.fetchone()[0] == 0:
                 self._seed_baseline_knowledge(cursor)
-
             conn.commit()
 
     def _seed_baseline_knowledge(self, cursor: sqlite3.Cursor) -> None:
-        """Seeds initial verified domain knowledge for Chennai real estate & clinics."""
+        """Seeds initial verified clinical FAQ knowledge for Amura Health & Hospital Front-Desk."""
         now = datetime.now(timezone.utc).isoformat()
         seeds = [
             (
-                "cmda_rera_approval",
-                "compliance",
-                "real_estate",
-                "CMDA / RERA approval status",
-                "Sir, indha project 100% CMDA மற்றும் TNRERA approved (TNRERA/A1/2024). All legal titles are clear and ready for bank loan verification.",
-                now
+                "metabolic_reversal_approach",
+                "clinical_program",
+                "amura_metabolic",
+                "Amura Health metabolic reversal approach MNT NMT",
+                "Amura Health uses deep biomarker tracking, Medical Nutrition Therapy (MNT), and Natural Molecule Therapy (NMT) for root-cause chronic-care reversal.",
+                now,
             ),
             (
-                "uds_percentage",
-                "specifications",
-                "real_estate",
-                "Undivided Share of land (UDS) percentage",
-                "Sir, 2BHK-ku 45% UDS and 3BHK-ku 48% UDS offer pandrom. Highest in this locality, with excellent long-term capital appreciation.",
-                now
+                "care_team_structure",
+                "care_team",
+                "amura_metabolic",
+                "Doctor physician and health coach care team",
+                "Every patient at Amura Health is guided by a licensed physician alongside a dedicated life-science health coach with regular check-ins.",
+                now,
             ),
             (
-                "water_source",
-                "amenities",
-                "real_estate",
-                "Drinking water and borewell source",
-                "Sir, 24/7 dedicated Metro Water connection plus heavy sweet borewell water irukku with on-site RO treatment plant.",
-                now
+                "velachery_clinic_location",
+                "location",
+                "amura_metabolic",
+                "Velachery Chennai clinic address and online telehealth",
+                "Amura Health's Chennai clinic is at 11th Floor, One National Park, 142 Velachery Main Road, Chennai - 600042, with full online telehealth consultations.",
+                now,
             ),
             (
-                "maintenance_fees",
-                "pricing",
-                "real_estate",
-                "Maintenance charge per sqft",
-                "First 1 year maintenance completely free of cost Sir! After that, just ₹2.50 per sqft managed by the resident welfare association.",
-                now
+                "lab_reports_whatsapp",
+                "onboarding",
+                "amura_metabolic",
+                "Fasting insulin HbA1c lab report upload via WhatsApp",
+                "You can share recent fasting glucose, fasting insulin, HbA1c, or lipid reports on WhatsApp (+91-62-622-62222) prior to your physician consultation.",
+                now,
             ),
             (
-                "bank_loans",
-                "financing",
-                "real_estate",
-                "Home loan approvals and banks",
-                "SBI, HDFC, ICICI, and Axis Bank pre-approved Sir. Up to 80% to 85% home loan available with spot sanction support.",
-                now
+                "medication_safety_policy",
+                "safety",
+                "amura_metabolic",
+                "Medication dosage insulin adjustment safety policy",
+                "Only a licensed Amura Health physician can evaluate lab reports or adjust medications after a clinical consultation; never alter doses without medical supervision.",
+                now,
             ),
             (
-                "possession_date",
-                "timeline",
-                "real_estate",
-                "Handover / Possession timeline",
-                "Sir, Phase 1 already ready-to-move with families living there. Phase 2 handover is scheduled within 4 months with guaranteed compensation for delay.",
-                now
+                "emergency_108_protocol",
+                "emergency",
+                "amura_metabolic",
+                "Emergency chest pain breathing red-flag 108 protocol",
+                "For chest pain, severe shortness of breath, stroke signs, or acute distress, call 108 emergency services immediately or go to the nearest ER.",
+                now,
             ),
         ]
-        cursor.executemany("""
-            INSERT OR IGNORE INTO learned_knowledge 
+        cursor.executemany(
+            """
+            INSERT OR IGNORE INTO learned_knowledge
             (topic, category, sector, customer_query, learned_response, frequency, confidence_score, last_observed)
             VALUES (?, ?, ?, ?, ?, 1, 0.95, ?)
-        """, seeds)
+            """,
+            seeds,
+        )
 
     def record_call(
         self,
@@ -170,9 +199,7 @@ class LearningMemoryDB:
         transcript: List[Dict[str, str]],
         dossier: Dict[str, Any],
     ) -> Dict[str, Any]:
-        """
-        Stores complete call record and automatically runs autonomous knowledge extraction.
-        """
+        """Stores complete call record and runs autonomous clinical knowledge extraction."""
         now = datetime.now(timezone.utc).isoformat()
         transcript_json = json.dumps(transcript, ensure_ascii=False)
         dossier_json = json.dumps(dossier, ensure_ascii=False)
@@ -183,25 +210,37 @@ class LearningMemoryDB:
 
         with self._get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT OR REPLACE INTO call_records (
                     call_id, timestamp, customer_name, customer_phone, market_mode,
                     sector, business_name, transcript_json, dossier_json,
                     intent_score, qualified, appointment_slot, turn_count
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, (
-                call_id, now, customer_name, customer_phone, market_mode,
-                sector, business_name, transcript_json, dossier_json,
-                intent_score, qualified, slot, turn_count
-            ))
+                """,
+                (
+                    call_id,
+                    now,
+                    customer_name,
+                    customer_phone,
+                    market_mode,
+                    sector,
+                    business_name,
+                    transcript_json,
+                    dossier_json,
+                    intent_score,
+                    qualified,
+                    slot,
+                    turn_count,
+                ),
+            )
             conn.commit()
 
-        # Run knowledge extraction
         new_learnings = self.extract_and_learn_from_call(
             call_id=call_id,
             transcript=transcript,
             sector=sector,
-            business_name=business_name
+            business_name=business_name,
         )
 
         return {
@@ -209,68 +248,64 @@ class LearningMemoryDB:
             "status": "saved",
             "turn_count": turn_count,
             "new_learnings_count": len(new_learnings),
-            "learnings": new_learnings
+            "learnings": new_learnings,
         }
 
     def extract_and_learn_from_call(
         self,
         call_id: str,
         transcript: List[Dict[str, str]],
-        sector: str = "real_estate",
-        business_name: str = "CLOSER AI"
+        sector: str = "amura_metabolic",
+        business_name: str = "Amura Health",
     ) -> List[Dict[str, Any]]:
-        """
-        Scans turn-by-turn customer queries in the transcript to discover new questions,
-        objections, or local preferences, and adds them to the persistent knowledge base.
-        """
-        learnings = []
-        user_turns = [t["content"] for t in transcript if t.get("role") == "user"]
+        """Scans patient queries in the transcript to capture clinical FAQ themes & frequencies."""
+        learnings: List[Dict[str, Any]] = []
+        user_turns = [t["content"] for t in transcript if t.get("role") == "user" and t.get("content")]
         now = datetime.now(timezone.utc).isoformat()
 
-        # Pattern detectors for Tamil, Tanglish, and English inquiries
         detectors = [
             {
-                "topic": "metro_connectivity",
-                "category": "location",
-                "keywords": ["metro", "railway", "station", "train", "மெட்ரோ", "ரயில்வே"],
-                "query": "Distance to nearest Metro / Railway station",
-                "response": f"Sir, upcoming Metro station is just 1.2 km (5 mins drive) from {business_name}, and suburban railway station is 2 km."
+                "topic": "hba1c_biomarkers",
+                "category": "diagnostics",
+                "keywords": ["hba1c", "fasting insulin", "fasting sugar", "blood test", "lab report", "biomarker", "ரிப்போர்ட்", "लैब रिपोर्ट"],
+                "query": "HbA1c, fasting insulin, and biomarker lab review",
+                "response": f"{business_name} physicians review fasting insulin, HbA1c, lipid, and metabolic panels before designing your personalized care plan.",
             },
             {
-                "topic": "car_parking",
-                "category": "amenities",
-                "keywords": ["parking", "car park", "covered parking", "பார்க்கிங்", "கார் பார்க்கிங்"],
-                "query": "Covered car parking and EV charging",
-                "response": "Sir, every 2BHK/3BHK unit gets 1 dedicated covered stilt car parking, with EV charging provision on spot."
+                "topic": "mnt_nmt_therapy",
+                "category": "clinical_program",
+                "keywords": ["mnt", "nmt", "medical nutrition", "natural molecule", "diet plan", "nutrition", "டயட்", "डाइट"],
+                "query": "Medical Nutrition Therapy (MNT) and Natural Molecule Therapy (NMT)",
+                "response": f"At {business_name}, MNT and NMT target root-cause insulin resistance alongside physician supervision and health coaching.",
             },
             {
-                "topic": "pet_friendly",
-                "category": "policies",
-                "keywords": ["pet", "dog", "cat", "விலங்கு", "நாய்", "பெட்"],
-                "query": "Pet friendly policy",
-                "response": "Yes Sir! 100% pet-friendly gated community with dedicated walking track and green garden space."
+                "topic": "pcod_thyroid_care",
+                "category": "conditions",
+                "keywords": ["pcod", "pcos", "thyroid", "tsh", "hormonal", "irregular periods", "थायरॉइड"],
+                "query": "PCOD/PCOS and thyroid metabolic care",
+                "response": f"{business_name} provides structured physician + coach programs for PCOD/PCOS and thyroid balance.",
             },
             {
-                "topic": "vaastu_compliance",
-                "category": "specifications",
-                "keywords": ["vaastu", "vastu", "facing", "north", "east", "வாஸ்து", "கிழக்கு", "வடக்கு"],
-                "query": "Vaastu compliance and entrance facing",
-                "response": "Sir, all units are 100% Vaastu compliant with East and North facing main doors, and no dead-end corridors."
+                "topic": "fatty_liver_gut",
+                "category": "conditions",
+                "keywords": ["fatty liver", "nafld", "gut", "gerd", "acidity", "bloating", "sgpt"],
+                "query": "Fatty liver and gut inflammation reversal",
+                "response": f"Our clinical team addresses fatty liver and gut inflammation via targeted nutrition, micronutrient support, and regular follow-ups.",
             },
             {
-                "topic": "rental_yield_investment",
-                "category": "investment",
-                "keywords": ["rent", "rental", "yield", "investment", "வாடகை", "ரிடர்ன்ஸ்"],
-                "query": "Expected monthly rental yield and tenant demand",
-                "response": f"Sir, because {business_name} is in a high-demand IT corridor, expected rental yield is ₹25,000–₹32,000/month with zero vacancy risk."
+                "topic": "hypertension_cardiac",
+                "category": "conditions",
+                "keywords": ["hypertension", "blood pressure", "bp", "cholesterol", "triglycerides", "dyslipidemia"],
+                "query": "Hypertension and dyslipidemia metabolic management",
+                "response": f"{business_name} tracks blood pressure and lipid markers closely under licensed medical supervision.",
             },
             {
-                "topic": "gated_amenities",
-                "category": "amenities",
-                "keywords": ["clubhouse", "gym", "swimming", "pool", "lift", "லிப்ட்", "நீச்சல்", "ஜிம்"],
-                "query": "Clubhouse, gym and swimming pool amenities",
-                "response": "Sir, premium 15,000 sq.ft clubhouse with air-conditioned gym, infinity pool, children play area, and 2 automatic high-speed lifts per block."
-            }
+                "topic": "telehealth_velachery_visit",
+                "category": "appointments",
+                "keywords": ["velachery", "chennai", "telehealth", "online consult", "video call", "clinic visit", "வேளச்சேரி", "ऑनलाइन"],
+                "query": "Online video consultation vs Velachery Chennai clinic visit",
+                "response": f"You can consult {business_name} online via video from anywhere or visit our Velachery Main Road, Chennai clinic.",
+            },
         ]
 
         with self._get_connection() as conn:
@@ -280,99 +315,129 @@ class LearningMemoryDB:
                 for d in detectors:
                     if any(k in text_low for k in d["keywords"]):
                         topic = d["topic"]
-                        # Check if already present
                         cursor.execute(
                             "SELECT id, frequency FROM learned_knowledge WHERE topic = ? AND sector = ?",
-                            (topic, sector)
+                            (topic, sector),
                         )
                         existing = cursor.fetchone()
                         if existing:
                             new_freq = existing["frequency"] + 1
-                            cursor.execute("""
-                                UPDATE learned_knowledge 
+                            cursor.execute(
+                                """
+                                UPDATE learned_knowledge
                                 SET frequency = ?, last_observed = ?, source_call_id = ?
                                 WHERE id = ?
-                            """, (new_freq, now, call_id, existing["id"]))
-                            learnings.append({
-                                "topic": topic,
-                                "status": "updated_frequency",
-                                "frequency": new_freq,
-                                "customer_query": d["query"]
-                            })
+                                """,
+                                (new_freq, now, call_id, existing["id"]),
+                            )
+                            learnings.append(
+                                {
+                                    "topic": topic,
+                                    "status": "updated_frequency",
+                                    "frequency": new_freq,
+                                    "customer_query": d["query"],
+                                }
+                            )
                         else:
-                            cursor.execute("""
+                            cursor.execute(
+                                """
                                 INSERT INTO learned_knowledge (
                                     topic, category, sector, customer_query,
                                     learned_response, frequency, confidence_score,
                                     last_observed, source_call_id
                                 ) VALUES (?, ?, ?, ?, ?, 1, 0.90, ?, ?)
-                            """, (
-                                topic, d["category"], sector, d["query"],
-                                d["response"], now, call_id
-                            ))
-                            learnings.append({
-                                "topic": topic,
-                                "status": "newly_learned",
-                                "frequency": 1,
-                                "customer_query": d["query"],
-                                "learned_response": d["response"]
-                            })
+                                """,
+                                (
+                                    topic,
+                                    d["category"],
+                                    sector,
+                                    d["query"],
+                                    d["response"],
+                                    now,
+                                    call_id,
+                                ),
+                            )
+                            learnings.append(
+                                {
+                                    "topic": topic,
+                                    "status": "newly_learned",
+                                    "frequency": 1,
+                                    "customer_query": d["query"],
+                                    "learned_response": d["response"],
+                                }
+                            )
             conn.commit()
 
         return learnings
 
-    def find_learned_response(self, user_utterance: str, sector: str = "real_estate") -> Optional[str]:
-        """
-        Matches a live incoming user query against the continuously updated knowledge base.
-        Returns the learned response if a relevant topic match is detected.
-        """
-        text_low = user_utterance.lower().strip()
+    def find_learned_response(self, user_utterance: str, sector: str = "amura_metabolic") -> Optional[str]:
+        """Matches a live user query against the continuously updated clinical knowledge base."""
+        text_low = (user_utterance or "").lower().strip()
+        if not text_low:
+            return None
         with self._get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("""
-                SELECT topic, customer_query, learned_response, frequency 
-                FROM learned_knowledge 
-                WHERE sector = ? 
+            cursor.execute(
+                """
+                SELECT topic, customer_query, learned_response, frequency
+                FROM learned_knowledge
+                WHERE sector = ?
                 ORDER BY frequency DESC
-            """, (sector,))
+                """,
+                (sector,),
+            )
             rows = cursor.fetchall()
+            if not rows and sector != "amura_metabolic":
+                cursor.execute(
+                    """
+                    SELECT topic, customer_query, learned_response, frequency
+                    FROM learned_knowledge
+                    WHERE sector = 'amura_metabolic'
+                    ORDER BY frequency DESC
+                    """
+                )
+                rows = cursor.fetchall()
 
             for r in rows:
-                topic = r["topic"]
-                # Match keywords based on topic name and customer query keywords
-                topic_words = topic.split("_")
-                query_words = [w for w in r["customer_query"].lower().split() if len(w) > 3]
-                
+                topic_words = [w for w in r["topic"].split("_") if len(w) > 2]
+                query_words = [w.strip(",.()") for w in r["customer_query"].lower().split() if len(w.strip(",.()")) > 3]
                 if any(w in text_low for w in topic_words) or any(w in text_low for w in query_words):
                     return r["learned_response"]
-
         return None
 
     def get_all_learned_knowledge(self, sector: Optional[str] = None) -> List[Dict[str, Any]]:
-        """Returns all knowledge items acquired from customer calls."""
+        """Returns all knowledge items acquired from patient calls."""
         with self._get_connection() as conn:
             cursor = conn.cursor()
             if sector:
-                cursor.execute("""
+                cursor.execute(
+                    """
                     SELECT id, topic, category, sector, customer_query, learned_response, frequency, last_observed
                     FROM learned_knowledge WHERE sector = ? ORDER BY frequency DESC
-                """, (sector,))
+                    """,
+                    (sector,),
+                )
             else:
-                cursor.execute("""
+                cursor.execute(
+                    """
                     SELECT id, topic, category, sector, customer_query, learned_response, frequency, last_observed
                     FROM learned_knowledge ORDER BY frequency DESC
-                """)
+                    """
+                )
             return [dict(row) for row in cursor.fetchall()]
 
     def get_recent_calls(self, limit: int = 10) -> List[Dict[str, Any]]:
-        """Returns the most recent recorded customer calls."""
+        """Returns the most recent recorded patient calls."""
         with self._get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT call_id, timestamp, customer_name, customer_phone, market_mode,
                        sector, business_name, intent_score, qualified, appointment_slot, turn_count
                 FROM call_records ORDER BY timestamp DESC LIMIT ?
-            """, (limit,))
+                """,
+                (limit,),
+            )
             return [dict(row) for row in cursor.fetchall()]
 
     def get_stats(self) -> Dict[str, Any]:
@@ -392,14 +457,14 @@ class LearningMemoryDB:
                 "total_calls_recorded": total_calls,
                 "total_learned_topics": total_topics,
                 "total_queries_handled": total_queries_handled,
-                "db_path": str(self.db_path)
+                "db_path": str(self.db_path),
             }
 
 
 _GLOBAL_LEARNING_DB: Optional[LearningMemoryDB] = None
 
 
-def get_learning_db(db_path: Optional[Path] = None) -> LearningMemoryDB:
+def get_learning_db(db_path: Optional[Path | str] = None) -> LearningMemoryDB:
     global _GLOBAL_LEARNING_DB
     if _GLOBAL_LEARNING_DB is None or db_path is not None:
         _GLOBAL_LEARNING_DB = LearningMemoryDB(db_path)

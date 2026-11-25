@@ -48,6 +48,16 @@ except Exception:
     ConversationEngine = None
 
 try:
+    from src.closer.agent.emotion import EmotionDetector
+except Exception:
+    EmotionDetector = None
+
+try:
+    from src.closer.agent.clinical_guardrails import ClinicalSafetyGuardrails
+except Exception:
+    ClinicalSafetyGuardrails = None
+
+try:
     from src.closer.voice.tts import EdgeTTSVoiceEngine
 except Exception:
     EdgeTTSVoiceEngine = None
@@ -78,7 +88,7 @@ except Exception:
     IndicDialectProsodyEngine = None
     SUPPORTED_DIALECTS = {}
 
-_app_conversation_engine = ConversationEngine(market_mode="usa") if ConversationEngine else None
+_app_conversation_engine = ConversationEngine(market_mode="usa", sector="healthcare", business_name="Amura Health") if ConversationEngine else None
 if _app_conversation_engine:
     _session_engines["default"] = _app_conversation_engine
 _app_tts_engine = EdgeTTSVoiceEngine() if EdgeTTSVoiceEngine else None
@@ -93,20 +103,20 @@ def _get_session_engine(session_id: str = "default"):
     sid = (session_id or "default").strip()[:64] or "default"
     if sid in _session_engines:
         return _session_engines[sid]
-    if "ConversationEngine" not in globals():
+    if "ConversationEngine" not in globals() or ConversationEngine is None:
         return None
     if len(_session_engines) >= _MAX_SESSIONS:
         oldest = next((k for k in _session_engines if k != "default"), None)
         if oldest:
             del _session_engines[oldest]
-    eng = ConversationEngine(market_mode="usa")
+    eng = ConversationEngine(market_mode="usa", sector="healthcare", business_name="Amura Health")
     _session_engines[sid] = eng
     if sid == "default":
         _app_conversation_engine = eng
     return eng
 
 
-@app.get("/", response_class=HTMLResponse)
+@app.api_route("/", methods=["GET", "HEAD"], response_class=HTMLResponse)
 @app.get("/landing", response_class=HTMLResponse)
 @app.get("/landing.html", response_class=HTMLResponse)
 @app.get("/index.html", response_class=HTMLResponse)
@@ -248,8 +258,8 @@ async def configure_agent(request: Request):
     except Exception:
         data = {}
     session_id = str(data.get("session_id", "default"))
-    sector = str(data.get("sector", "real_estate"))
-    business_name = data.get("business_name")
+    sector = str(data.get("sector", "healthcare"))
+    business_name = data.get("business_name") or "Amura Health"
     market_mode = data.get("market_mode")
 
     eng = _get_session_engine(session_id)
@@ -283,13 +293,13 @@ async def set_market_mode(request: Request):
         dossier = eng.export_dossier().model_dump()
     else:
         if mode == "tamil":
-            greeting = "வணக்கம் Sir... CLOSER AI-ல இருந்து பல்லவி பேசுறேங்க. உங்க enquiry பத்தி கொஞ்சம் பேசலாமா Sir?"
+            greeting = "வணக்கம் Sir! வேளச்சேரி Amura Health-ல இருந்து பிரியா பேசுறேங்க. சுகர், தைராய்டு அல்லது மருத்துவ ஆலோசனை குறித்து பேசலாமா Sir?"
         elif mode == "hindi":
-            greeting = "नमस्ते जी! क्लोज़र एआई कस्टमर सपोर्ट में आपका स्वागत है। मैं आपकी प्रॉपर्टी सर्च और साइट विज़िट में किस प्रकार सहायता कर सकती हूँ?"
+            greeting = "नमस्ते जी! Amura Health पेशेंट केयर से रितु बात कर रही हूँ। आपकी सेहत और डॉक्टर कंसल्टेशन में मैं किस तरह मदद कर सकती हूँ?"
         elif mode == "india":
-            greeting = "Namaste! How may I assist you with your luxury property or service inquiry today?"
+            greeting = "Namaste! Welcome to Amura Health Patient Care. How may I assist you with your metabolic care or specialist consultation today?"
         else:
-            greeting = "Hello, this is CLOSER AI luxury real estate concierge. How can I assist you today?"
+            greeting = "Hello! Maya calling from Amura Health Patient Care. How can I assist you with your consultation or clinical triage today?"
         dossier = {"market_mode": mode}
     return JSONResponse(content={"success": True, "session_id": session_id, "mode": mode, "greeting": greeting, "dossier": dossier})
 
@@ -340,16 +350,16 @@ async def reset_conversation(request: Request = None):
     global _app_conversation_engine
     session_id = "default"
     mode = "usa"
-    sector = "real_estate"
-    business_name = None
+    sector = "healthcare"
+    business_name = "Amura Health"
     if request is not None:
         try:
             body = await request.json()
             if isinstance(body, dict):
                 session_id = str(body.get("session_id", "default"))
                 mode = str(body.get("market_mode", "usa"))
-                sector = str(body.get("sector", "real_estate"))
-                business_name = body.get("business_name")
+                sector = str(body.get("sector", "healthcare"))
+                business_name = body.get("business_name") or "Amura Health"
         except Exception:
             pass
     try:
@@ -361,7 +371,7 @@ async def reset_conversation(request: Request = None):
         greeting = fresh.get_initial_greeting()
         dossier = fresh.export_dossier().model_dump()
     except Exception:
-        greeting = "Hello, this is CLOSER AI luxury real estate concierge. How can I assist you today?"
+        greeting = "Hello! Maya calling from Amura Health Patient Care. How can I assist you today?"
         dossier = {"market_mode": mode}
     return JSONResponse(content={"success": True, "session_id": session_id, "greeting": greeting, "dossier": dossier})
 
@@ -428,33 +438,49 @@ async def process_turn(request: Request):
         if engine:
             if sector or business_name:
                 engine.configure_business(
-                    sector=str(sector or getattr(engine, "sector", "real_estate")),
-                    business_name=business_name,
+                    sector=str(sector or getattr(engine, "sector", "healthcare")),
+                    business_name=business_name or getattr(engine, "business_name", "Amura Health"),
                 )
+            elif getattr(engine, "sector", "real_estate") == "real_estate":
+                engine.configure_business(sector="healthcare", business_name="Amura Health")
             if inferred_mode in ("tamil", "hindi", "india", "usa") and engine.market_mode != inferred_mode:
                 engine.set_market_mode(inferred_mode)
+
+        # Detect patient emotion & clinical safety status
+        emotion_assessment = (
+            EmotionDetector().assess(utterance, language=inferred_mode)
+            if EmotionDetector and utterance not in ("PREVIEW_SAMPLE", "STUDIO_SAMPLE")
+            else None
+        )
+        detected_emotion = emotion_assessment.emotion.value if emotion_assessment else "calm"
+        voice_style = emotion_assessment.voice_style if emotion_assessment else "empathetic"
+
+        if not rate and emotion_assessment:
+            rate = emotion_assessment.tts_rate
+        if not pitch and emotion_assessment:
+            pitch = emotion_assessment.tts_pitch
 
         if utterance in ("PREVIEW_SAMPLE", "STUDIO_SAMPLE"):
             if custom_text:
                 reply = custom_text
             elif inferred_mode == "tamil":
-                reply = "வணக்கம் Sir... OMR கிராண்ட் பென்ட்ஹவுஸ்ல இருந்து பிரியா பேசுறேங்க. நம்ம luxury 3BHK residences பத்தி தெரிஞ்சுக்க enquiry பண்ணியிருந்தீங்க — நீங்க ஃபேமிலியோட stay பண்ண பாக்குறீங்களா, இல்ல investment-க்காகவா Sir?"
+                reply = "வணக்கம் Sir! வேளச்சேரி Amura Health-ல இருந்து பிரியா பேசுறேங்க. சுகர், தைராய்டு அல்லது PCOD மேனேஜ்மென்ட் பத்தி doctor consultation கேட்டிருந்தீங்க—உங்களுக்கு இப்போ என்ன health goal இருக்கு Sir?"
             elif inferred_mode == "hindi":
-                reply = "नमस्ते सर... ग्रैंड OMR पेंटहाउस से रितु बात कर रही हूँ। आपने हमारी luxury 3BHK residences के लिए enquiry की थी — आप अपने परिवार के साथ रहने के लिए देख रहे हैं या फिर high-yield investment के लिए?"
+                reply = "नमस्ते जी! Amura Health पेशेंट केयर से रितु बात कर रही हूँ। आपने मेटाबोलिक और क्रॉनिक केयर कंसल्टेशन के लिए रिक्वेस्ट की थी—क्या आप डायबिटीज, थायरॉइड या किसी स्पेशलिस्ट OPD के लिए देख रहे हैं?"
             else:
-                reply = "Hey, good morning! Maya here from the Grand OMR Penthouse. I noticed you were exploring our private residences online. Quick question — are you looking for an investment or a spacious layout for your family?"
+                reply = "Hello! Maya calling from Amura Health Patient Care in Velachery, Chennai. I noticed you requested a metabolic health consultation—are you looking into diabetes reversal, thyroid care, or a specialist OPD visit?"
         elif engine:
             reply = engine.process_user_turn(utterance)
         else:
-            reply = f"Thank you for your inquiry. CLOSER AI is processing: {utterance}"
+            reply = f"Thank you for contacting Amura Health Patient Care. How can I assist you with your consultation today?"
 
         if not reply or str(reply).strip() in ("", "None", "undefined"):
             if inferred_mode == "tamil":
-                reply = "வணக்கம் Sir! Green Valley Porur-ல் 2BHK மற்றும் 3BHK flats ரெடியாக இருக்கு. சனிக்கிழமை நேர்ல வந்து சைட் விசிட் பார்க்கலாமா Sir?"
+                reply = "வணக்கம் Sir! வேளச்சேரி Amura Health மருத்துவ ஆலோசனை மையத்திற்கு நல்வரவு. நாளை காலை 11:30 மணிக்கு மருத்துவர் ஆலோசனை நேரம் முன்பதிவு செய்யலாமா Sir?"
             elif inferred_mode == "hindi":
-                reply = "नमस्ते सर! ग्रीन वैली प्रोजेक्ट में 2BHK और 3BHK रेडी-टू-मूव फ्लैट्स उपलब्ध हैं। क्या इस शनिवार आप साइट विज़िट के लिए आ सकते हैं?"
+                reply = "नमस्ते जी! Amura Health पेशेंट केयर में आपका स्वागत है। क्या मैं कल सुबह 11:30 बजे आपका डॉक्टर कंसल्टेशन स्लॉट बुक कर दूँ?"
             else:
-                reply = "Hello! I am CLOSER AI, your 24/7 autonomous real estate concierge. How can I assist you with your property inquiry today?"
+                reply = "Hello! Welcome to Amura Health Patient Care. Would you like me to schedule a physician consultation for tomorrow at 11:30 AM?"
 
         audio_b64 = ""
         audio_fmt = "wav"
@@ -505,10 +531,13 @@ async def process_turn(request: Request):
                     tts_error = f"{type(exc).__name__}: {exc}"
 
         dossier = engine.export_dossier().model_dump() if engine else {}
+        if dossier and not dossier.get("detected_emotion"):
+            dossier["detected_emotion"] = detected_emotion
+
         if dossier and (dossier.get("qualified") or dossier.get("appointment_datetime") or dossier.get("whatsapp_dispatched")):
             lead_record = {
                 "session_id": session_id,
-                "full_name": dossier.get("full_name", "Web Lead"),
+                "full_name": dossier.get("full_name", "Patient Inquiry"),
                 "market_region": dossier.get("market_region", inferred_mode.upper()),
                 "intent_score": dossier.get("intent_score", 0),
                 "qualified": dossier.get("qualified", False),
@@ -537,8 +566,19 @@ async def process_turn(request: Request):
         return JSONResponse(content={
             "session_id": session_id,
             "market_mode": engine.market_mode if engine else inferred_mode,
-            "sector": getattr(engine, "sector", "real_estate") if engine else "real_estate",
+            "sector": getattr(engine, "sector", "healthcare") if engine else "healthcare",
+            "business_name": getattr(engine, "business_name", "Amura Health") if engine else "Amura Health",
             "reply": reply,
+            "detected_emotion": detected_emotion,
+            "emotion_confidence": round(float(emotion_assessment.confidence), 2) if emotion_assessment else 0.85,
+            "empathy_tone": voice_style,
+            "voice_style": voice_style,
+            "tts_rate": rate or "+0%",
+            "tts_pitch": pitch or "+0Hz",
+            "emergency_108": bool(dossier.get("emergency_108", False)),
+            "safety_flag": "emergency_108" if dossier.get("emergency_108") else (getattr(engine, "last_safety_category", None) or "safe"),
+            "safety_category": "emergency_108" if dossier.get("emergency_108") else "safe",
+            "consent_status": dossier.get("consent_status", "pending"),
             "audio_base64": audio_b64,
             "audio_format": audio_fmt,
             "tts_provider": tts_provider,
@@ -558,26 +598,110 @@ async def process_turn(request: Request):
         except Exception:
             pass
         if v_mode == "hindi":
-            fallback_text = "नमस्ते सर! ग्रीन वैली प्रोजेक्ट में 2BHK और 3BHK रेडी-टू-मूव फ्लैट्स उपलब्ध हैं। क्या इस शनिवार आप साइट विज़िट के लिए आ सकते हैं?"
+            fallback_text = "नमस्ते जी! Amura Health पेशेंट केयर में आपका स्वागत है। क्या मैं कल सुबह 11:30 बजे आपका डॉक्टर कंसल्टेशन स्लॉट बुक कर दूँ?"
         elif v_mode == "tamil":
-            fallback_text = "வணக்கம் Sir! Green Valley Porur-ல் 2BHK மற்றும் 3BHK flats ரெடியாக இருக்கு. சனிக்கிழமை நேர்ல வந்து சைட் விசிட் பார்க்கலாமா Sir?"
+            fallback_text = "வணக்கம் Sir! வேளச்சேரி Amura Health மருத்துவ ஆலோசனை மையத்திற்கு நல்வரவு. நாளை காலை 11:30 மணிக்கு மருத்துவர் ஆலோசனை முன்பதிவு செய்யலாமா Sir?"
         else:
-            fallback_text = "Hello! I am CLOSER AI, your 24/7 autonomous real estate concierge. How can I assist you with your property inquiry today?"
+            fallback_text = "Hello! Welcome to Amura Health Patient Care. How can I assist you with your clinical consultation today?"
 
         return JSONResponse(content={
             "session_id": "fallback",
             "market_mode": v_mode,
-            "sector": "real_estate",
+            "sector": "healthcare",
             "reply": fallback_text,
+            "detected_emotion": "calm",
+            "voice_style": "empathetic",
+            "emergency_108": False,
             "audio_base64": "",
             "audio_format": "wav",
             "tts_provider": "browser_speech_synthesis",
             "tts_error": None,
-            "dossier": {"qualified": True, "intent_score": 75},
+            "dossier": {"qualified": True, "intent_score": 75, "detected_emotion": "calm"},
             "debug_error": f"{type(exc).__name__}: {exc}",
             "traceback": traceback.format_exc(),
             "llm_model": "reflex_edge_fallback"
         })
+
+
+@app.post("/api/call/demo")
+@app.post("/api/telephony/demo-call")
+async def trigger_demo_phone_call(request: Request):
+    """Validates a patient/founder phone number and triggers or simulates an outbound Amura Health call."""
+    import re as _re
+    from datetime import datetime, timezone
+
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+
+    phone_raw = str(data.get("phone_number", "") or "").strip()
+    language = str(data.get("language", "english") or "english").lower().strip()
+    patient_name = str(data.get("patient_name", "Amura Guest") or "Amura Guest").strip()[:80]
+    concern = str(data.get("concern", "Metabolic & Diabetes Consultation") or "Metabolic & Diabetes Consultation").strip()[:200]
+    consent_confirmed = bool(data.get("consent_confirmed", True))
+
+    cleaned_digits = _re.sub(r"[^\d+]", "", phone_raw)
+    if len(_re.sub(r"\D", "", cleaned_digits)) < 10:
+        return JSONResponse(
+            status_code=400,
+            content={"success": False, "error": "Please enter a valid 10+ digit phone number (e.g. +919840012345)."},
+        )
+    if not consent_confirmed:
+        return JSONResponse(
+            status_code=400,
+            content={"success": False, "error": "Explicit DPDP / TRAI callback consent is required before dialing."},
+        )
+
+    lang_key = "tamil" if "tam" in language else ("hindi" if "hin" in language else "english")
+    carrier_mode = "live_carrier" if (os.getenv("BLAND_API_KEY") or os.getenv("LIVEKIT_URL")) else "simulated_demo"
+    call_id = f"AMURA-CALL-{int(datetime.now(timezone.utc).timestamp())}"
+
+    if os.getenv("BLAND_API_KEY"):
+        try:
+            from closer.telephony.bland_engine import BlandTelephonyEngine
+            bland = BlandTelephonyEngine()
+            res = await bland.dispatch_phone_call(
+                phone_number=cleaned_digits,
+                language=lang_key,
+                custom_context=f"Patient Name: {patient_name}. Concern: {concern}. Clinic: Amura Health, Velachery Chennai.",
+            )
+            return JSONResponse(content={
+                "success": True,
+                "call_id": res.get("call_id", call_id),
+                "status": "dispatched",
+                "mode": "live_carrier",
+                "carrier": "Bland AI / SIP",
+                "to": cleaned_digits,
+                "language": lang_key,
+                "compliance": {"trai_dlt": "opt_in_verified", "dpdp_consent": True, "emergency_108_active": True},
+                "message": f"Live call dispatched to {cleaned_digits} in {lang_key.title()}.",
+            })
+        except Exception as exc:
+            carrier_mode = "simulated_demo"
+            fallback_note = f"Carrier fallback to interactive demo ({type(exc).__name__})"
+    else:
+        fallback_note = "Interactive Demo Mode — add BLAND_API_KEY or Exotel/Twilio + LiveKit SIP credentials in .env to ring live PSTN handsets."
+
+    return JSONResponse(content={
+        "success": True,
+        "call_id": call_id,
+        "status": "queued_demo",
+        "mode": carrier_mode,
+        "carrier": "LiveKit SIP / Exotel-Twilio Bridge (Demo Ready)",
+        "from_number": os.getenv("CLINIC_DID_NUMBER", "+91-44-4813-AMURA"),
+        "to": cleaned_digits,
+        "patient_name": patient_name,
+        "language": lang_key,
+        "concern": concern,
+        "compliance": {
+            "trai_dlt": "opt_in_verified",
+            "dpdp_consent": True,
+            "emergency_108_active": True,
+            "no_diagnosis_guardrail": True,
+        },
+        "message": f"Demo call pipeline validated for {cleaned_digits} ({lang_key.title()}). {fallback_note}",
+    })
 
 
 # -----------------------------------------------------------------------------

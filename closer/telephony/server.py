@@ -69,85 +69,85 @@ DEMO_VOICE_CATALOG = {
         "name": "Maya (Signature Closer)",
         "language_name": "English",
         "engine": "Kokoro 3-Way SOTA Blend (55% Heart + 30% Nicole + 15% Bella)",
-        "accent": "Natural American Consultative / Warm Luxury Real Estate",
+        "accent": "Warm Empathetic Clinical Care • Amura Health & Hospital Triage",
         "scenarios": [
             {
                 "id": "en_opener",
-                "title": "Lead Opener & Luxury Qualification",
-                "description": "Engages high-net-worth buyer exploring penthouse layouts.",
+                "title": "Patient Care Intake & Metabolic Triage",
+                "description": "Warmly qualifies patient goals for diabetes, thyroid, or OPD consults.",
                 "audio_url": "/static/demos/en_opener.wav",
-                "transcript": "Hey, good morning! Maya here from the Grand OMR Penthouse. I noticed you were exploring our private residences online. Quick question — are you looking for an investment or a spacious layout for your family?"
+                "transcript": "Hello! Maya calling from Amura Health Patient Care in Velachery, Chennai. I saw you requested a metabolic consultation—are you looking into diabetes reversal, thyroid care, or a specialist OPD visit?"
             },
             {
                 "id": "en_objection",
-                "title": "15% Discount Objection Deflection",
-                "description": "Never leaks pricing or discounts on phone; pivots to exclusive in-person walkthrough.",
+                "title": "Anxious Patient Reassurance & Safety Guardrail",
+                "description": "De-escalates anxiety without diagnosing/prescribing; routes safely to physician.",
                 "audio_url": "/static/demos/en_objection.wav",
-                "transcript": "Look, I totally get where you are coming from on the pricing. The developer only authorizes custom payment milestones and private concessions in-person during the private walkthrough. Would Thursday at 4 PM or Saturday morning work better for you?"
+                "transcript": "I completely understand how stressful fluctuating sugar levels feel, and you're in safe hands. Only our licensed physician can adjust medication after reviewing your HbA1c—shall I book your video consultation tomorrow at 11:30 AM?"
             },
             {
                 "id": "en_closing",
-                "title": "VIP Penthouse Walkthrough Scheduled",
-                "description": "Secures commitment and dispatches instant VIP gate pass.",
+                "title": "Doctor Consultation Confirmed + WhatsApp Care Kit",
+                "description": "Locks doctor slot and dispatches lab checklist via WhatsApp.",
                 "audio_url": "/static/demos/en_closing.wav",
-                "transcript": "Terrific! I have reserved the exclusive sunrise penthouse preview for you this Saturday at 11 AM. I am texting you the VIP gate pass right now. Looking forward to welcoming you, Sir."
+                "transcript": "Wonderful! Your physician consultation is confirmed for tomorrow at 11:30 AM IST. I've sent your fasting lab checklist and clinic link on WhatsApp right now."
             }
         ]
     },
     "tamil": {
         "voice_id": "kavitha_tanglish_closer",
-        "name": "பல்லவி (Pallavi)",
+        "name": "பிரியா (Priya)",
         "language_name": "தமிழ் (Tanglish)",
         "engine": "Sarvam Bulbul v3 / Chennai Conversational Tanglish",
-        "accent": "Sweet Chennai Telecaller • Crisp 'Sir' • Natural Real Estate Loanwords",
+        "accent": "Warm Chennai Care Coordinator • Natural Tanglish Medical Support",
         "scenarios": [
             {
                 "id": "ta_opener",
-                "title": "சென்னை லீட் வரவேற்பு (Opener & Qualification)",
-                "description": "சூப்பரான வரவேற்பு, கனிவான Tanglish அணுகுமுறை.",
+                "title": "சென்னை நோயாளி வரவேற்பு (Amura Care Intake)",
+                "description": "அன்பான Tanglish மருத்துவ ஆலோசனை மற்றும் நோய் விவரம் கேட்டல்.",
                 "audio_url": "/static/demos/ta_opener.mp3",
-                "transcript": "வணக்கம் Sir! OMR கிராண்ட் பென்ட்ஹவுஸ்ல இருந்து பல்லவி பேசுறேங்க. நம்ம luxury 3BHK residences பத்தி தெரிஞ்சுக்க enquiry பண்ணியிருந்தீங்க. நீங்க ஃபேமிலியோட stay பண்ண பாக்குறீங்களா, இல்ல investment-க்காகவா Sir?"
+                "transcript": "வணக்கம் Sir! வேளச்சேரி Amura Health-ல இருந்து பிரியா பேசுறேங்க. சுகர், தைராய்டு அல்லது PCOD மேனேஜ்மென்ட் பத்தி doctor consultation கேட்டிருந்தீங்க—உங்களுக்கு இப்போ என்ன health goal இருக்கு Sir?"
             },
             {
                 "id": "ta_objection",
-                "title": "15% டிஸ்கவுண்ட் தடுப்பு (Price Deflection)",
-                "description": "போனில் விலை குறைக்காமல், நேரில் சைட் விசிட் வரவைக்கும் தந்திரம்.",
+                "title": "பயம் நீக்கி ஆலோசனை (Empathy & Safety)",
+                "description": "மருந்து பரிந்துரைக்காமல் அக்கறையுடன் மருத்துவர் சந்திப்பை உறுதி செய்தல்.",
                 "audio_url": "/static/demos/ta_objection.mp3",
-                "transcript": "Sir, pricing மற்றும் special discount பத்தி நம்ம நேரடியா site visit வரும்போது developer approval-ஓட பேசிக்கலாமுங்க. இந்த வியாழக்கிழமை சாயங்காலம் 4 மணிக்கு பார்க்கலாமா, இல்ல சனிக்கிழமை காலைல பார்க்கலாமா Sir?"
+                "transcript": "கவலைப்படாதீங்க Sir, உங்க நிலைமை எங்களுக்குப் புரியுது. மருந்து அளவை மாற்றுவது பற்றி நம்ம Amura மருத்துவர் தான் உங்க HbA1c ரிப்போர்ட் பார்த்து முடிவு பண்ணுவாங்க. நாளை காலை 11:30 மணிக்கு video consultation புக் பண்ணலாமா Sir?"
             },
             {
                 "id": "ta_closing",
-                "title": "விஐபி சைட் விசிட் உறுதி (Site Visit Closed)",
-                "description": "நேரடி விசிட்டை உறுதிசெய்து வாட்ஸ்அப் கேட் பாஸ் அனுப்பும் நிறைவு.",
+                "title": "மருத்துவர் நேரம் உறுதி (Consultation Confirmed)",
+                "description": "சந்திப்பை உறுதி செய்து வாட்ஸ்அப்பில் லேப் பட்டியல் அனுப்புதல்.",
                 "audio_url": "/static/demos/ta_closing.mp3",
-                "transcript": "ரொம்ப சந்தோஷம் Sir! இந்த சனிக்கிழமை காலைல 11 மணிக்கு உங்க VIP walkthrough slot book பண்ணிட்டேங்க. உங்க WhatsApp-க்கு location map மற்றும் gate pass உடனே அனுப்பிடுறேன் Sir. நன்றி!"
+                "transcript": "ரொம்ப நன்றி Sir! நாளைக்கு காலை 11:30 மணிக்கு உங்க doctor consultation slot புக் பண்ணிட்டேங்க. உங்க WhatsApp-க்கு lab test checklist மற்றும் consultation link அனுப்பிட்டேன் Sir!"
             }
         ]
     },
     "hindi": {
         "voice_id": "shreya_hinglish_closer",
-        "name": "स्वाति (Swati)",
+        "name": "रितु (Ritu)",
         "language_name": "हिंदी (Hinglish)",
         "engine": "Sarvam Bulbul v3 / Conversational Hinglish",
-        "accent": "Sweet North Indian Telecaller • Warm Persuasive Cadence",
+        "accent": "Warm Pan-India Patient Care • Reassuring Clinical Cadence",
         "scenarios": [
             {
                 "id": "hi_opener",
-                "title": "लीड स्वागत व परिचय (Lead Opener & Qualification)",
-                "description": "विनम्र और भरोसेमंद शुरुआत, परिवार या इन्वेस्टमेंट का सही वर्गीकरण।",
+                "title": "पेशेंट इनटेक व परिचय (Amura Health Triage)",
+                "description": "डायबिटीज, थायरॉइड और मेटाबोलिक केयर के लिए संवेदनशील शुरुआत।",
                 "audio_url": "/static/demos/hi_opener.mp3",
-                "transcript": "नमस्ते सर! ग्रैंड OMR पेंटहाउस से स्वाति बात कर रही हूँ। आपने हमारी luxury 3BHK residences के लिए enquiry की थी। सर, आप अपने परिवार के साथ रहने के लिए देख रहे हैं या फिर high-yield investment के लिए?"
+                "transcript": "नमस्ते जी! Amura Health पेशेंट केयर से रितु बात कर रही हूँ। आपने मेटाबोलिक और क्रॉनिक केयर कंसल्टेशन के लिए रिक्वेस्ट की थी—क्या आप डायबिटीज, थायरॉइड या किसी स्पेशलिस्ट OPD के लिए देख रहे हैं?"
             },
             {
                 "id": "hi_objection",
-                "title": "15% डिस्काउंट डिफ्लेक्शन (Objection Handling)",
-                "description": "कॉल पर रेट कम किए बिना ग्राहक को सीधे साइट विज़िट के लिए तैयार करना।",
+                "title": "चिंता समाधान व सेफ्टी गार्डरेल (Clinical Safety)",
+                "description": "बिना दवा बताए मरीज़ को शांत कर डॉक्टर कंसल्टेशन से जोड़ना।",
                 "audio_url": "/static/demos/hi_objection.mp3",
-                "transcript": "हाँजी बिल्कुल सर! डिस्काउंट और exclusive payment plan के बारे में हम site visit पर बैठकर developer के साथ final कर सकते हैं जी। क्या गुरुवार शाम 4 बजे या शनिवार सुबह का समय आपके लिए सुविधाजनक रहेगा?"
+                "transcript": "जी बिल्कुल, मैं आपकी चिंता समझती हूँ। कोई भी दवा या डोज़ हमारे Amura डॉक्टर आपकी HbA1c और ब्लड रिपोर्ट देखकर ही तय करते हैं। क्या मैं कल सुबह 11:30 बजे आपका टेली-कंसल्टेशन बुक कर दूँ?"
             },
             {
                 "id": "hi_closing",
-                "title": "वीआईपी साइट विज़िट फाइनल (Site Visit Closed)",
+                "title": "डॉक्टर अपॉइंटमेंट कन्फ़र्म (Consultation Confirmed)",
                 "description": "शनिवार का स्लॉट फाइनल कर तुरंत व्हाट्सएप पर गेट पास भेजना।",
                 "audio_url": "/static/demos/hi_closing.mp3",
                 "transcript": "बहुत बढ़िया सर! मैंने इस शनिवार सुबह 11 बजे आपका VIP private walkthrough confirm कर दिया है। लोकेशन और गेट पास आपके WhatsApp पर भेज रही हूँ जी। थैंक यू सो मच सर!"
@@ -431,51 +431,42 @@ async def websocket_call(websocket: WebSocket):
                     "type": "dossier_update",
                     "deal_score": min(95, deal_score),
                     "dossier": {
-                        "buyer_type": dossier.buyer_type or "Evaluating",
-                        "budget": dossier.budget_bracket or "₹1.5 Cr — ₹2.5 Cr",
-                        "property_type": dossier.property_type or "3 BHK Luxury",
-                        "preferred_location": dossier.preferred_location or "OMR Chennai",
-                        "site_visit_interest": "Confirmed Slot" if deal_score >= 70 else "Pending",
+                        "patient_goal": getattr(dossier, "buyer_type", None) or "Metabolic Care / OPD",
+                        "condition_category": "Diabetes / Thyroid / Clinical Triage",
+                        "clinic_hub": "Amura Health (Velachery, Chennai)",
+                        "consultation_slot": "Confirmed Slot" if deal_score >= 70 else "Pending",
                     }
                 }))
 
-                # 2. Determine Sales Response with human closer guardrails
+                # 2. Determine Clinical Triage Response with safety guardrails
                 lower = text.lower()
+                is_emergency = any(k in lower for k in ["chest pain", "can't breathe", "cannot breathe", "breathing", "faint", "unconscious", "நெஞ்சு வலி", "மூச்சு", "सीने में दर्द", "सांस"])
                 is_price = any(k in lower for k in [
-                    "discount", "price", "rate", "cost", "offer", "bargain",
-                    "டிஸ்கவுண்ட்", "ரேட்", "ஆஃபர்", "விலை", "கம்மி", "குறைக்க", "பர்சன்ட்",
-                    "डिस्काउंट", "रेट", "कम", "छूट"
+                    "discount", "price", "rate", "cost", "fee", "fees", "package",
+                    "டிஸ்கவுண்ட்", "ரேட்", "விலை", "கட்டணம்", "डिस्काउंट", "फीस", "खर्च"
                 ])
 
-                if is_price:
+                if is_emergency:
                     if "tam" in agent_name:
-                        resp = "Sir, pricing மற்றும் special discount பத்தி நம்ம நேரடியா site visit வரும்போது பேசிக்கலாமுங்க. இந்த வியாழக்கிழமை சாயங்காலம் 4 மணிக்கு பார்க்கலாமா, இல்ல சனிக்கிழமை காலைல பார்க்கலாமா Sir?"
+                        resp = "தயவுசெய்து உடனடியாக 108 அவசர உதவிக்கு அழைக்கவும் அல்லது அருகிலுள்ள Emergency Room-க்கு செல்லவும் Sir. இது அவசர மருத்துவ நிலை."
                     elif "hin" in agent_name:
-                        resp = "हाँजी बिल्कुल! डिस्काउंट और final pricing के बारे में हम site visit पर बैठकर आराम से बात कर सकते हैं जी। क्या गुरुवार शाम 4 बजे या शनिवार सुबह का समय सही रहेगा सर?"
+                        resp = "कृपया तुरंत 108 पर कॉल करें या नजदीकी इमरजेंसी रूम में जाएं जी। सीने में दर्द या सांस की तकलीफ में तुरंत डॉक्टर की जरूरत है।"
                     else:
-                        resp = "Look, I totally get where you are coming from on the pricing. The developer authorizes custom payment milestones during the private walkthrough. Would Thursday at 4 PM or Saturday morning work better for you?"
+                        resp = "Please call 108 or go to the nearest Emergency Room immediately. Chest pain or breathing distress requires urgent emergency care."
+                elif is_price:
+                    if "tam" in agent_name:
+                        resp = "Sir, உங்க health program மற்றும் கட்டண விவரங்களை நம்ம Amura Health மருத்துவர் உங்கள் ரிப்போர்ட் பார்த்த பிறகு துல்லியமாகச் சொல்வார். நாளை காலை 11:30 மணிக்கு consultation புக் பண்ணலாமா Sir?"
+                    elif "hin" in agent_name:
+                        resp = "जी बिल्कुल! प्रोग्राम फीस और पर्सनलाइज्ड केयर प्लान डॉक्टर आपकी रिपोर्ट देखने के बाद बताते हैं। क्या कल सुबह 11:30 बजे का कंसल्टेशन स्लॉट बुक कर दूँ?"
+                    else:
+                        resp = "Program fees and customized Natural Molecule Therapy plans are tailored after our physician reviews your labs. Shall I reserve tomorrow at 11:30 AM for your consultation?"
                 else:
-                    if dossier.budget_bracket:
-                        if "tam" in agent_name:
-                            resp = "கண்டிப்பா Sir! உங்க budget-க்கு ஏத்த மாதிரி OMR-ல ரொம்பவே அழகான 3 BHK luxury projects இருக்குங்க. இந்த weekend நேர்ல வந்து site visit பார்க்கலாமா Sir?"
-                        elif "hin" in agent_name:
-                            resp = "जी बिल्कुल सर! अगर आपका budget डेढ़ करोड़ के आस-पास है, तो हमारे पास बहुत ही शानदार 3 BHK luxury options हैं। क्या इस weekend एक बार site visit plan करें?"
-                        else:
-                            resp = "Got it! That fits our luxury inventory perfectly. Would you like to schedule a private walkthrough this weekend?"
-                    elif any(w in lower for w in ["invest", "investment", "rent", "வாடகை", "முதலீடு", "निवेश"]):
-                        if "tam" in agent_name:
-                            resp = "ரொம்ப நல்ல choice Sir! High rental yield தரக்கூடிய சூப்பரான investment options எங்ககிட்ட இருக்குங்க. இந்த சனிக்கிழமை நேர்ல வந்து பார்க்கலாமா Sir?"
-                        elif "hin" in agent_name:
-                            resp = "शानदार सर! हमारे पास high rental yield देने वाले बहुत ही बेहतरीन investment options हैं जी। क्या मैं आपके लिए कल का slot confirm करूँ?"
-                        else:
-                            resp = "Understood. We have strong high-yield options. Would you prefer a morning or afternoon walkthrough?"
+                    if "tam" in agent_name:
+                        resp = "கண்டிப்பா Sir! வேளச்சேரி Amura Health-ல் சர்க்கரை நோய், தைராய்டு மற்றும் மेटाபாலிக் ஆரோக்கியத்திற்கான சிறப்பு மருத்துவர் ஆலோசனை உள்ளது. நாளை காலைல slot புக் பண்ணலாமா Sir?"
+                    elif "hin" in agent_name:
+                        resp = "जी बिल्कुल! Amura Health में डायबिटीज, थायरॉइड और मेटाबोलिक केयर के लिए अनुभवी डॉक्टर उपलब्ध हैं। क्या कल सुबह 11:30 बजे आपका कंसल्टेशन शेड्यूल करें?"
                     else:
-                        if "tam" in agent_name:
-                            resp = "வணக்கம் Sir! நீங்க ஃபேமிலியோட stay பண்ண 3 BHK பாக்குறீங்களா, இல்ல investment-க்காக பாக்குறீங்களா Sir?"
-                        elif "hin" in agent_name:
-                            resp = "नमस्ते सर! आप अपने परिवार के साथ रहने के लिए 3 BHK फ्लैट देख रहे हैं या फिर investment के लिए?"
-                        else:
-                            resp = "Hey, good morning! Thanks for checking out our residences. Quick question — are you looking for a two-bedroom or a three-bedroom layout for your family?"
+                        resp = "Thank you for sharing that. Our Amura Health clinical team specializes in root-cause metabolic care and OPD triage. Would tomorrow at 11:30 AM work for a physician consultation?"
 
                 # 3. Stream Response (Layer 1 Token Streaming)
                 await notify_state(AgentCallState.AGENT_SPEAKING)

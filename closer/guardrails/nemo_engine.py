@@ -71,21 +71,21 @@ class InputRails:
         for pat in cls.INJECTION_PATTERNS:
             if re.search(pat, lower, re.IGNORECASE):
                 deflection = (
-                    "I am CLOSER AI, the autonomous luxury concierge for The Grand OMR Penthouse. "
-                    "I am dedicated exclusively to assisting you with our luxury residential portfolio. "
-                    "Would you like to explore our 3BHK penthouse floor plans?"
+                    "I am CLOSER AI, the patient care concierge for Amura Health in Velachery, Chennai. "
+                    "I am dedicated exclusively to helping you with clinical onboarding and physician consultations. "
+                    "Would you like to book a consultation?"
                 )
                 if "ta" in lang:
                     deflection = (
-                        "வணக்கம் Sir, நான் கிராண்ட் ஓஎம்ஆர் பென்ட்ஹவுஸின் பிரத்யேக ஏஐ ஆலோசகர். "
-                        "நமது சொகுசு குடியிருப்புகள் பற்றி மட்டுமே நான் வழிகாட்ட முடியும். "
-                        "பென்ட்ஹவுஸ் விவரங்களைப் பார்க்கலாமா Sir?"
+                        "வணக்கம் Sir, நான் வேளச்சேரி Amura Health மருத்துவ மனையின் பிரத்யேக நோயாளி ஆலோசகர். "
+                        "உங்கள் ஆரோக்கியம் மற்றும் மருத்துவர் ஆலோசனை குறித்து மட்டுமே நான் உதவ முடியும். "
+                        "மருத்துவர் ஆலோசனை நேரம் முன்பதிவு செய்யலாமா Sir?"
                     )
                 elif "hi" in lang:
                     deflection = (
-                        "नमस्ते सर, मैं द ग्रैंड ओएमआर पेंटहाउस की अधिकृत लग्जरी कंसल्टेंट हूँ जी। "
-                        "मैं केवल हमारे प्रोजेक्ट और पेंटहाउस चयन में आपकी सहायता कर सकती हूँ। "
-                        "क्या हम फ्लोर प्लान पर चर्चा करें?"
+                        "नमस्ते जी, मैं वेलाचेरी Amura Health क्लिनिक की अधिकृत पेशेंट केयर असिस्टेंट हूँ। "
+                        "मैं केवल आपकी स्वास्थ्य जानकारी और डॉक्टर कंसल्टेशन में सहायता कर सकती हूँ। "
+                        "क्या हम डॉक्टर अपॉइंटमेंट शेड्यूल करें?"
                     )
 
                 return GuardrailResult(
@@ -100,18 +100,18 @@ class InputRails:
         for pat in cls.TOXIC_PATTERNS:
             if re.search(pat, lower, re.IGNORECASE):
                 calm_reply = (
-                    "I completely understand your frustration. Our project is 100% RERA verified with clear documentation. "
-                    "I'd be glad to connect you with our senior acquisition director for a private discussion."
+                    "I completely understand your frustration and apologize for any delay. "
+                    "Your care is our top priority—let me connect you directly with our senior care coordinator."
                 )
                 if "ta" in lang:
                     calm_reply = (
-                        "உங்கள் ஆதங்கம் புரிகிறது Sir. எங்களது திட்டம் 100% சட்டப்பூர்வ RERA அனுமதி பெற்றது. "
-                        "உங்களுக்கு முழு தெளிவு அளிக்க எங்களது மூத்த இயக்குனரை தொடர்பு கொள்ள வைக்கிறேன் Sir."
+                        "உங்கள் ஆதங்கம் புரிகிறது Sir. எங்கள் மருத்துவக் குழுவின் தாமதத்திற்கு மன்னிக்கவும். "
+                        "உங்களுக்கு உடனடி உதவி கிடைக்க மூத்த மருத்துவ ஒருங்கிணைப்பாளரை இணைக்கிறேன் Sir."
                     )
                 elif "hi" in lang:
                     calm_reply = (
-                        "मैं आपकी चिंता समझती हूँ सर। हमारा प्रोजेक्ट 100% रेरा और कानूनी रूप से सत्यापित है। "
-                        "मैं हमारे सीनियर डायरेक्टर से आपकी सीधी बात करा देती हूँ जी।"
+                        "मैं आपकी परेशानी पूरी तरह समझती हूँ जी, देरी के लिए क्षमा चाहती हूँ। "
+                        "मैं तुरंत हमारे सीनियर केयर कोऑर्डिनेटर से आपकी बात कराती हूँ।"
                     )
 
                 return GuardrailResult(
@@ -145,22 +145,22 @@ class OutputRails:
     def evaluate(cls, response: str, lang: str = "en") -> GuardrailResult:
         lower = response.lower()
 
-        # 1. Hallucinated Financial Commitments
+        # 1. Hallucinated Clinical/Financial Commitments
         for pat in cls.UNAUTHORIZED_GUARANTEES:
             if re.search(pat, lower, re.IGNORECASE):
                 safe_correction = (
-                    "Milestone payment structuring and customized developer terms are finalized exclusively "
-                    "during the in-person site walkthrough. Would Thursday at 4 PM or Saturday at 11 AM work better for you?"
+                    "Program pricing and personalized Natural Molecule Therapy protocols are finalized exclusively "
+                    "after a licensed Amura Health physician reviews your biomarkers. Would tomorrow at 11:30 AM or Friday at 5:00 PM work?"
                 )
                 if "ta" in lang:
                     safe_correction = (
-                        "விலை மற்றும் கட்டண சலுகைகள் சைட் விசிட்டின் போது டெவலப்பரால் நேரடியாக உறுதி செய்யப்படும். "
-                        "இந்த வியாழன் மாலை 4 மணிக்கு பார்க்கலாமா, அல்லது சனிக்கிழமை காலை 11 மணி சௌகரியமா Sir?"
+                        "கட்டணம் மற்றும் சிகிச்சைத் திட்டம் எங்கள் Amura Health மருத்துவர் உங்கள் பரிசோதனை முடிவுகளைப் பார்த்த பிறகே உறுதி செய்யப்படும். "
+                        "நாளை காலை 11:30 மணி அல்லது சனிக்கிழமை காலை 11 மணி சௌகரியமா Sir?"
                     )
                 elif "hi" in lang:
                     safe_correction = (
-                        "डेवलपर केवल प्राइवेट साइट विज़िट पर ही कस्टमाइज़्ड पेमेंट प्लान और स्पेशल इंसेंटिव ऑफर करते हैं जी। "
-                        "क्या गुरुवार शाम 4 बजे या शनिवार सुबह 11 बजे का स्लॉट तय करें?"
+                        "प्रोग्राम शुल्क और पर्सनलाइज्ड प्रोटोकॉल हमारे Amura Health डॉक्टर द्वारा आपकी लैब रिपोर्ट देखने के बाद ही तय किए जाते हैं। "
+                        "क्या कल सुबह 11:30 बजे या शनिवार सुबह 11 बजे का स्लॉट तय करें?"
                     )
 
                 return GuardrailResult(

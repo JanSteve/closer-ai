@@ -1,17 +1,18 @@
 """
-Open-Source Foundation LLM Catalog & Architecture Profiles.
-Curated from ever-works/awesome-open-source-llms for ultra-scale 175B+ parameter reasoning.
-Provides model metadata, parameter counts, context limits, and telephony latency profiles.
+Open-Source & Foundation LLM Catalog & Architecture Profiles for CLOSER AI (Amura Health).
+Provides model metadata, parameter counts, context limits, and clinical telephony latency profiles.
 """
 
 from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Dict, List, Optional
+from typing import Any, Dict, List
 
 
 @dataclass(frozen=True)
 class OpenSourceLLMProfile:
-    """Metadata specification for open-source foundation models."""
+    """Metadata specification for foundation models."""
+
     model_id: str
     display_name: str
     parameter_scale: str
@@ -22,10 +23,23 @@ class OpenSourceLLMProfile:
     target_telephony_latency_ms: int
     open_license: str
     supports_function_calling: bool
-    multilingual_coverage: int  # number of languages
+    multilingual_coverage: int
 
 
 OPEN_SOURCE_LLM_CATALOG: Dict[str, OpenSourceLLMProfile] = {
+    "gemini-2.5-flash": OpenSourceLLMProfile(
+        model_id="google/gemini-2.5-flash",
+        display_name="Gemini 2.5 Flash (Google Multimodal)",
+        parameter_scale="Flash Reasoning Tier",
+        active_parameters="MoE Multimodal",
+        context_window=1048576,
+        architecture="Multimodal Sparse Transformer",
+        primary_use_case="Sub-second tri-lingual clinical front-desk dialogue, emotion-aware empathy, and safe triage routing",
+        target_telephony_latency_ms=95,
+        open_license="Google Gemini API",
+        supports_function_calling=True,
+        multilingual_coverage=100,
+    ),
     "bloomz-176b": OpenSourceLLMProfile(
         model_id="bigscience/bloomz",
         display_name="BLOOMZ 176B (BigScience Multilingual)",
@@ -33,7 +47,7 @@ OPEN_SOURCE_LLM_CATALOG: Dict[str, OpenSourceLLMProfile] = {
         active_parameters="176B (Dense)",
         context_window=2048,
         architecture="Transformer Decoder (ALiBi Positional Embeddings)",
-        primary_use_case="Multilingual cross-border qualification across 46 natural languages including Indic dialects",
+        primary_use_case="Multilingual patient intake across 46 natural languages including Tamil and Hindi dialects",
         target_telephony_latency_ms=280,
         open_license="BigScience OpenRAIL-M v1",
         supports_function_calling=True,
@@ -46,7 +60,7 @@ OPEN_SOURCE_LLM_CATALOG: Dict[str, OpenSourceLLMProfile] = {
         active_parameters="70B (Dense GQA)",
         context_window=128000,
         architecture="Dense Auto-regressive Transformer (GQA 8 Heads)",
-        primary_use_case="Real-time conversational telephony reflex engine (<100ms first-token latency on Groq/vLLM)",
+        primary_use_case="Real-time clinical voice telephony reflex engine (<100ms first-token latency on Groq/vLLM)",
         target_telephony_latency_ms=88,
         open_license="Llama 3.3 Community License",
         supports_function_calling=True,
@@ -59,7 +73,7 @@ OPEN_SOURCE_LLM_CATALOG: Dict[str, OpenSourceLLMProfile] = {
         active_parameters="104B (Dense)",
         context_window=128000,
         architecture="Transformer Decoder with Multi-Step Tooling",
-        primary_use_case="Enterprise multi-step CRM dispatch, RAG, and RERA legal compliance verification",
+        primary_use_case="Enterprise EHR/CRM dispatch, clinical RAG, and DPDP healthcare compliance verification",
         target_telephony_latency_ms=175,
         open_license="CC-BY-NC-4.0",
         supports_function_calling=True,
@@ -72,7 +86,7 @@ OPEN_SOURCE_LLM_CATALOG: Dict[str, OpenSourceLLMProfile] = {
         active_parameters="37 Billion (Sparse MoE)",
         context_window=128000,
         architecture="Multi-head Latent Attention (MLA) + DeepSeekMoE",
-        primary_use_case="Complex real estate negotiation, tax-advantaged 1031 exchanges, and objection deconstruction",
+        primary_use_case="Complex metabolic care-plan explanations, MNT/NMT education, and empathetic patient guidance",
         target_telephony_latency_ms=195,
         open_license="MIT License",
         supports_function_calling=True,
@@ -85,7 +99,7 @@ OPEN_SOURCE_LLM_CATALOG: Dict[str, OpenSourceLLMProfile] = {
         active_parameters="72B (Dense)",
         context_window=131072,
         architecture="RoPE + SwiGLU + RMSNorm",
-        primary_use_case="Code-mixing, Hinglish vernacular dialogue, and mathematical mortgage calculation",
+        primary_use_case="Code-mixing, Hinglish & Tanglish patient dialogue, and care-schedule coordination",
         target_telephony_latency_ms=115,
         open_license="Apache-2.0",
         supports_function_calling=True,
@@ -98,7 +112,7 @@ OPEN_SOURCE_LLM_CATALOG: Dict[str, OpenSourceLLMProfile] = {
         active_parameters="180B (Dense Multi-Query)",
         context_window=4096,
         architecture="Multiquery Attention (MQA) Transformer",
-        primary_use_case="Sovereign high-security on-premise private banking lead intake",
+        primary_use_case="Sovereign high-security on-premise hospital front-desk & DPDP-compliant patient intake",
         target_telephony_latency_ms=310,
         open_license="Falcon 180B TII License",
         supports_function_calling=False,
@@ -118,8 +132,8 @@ def get_model_profile(model_id_or_alias: str) -> OpenSourceLLMProfile:
     return OPEN_SOURCE_LLM_CATALOG["llama-3.3-70b"]
 
 
-def list_available_models() -> List[Dict[str, any]]:
-    """Returns a serializable list of open-source foundation models for API consumers."""
+def list_available_models() -> List[Dict[str, Any]]:
+    """Returns a serializable list of foundation models for API consumers."""
     return [
         {
             "id": key,

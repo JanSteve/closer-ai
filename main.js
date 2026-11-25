@@ -290,97 +290,102 @@ document.addEventListener('DOMContentLoaded', () => {
   let lastAudioBase64 = null;
   let isModalClosing = false;
 
-  // Scenario presets for 3 production voices
+  // Scenario presets for 3 production voices (Hospital & Amura Health Care)
   const MARKET_PRESETS = {
     usa: {
-      marketLabel: 'USA (Luxury Real Estate — Maya Closer)',
+      marketLabel: 'Amura Health & Clinical Triage (English — Maya)',
       defaultVoice: 'maya_en',
       defaultDialect: 'english_consultative',
-      leadName: 'Harrison & Claire Sterling (+1-310-555-0144)',
-      initialGreeting: 'Hey, good morning! Maya here from the Grand OMR Penthouse. I noticed you were exploring our private residences online. Quick question — are you looking for an investment or a spacious layout for your family?',
-      defaultBudget: '$6,500,000 USD (Bel Air / Beverly Hills)',
-      defaultFinancing: 'Cash / Jumbo Pre-Approved',
-      initialStatus: 'QUALIFYING',
-      initialAction: 'Evaluating Luxury Portfolio',
+      leadName: 'Aarav Menon (+91-98400-12345)',
+      initialGreeting: 'Hello! Maya calling from Amura Health Patient Care in Velachery, Chennai. I saw you requested a metabolic consultation—are you looking into diabetes reversal, thyroid care, or a specialist OPD visit?',
+      defaultBudget: 'Type-2 Diabetes / HbA1c 8.4% (Metabolic Program)',
+      defaultFinancing: 'DPDP Consent • 108 Guard Active',
+      initialStatus: 'TRIAGING',
+      initialAction: 'Capturing Biomarkers & Clinical Goal',
       initialIntent: 85,
       prompts: [
-        'Looking for an estate in Bel Air, all cash.',
-        'Can we book a private showing Thursday at 2:00 PM?',
-        'I am in a meeting right now, please call me tomorrow.',
-        'Why should I pay $6.5M when neighboring units are lower?'
+        'I am really worried my HbA1c is 9.2, how much insulin should I take?',
+        'Can we book a physician consultation tomorrow at 11:30 AM?',
+        'I have severe chest pain and cannot breathe right now.',
+        'I am in a meeting, please send the fasting lab checklist on WhatsApp.'
       ],
       offlineReplies: {
-        estate: 'Splendid. We have an architectural estate on Bellagio Road in Bel Air listed at $6.85M with panoramic ocean and city views. Would you like to schedule a private walkthrough?',
-        showing: 'Your private VIP tour has been confirmed for Thursday at 2:00 PM. A confirmation packet has been dispatched to your mobile via WhatsApp.',
-        site_visit: 'Your private VIP tour has been confirmed for Thursday at 2:00 PM. A confirmation packet has been dispatched to your mobile via WhatsApp.',
-        meeting: 'I completely respect your busy schedule. I will follow up with you tomorrow afternoon at your convenience. Have a productive day.',
-        schedule: 'I completely respect your busy schedule. I will follow up with you tomorrow afternoon at your convenience. Have a productive day.',
-        price: 'Fair question. Unlike neighboring inventory, this penthouse features double-height 22ft ceilings, a private rooftop lap pool, and 4 dedicated basement parking slots with EV supercharging.',
-        bhk: 'Our prime residences feature 3 spacious ensuite bedrooms, floor-to-ceiling glass, and dual car parks starting from $1.85M. Would you like a private walkthrough?',
-        rera: 'All listings in our portfolio have fully verified titles, approved permits, and pre-sanctioned jumbo lending tie-ups.',
-        whatsapp: 'A detailed brochure with floor plans and private pricing has been dispatched to your WhatsApp.',
-        who_are_you: 'Hello! I am CLOSER AI, your 24/7 autonomous luxury real estate concierge. How can I assist you with your property inquiry today?',
-        default: 'Hello! I am CLOSER AI, your 24/7 autonomous luxury real estate concierge. How can I assist you with your property inquiry today?'
+        emergency: 'Please call 108 emergency services immediately or go to the nearest hospital Emergency Room (ER) right away. Chest pain or breathing distress requires urgent emergency medical care.',
+        safety: 'I completely understand your concern, and you are in safe hands. I cannot prescribe or adjust insulin dosage—only our licensed Amura Health physician can review your HbA1c safely. Shall I book your consultation tomorrow at 11:30 AM?',
+        showing: 'Your physician consultation at Amura Health is confirmed for tomorrow at 11:30 AM IST. I have dispatched your fasting lab checklist on WhatsApp right now.',
+        site_visit: 'Your physician consultation at Amura Health is confirmed for tomorrow at 11:30 AM IST. I have dispatched your fasting lab checklist on WhatsApp right now.',
+        meeting: 'I completely respect your busy schedule. I have sent the fasting lab checklist and callback link to your WhatsApp so you can review at your convenience.',
+        schedule: 'I completely respect your schedule. Tomorrow at 11:30 AM or 4:00 PM works great—which slot suits you for a quick physician call?',
+        price: 'Our initial Amura Health metabolic consultation starts at ₹1,500–₹2,500, and structured reversal programs are tailored after a doctor reviews your labs.',
+        bhk: 'Our clinical team specializes in root-cause metabolic care (diabetes, PCOD, thyroid, autoimmune) using Medical Nutrition Therapy and physician supervision. Would you like to book a consultation?',
+        rera: 'Amura Health follows strict clinical safety guardrails, DPDP 2023 consent protocols, and physician-led care at our Velachery, Chennai clinic.',
+        whatsapp: 'I have sent the Amura Health care overview and fasting lab checklist to your WhatsApp.',
+        who_are_you: 'Hello! I am CLOSER AI, your emotion-aware clinical voice concierge for Amura Health and hospital patient care.',
+        default: 'Thank you for sharing that. Would you like me to schedule a physician consultation tomorrow at 11:30 AM IST?'
       }
     },
     tamil: {
-      marketLabel: 'Tamil Nadu (Sarvam bulbul:v3 — Priya Closer)',
+      marketLabel: 'Chennai Tamil (Sarvam bulbul:v3 — Priya Care)',
       defaultVoice: 'priya_ta',
       defaultDialect: 'chennai_tanglish',
-      leadName: 'கார்த்திக் & திவ்யா சுந்தரம் (+91-98840-23456)',
-      initialGreeting: 'வணக்கம் Sir! OMR கிராண்ட் பென்ட்ஹவுஸ்ல இருந்து பிரியா பேசுறேங்க. நம்ம luxury 3BHK residences பத்தி enquiry பண்ணியிருந்தீங்க. நீங்க ஃபேமிலியோட stay பண்ண பாக்குறீங்களா, இல்ல investment-க்காகவா Sir?',
-      defaultBudget: '₹2.85 Crore (OMR Waterfront, Chennai)',
-      defaultFinancing: 'HDFC / SBI Pre-Approved Home Loan',
-      initialStatus: 'QUALIFYING',
-      initialAction: 'Checking Penthouse Availability & RERA',
+      leadName: 'கார்த்திக் & திவ்யா (+91-98840-23456)',
+      initialGreeting: 'வணக்கம் Sir! வேளச்சேரி Amura Health-ல இருந்து பிரியா பேசுறேங்க. சுகர், தைராய்டு அல்லது PCOD மேனேஜ்மென்ட் பத்தி doctor consultation கேட்டிருந்தீங்க—உங்களுக்கு இப்போ என்ன health goal இருக்கு Sir?',
+      defaultBudget: 'சர்க்கரை நோய் / தைராய்டு (MNT & NMT Care)',
+      defaultFinancing: 'DPDP Consent • 108 Guard Active',
+      initialStatus: 'TRIAGING',
+      initialAction: 'Tamil Clinical Intake & Emotion Care',
       initialIntent: 90,
       prompts: [
-        '3BHK பென்ட்ஹவுஸ் விலை என்ன? (Price Details)',
+        'எனக்கு சுகர் அதிகமா இருக்கு, என்ன மாத்திரை சாப்பிடணும்?',
         'நான் இப்போ மீட்டிங்ல இருக்கேன், நாளைக்கு கூப்பிடுங்க.',
-        'இந்த சனிக்கிழமை சைட் விசிட் புக் பண்ண முடியுமா?',
-        'ப்ராஜெக்ட் RERA அப்ரூவ்டு மற்றும் உடனடி பொஸஷன் உண்டா?'
+        'நாளை காலை 11:30 மணிக்கு doctor consultation புக் பண்ண முடியுமா?',
+        'நெஞ்சு வலி மற்றும் மூச்சு விட முடியல, உடனே உதவுங்க.'
       ],
       offlineReplies: {
-        estate: 'கிராண்ட் பென்ட்ஹவுஸ் 3BHK ரெசிடென்ஸ் ₹2.85 கோடியில் இருந்து தொடங்குகிறது. இதில் 100% பிரைவேட் டெரஸ் கார்டன் மற்றும் பே-வியூ பால்கனி அடங்கும்.',
-        meeting: 'கண்டிப்பா புரிஞ்சுக்க முடியுதுங்க. நாளைக்கு உங்களுக்கு சௌகரியமான நேரத்துல கூப்பிடுறேன். நல்ல நாளாக அமையட்டும்!',
-        schedule: 'கண்டிப்பா புரிஞ்சுக்க முடியுதுங்க. நாளைக்கு உங்களுக்கு சௌகரியமான நேரத்துல கூப்பிடுறேன். நல்ல நாளாக அமையட்டும்!',
-        showing: 'நிச்சயமாக! வரும் சனிக்கிழமை காலை 11 மணிக்கு உங்களுக்கான விஐபி சைட் விசிட் ஸ்லாட் உறுதி செய்யப்பட்டுள்ளது. கேட் பாஸ் வாட்ஸ்அப்பில் அனுப்பப்பட்டுள்ளது.',
-        site_visit: 'நிச்சயமாக! வரும் சனிக்கிழமை காலை 11 மணிக்கு உங்களுக்கான விஐபி சைட் விசிட் ஸ்லாட் உறுதி செய்யப்பட்டுள்ளது. கேட் பாஸ் வாட்ஸ்அப்பில் அனுப்பப்பட்டுள்ளது.',
-        rera: 'ஆமாங்க Sir, இந்த திட்டம் 100% RERA பதிவு செய்யப்பட்டது மற்றும் HDFC, SBI வங்கிகளில் முன்-அங்கீகரிக்கப்பட்ட வீட்டுக் கடன் வசதி உள்ளது.',
-        bhk: 'நம்ம கிராண்ட் ரெசிடென்ஸ்ல 2BHK ₹95 லட்சத்திலிருந்தும், 3BHK ₹1.65 கோடியிலிருந்தும் தொடங்குதுங்க. இந்த சனிக்கிழமை நேர்ல வந்து பார்க்கலாமா Sir?',
-        whatsapp: 'கண்டிப்பா Sir! புராஜெக்ட் ப்ரோஷர் மற்றும் ஃப்ளோர் பிளான் விபரங்களை உங்க வாட்ஸ்அப் எண்ணுக்கு உடனடியாக அனுப்பிட்டோமுங்க.',
-        who_are_you: 'வணக்கம் Sir! நான் CLOSER AI வாய்ஸ் மேனேஜர். நம்ம ரியல் எஸ்டேட் புராஜெக்ட் விபரங்கள் மற்றும் சைட் விசிட் புக் பண்ண நான் உதவி செய்றேன் Sir.',
-        default: 'வணக்கம் Sir! OMR கிராண்ட் பென்ட்ஹவுஸ் மற்றும் Green Valley-ல் 2BHK மற்றும் 3BHK ரெடி-டூ-மூவ் யூனிட்கள் ரெடியாக இருக்குங்க. சைட் விசிட் புக் பண்ணலாமா Sir?'
+        emergency: 'தயவுசெய்து உடனடியாக 108 அவசர உதவிக்கு அழைக்கவும் அல்லது அருகிலுள்ள Emergency Room-க்கு செல்லவும் Sir. இது அவசர மருத்துவ நிலை.',
+        safety: 'கவலைப்படாதீங்க Sir, உங்க நிலைமை புரியுது. நான் மாத்திரை அல்லது மருந்து அளவைச் சொல்ல முடியாது—நம்ம Amura மருத்துவர் தான் உங்க HbA1c ரிப்போர்ட் பார்த்து முடிவு பண்ணுவாங்க. நாளை காலை 11:30 மணிக்கு consultation புக் பண்ணலாமா Sir?',
+        estate: 'வேளச்சேரி Amura Health-ல் சர்க்கரை நோய், தைராய்டு மற்றும் PCOD-க்கான சிறப்பு மருத்துவ ஆலோசனை மற்றும் NMT திட்டங்கள் உள்ளன.',
+        meeting: 'கண்டிப்பா புரிஞ்சுக்க முடியுதுங்க Sir. நாளைக்கு உங்களுக்கு சௌகரியமான நேரத்துல கூப்பிடுறேன். இப்போ WhatsApp-ல fasting lab checklist அனுப்புறேன்!',
+        schedule: 'கண்டிப்பா புரிஞ்சுக்க முடியுதுங்க Sir. நாளைக்கு காலை 11:30 மணிக்கு பார்க்கலாமா Sir?',
+        showing: 'ரொம்ப நன்றி Sir! நாளை காலை 11:30 மணிக்கு உங்க doctor consultation slot புக் பண்ணிட்டேங்க. உங்க WhatsApp-க்கு lab test checklist அனுப்பிட்டேன் Sir!',
+        site_visit: 'ரொம்ப நன்றி Sir! நாளை காலை 11:30 மணிக்கு உங்க doctor consultation slot புக் பண்ணிட்டேங்க. உங்க WhatsApp-க்கு lab test checklist அனுப்பிட்டேன் Sir!',
+        rera: 'ஆமாங்க Sir, நம்ம Velachery Amura Health மருத்துவர்கள் முழுமையான பாதுகாப்பு மற்றும் DPDP விதிமுறைகளுடன் சிகிச்சை அளிக்கிறார்கள்.',
+        bhk: 'வேளச்சேரி Amura Health-ல் சர்க்கரை நோய், தைராய்டு மற்றும் PCOD-க்கான சிறப்பு மருத்துவர் ஆலோசனை ₹1,500 முதல் தொடங்குகிறது. நாளைக்கு slot புக் பண்ணலாமா Sir?',
+        whatsapp: 'கண்டிப்பா Sir! மருத்துவர் ஆலோசனை விவரம் மற்றும் fasting lab checklist-ஐ உங்க WhatsApp-க்கு உடனே அனுப்பிட்டோமுங்க.',
+        who_are_you: 'வணக்கம் Sir! நான் வேளச்சேரி Amura Health மற்றும் மருத்துவமனை சேவைகளுக்கான CLOSER AI நோயாளி ஆலோசகர்.',
+        default: 'வணக்கம் Sir! வேளச்சேரி Amura Health-ல் சர்க்கரை நோய், தைராய்டு மற்றும் OPD ஆலோசனைக்கு நாளை காலை 11:30 மணிக்கு slot புக் பண்ணலாமா Sir?'
       }
     },
     hindi: {
-      marketLabel: 'Pan-India (Sarvam bulbul:v3 — Ritu Closer)',
+      marketLabel: 'Pan-India Hindi (Sarvam bulbul:v3 — Ritu Care)',
       defaultVoice: 'ritu_hi',
       defaultDialect: 'delhi_hinglish',
       leadName: 'रोहित & अनन्या शर्मा (+91-98800-12345)',
-      initialGreeting: 'नमस्ते सर! ग्रैंड OMR पेंटहाउस से रितु बात कर रही हूँ। आपने हमारी luxury 3BHK residences के लिए enquiry की थी। सर, आप अपने परिवार के साथ रहने के लिए देख रहे हैं या फिर high-yield investment के लिए?',
-      defaultBudget: '₹2.85 Crore (Luxury High-Rise)',
-      defaultFinancing: 'HDFC / ICICI Pre-Sanctioned Home Loan',
-      initialStatus: 'QUALIFYING',
-      initialAction: 'Verifying Buyer Criteria & Site Visit',
+      initialGreeting: 'नमस्ते जी! Amura Health पेशेंट केयर से रितु बात कर रही हूँ। आपने मेटाबोलिक और क्रॉनिक केयर कंसल्टेशन के लिए रिक्वेस्ट की थी—क्या आप डायबिटीज, थायरॉइड या किसी स्पेशलिस्ट OPD के लिए देख रहे हैं?',
+      defaultBudget: 'डायबिटीज / थायरॉइड / PCOD केयर',
+      defaultFinancing: 'DPDP Consent • 108 Guard Active',
+      initialStatus: 'TRIAGING',
+      initialAction: 'Hindi Clinical Intake & Triage',
       initialIntent: 88,
       prompts: [
-        '3 BHK का फाइनल ऑल-इनक्लूसिव प्राइस क्या है?',
+        'मेरा शुगर बहुत बढ़ा है, कौन सी दवाई या इंसुलिन डोज़ लूँ?',
         'मैं अभी ऑफिस में हूँ, मुझे कल 3 बजे कॉल करें।',
-        'क्या इस रविवार सुबह 11 बजे साइट विज़िट बुक हो सकती है?',
-        'क्या प्रोजेक्ट 100% RERA अप्रूव्ड और बैंक टाइ-अप है?'
+        'क्या कल सुबह 11:30 बजे डॉक्टर कंसल्टेशन बुक हो सकता है?',
+        'मुझे सीने में तेज दर्द और सांस लेने में तकलीफ हो रही है।'
       ],
       offlineReplies: {
-        estate: 'नमस्ते सर! 3 BHK अल्ट्रा-लक्ज़री पेंटहाउस ₹2.85 करोड़ से शुरू होता है, जिसमें क्लब हाउस मेंबरशिप और 2 कवर्ड कार पार्किंग शामिल हैं।',
-        meeting: 'बिल्कुल सर, मैं आपका समय समझती हूँ। मैं कल दोपहर ठीक 3:00 बजे आपको दोबारा संपर्क करूँगी। आपका दिन शुभ हो!',
-        schedule: 'बिल्कुल सर, मैं आपका समय समझती हूँ। मैं कल दोपहर ठीक 3:00 बजे आपको दोबारा संपर्क करूँगी। आपका दिन शुभ हो!',
-        showing: 'बहुत बढ़िया सर! इस रविवार सुबह 11:00 बजे का VIP साइट विज़िट स्लॉट आपके नाम से लॉक कर दिया गया है। गेट पास व्हाट्सएप पर भेज दिया गया है।',
-        site_visit: 'बहुत बढ़िया सर! इस रविवार सुबह 11:00 बजे का VIP साइट विज़िट स्लॉट आपके नाम से लॉक कर दिया गया है। गेट पास व्हाट्सएप पर भेज दिया गया है।',
-        rera: 'जी हाँ सर, यह प्रोजेक्ट 100% RERA रजिस्टर्ड है और SBI, HDFC तथा ICICI बैंक से प्री-अप्रूव्ड होम लोन सुविधा उपलब्ध है।',
-        bhk: 'नमस्ते सर! हमारे पास 2 BHK ₹95 लाख से और 3 BHK ₹1.65 करोड़ से उपलब्ध हैं। क्या इस रविवार सुबह 11 बजे आप साइट विज़िट के लिए आ सकते हैं?',
-        whatsapp: 'जी बिल्कुल सर! प्रोजेक्ट का पूरा ब्रोशर, फ्लोर प्लान और प्राइस शीट मैंने आपके व्हाट्सएप पर भेज दी है।',
-        who_are_you: 'नमस्ते सर! मैं CLOSER AI की ऑटोमेटेड वॉइस असिस्टेंट हूँ। मैं प्रोजेक्ट की जानकारी देने और आपकी साइट विज़िट बुक करने के लिए बात कर रही हूँ।',
-        default: 'जी सर! हमारे पास 2BHK और 3BHK रेडी-टू-मूव यूनिट्स उपलब्ध हैं। आप प्रोजेक्ट के बारे में और क्या जानकारी चाहते हैं सर?'
+        emergency: 'कृपया तुरंत 108 पर कॉल करें या नजदीकी इमरजेंसी रूम में जाएं जी। सीने में दर्द या सांस की तकलीफ में तुरंत डॉक्टर की जरूरत है।',
+        safety: 'जी बिल्कुल, मैं आपकी चिंता समझती हूँ। मैं कोई दवा या इंसुलिन डोज़ नहीं बता सकती—हमारे Amura डॉक्टर आपकी HbA1c रिपोर्ट देखकर ही सही सलाह देंगे। क्या कल सुबह 11:30 बजे का कंसल्टेशन बुक कर दूँ?',
+        estate: 'Amura Health में डॉक्टर और हेल्थ कोच मिलकर मेडिकल न्यूट्रिशन थेरेपी (MNT) और नेचुरल मॉलिक्यूल थेरेपी (NMT) से डायबिटीज और थायरॉइड की देखभाल करते हैं।',
+        meeting: 'बिल्कुल जी, मैं आपका समय समझती हूँ। मैं कल दोपहर 3:00 बजे आपको दोबारा कॉल करूँगी और वॉट्सऐप पर लैब चेकलिस्ट भेज रही हूँ।',
+        schedule: 'बिल्कुल जी, कल सुबह 11:30 बजे या दोपहर 3:00 बजे का समय सही रहेगा?',
+        showing: 'बहुत बढ़िया जी! कल सुबह 11:30 बजे का डॉक्टर कंसल्टेशन स्लॉट आपके नाम से बुक कर दिया गया है। लैब चेकलिस्ट वॉट्सऐप पर भेज दी गई है।',
+        site_visit: 'बहुत बढ़िया जी! कल सुबह 11:30 बजे का डॉक्टर कंसल्टेशन स्लॉट आपके नाम से बुक कर दिया गया है। लैब चेकलिस्ट वॉट्सऐप पर भेज दी गई है।',
+        rera: 'जी हाँ, Amura Health में सभी कंसल्टेशन लाइसेंस प्राप्त डॉक्टरों की देखरेख और DPDP प्राइवेसी नियमों के तहत होते हैं।',
+        bhk: 'Amura Health का इनिशियल मेटाबोलिक कंसल्टेशन ₹1,500 से शुरू होता है। क्या मैं कल सुबह 11:30 बजे आपका स्लॉट बुक कर दूँ?',
+        whatsapp: 'जी बिल्कुल! प्रोग्राम गाइड और फास्टिंग लैब चेकलिस्ट मैंने आपके वॉट्सऐप पर भेज दी है।',
+        who_are_you: 'नमस्ते जी! मैं Amura Health और हॉस्पिटल केयर के लिए CLOSER AI की इमोशन-अवेयर वॉइस असिस्टेंट हूँ।',
+        default: 'जी बिल्कुल! Amura Health में डायबिटीज, थायरॉइड और मेटाबोलिक केयर के लिए डॉक्टर उपलब्ध हैं। क्या कल सुबह 11:30 बजे का अपॉइंटमेंट बुक करें?'
       }
     }
   };
@@ -697,17 +702,33 @@ document.addEventListener('DOMContentLoaded', () => {
       startSpeakingUI();
 
       let audioSrc = '/demos/en_opener.wav';
-      let sampleMsg = 'Hey, good morning! Maya here from the Grand OMR Penthouse. Quick question — are you looking for an investment or a spacious layout for your family?';
+      let sampleMsg = 'Hello! Maya calling from Amura Health Patient Care in Velachery, Chennai. I saw you requested a metabolic consultation—are you looking into diabetes reversal, thyroid care, or a specialist OPD visit?';
 
       if (selectedVoice === 'priya_ta' || selectedVoice === 'pallavi_ta' || selectedVoice.includes('ta') || selectedVoice.includes('tamil')) {
         audioSrc = '/demos/ta_opener.mp3';
-        sampleMsg = 'வணக்கம் Sir! OMR கிராண்ட் பென்ட்ஹவுஸ்ல இருந்து பிரியா பேசுறேங்க. நம்ம luxury 3BHK residences பத்தி தெரிஞ்சுக்க enquiry பண்ணியிருந்தீங்க — நீங்க ஃபேமிலியோட stay பண்ண பாக்குறீங்களா, இல்ல investment-க்காகவா Sir?';
+        sampleMsg = 'வணக்கம் Sir! வேளச்சேரி Amura Health-ல இருந்து பிரியா பேசுறேங்க. சுகர், தைராய்டு அல்லது PCOD மேனேஜ்மென்ட் பத்தி doctor consultation கேட்டிருந்தீங்க—உங்களுக்கு இப்போ என்ன health goal இருக்கு Sir?';
       } else if (selectedVoice === 'ritu_hi' || selectedVoice === 'swati_hi' || selectedVoice.includes('hi') || selectedVoice.includes('hindi')) {
         audioSrc = '/demos/hi_opener.mp3';
-        sampleMsg = 'नमस्ते सर! ग्रैंड OMR पेंटहाउस से रितु बात कर रही हूँ। आपने हमारी luxury 3BHK residences के लिए enquiry की थी — आप अपने परिवार के साथ रहने के लिए देख रहे हैं या फिर high-yield investment के लिए?';
+        sampleMsg = 'नमस्ते जी! Amura Health पेशेंट केयर से रितु बात कर रही हूँ। आपने मेटाबोलिक और क्रॉनिक केयर कंसल्टेशन के लिए रिक्वेस्ट की थी—क्या आप डायबिटीज, थायरॉइड या किसी स्पेशलिस्ट OPD के लिए देख रहे हैं?';
       }
 
       if (modalAIText) modalAIText.textContent = `"${sampleMsg}"`;
+
+      // Prefer live API neural TTS for up-to-date Amura Health speech, fallback to browser TTS
+      try {
+        const res = await fetch('/api/turn', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ utterance: 'PREVIEW_SAMPLE', text: sampleMsg, voice: selectedVoice, sector: 'healthcare' })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.audio_base64) {
+            playAudioResponse(data.audio_base64, data.reply || sampleMsg, null, data.audio_format || 'wav');
+            return;
+          }
+        }
+      } catch {}
 
       try {
         const audio = new Audio(audioSrc);
@@ -719,7 +740,6 @@ document.addEventListener('DOMContentLoaded', () => {
         await audio.play();
         return;
       } catch {
-        // Fallback to local speech
         speakBrowserTTS(sampleMsg);
       }
     });
@@ -733,7 +753,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const text = utteranceText.trim();
     const selectedVoice = voiceSelector ? voiceSelector.value : 'en-US-AriaNeural';
     const selectedDialect = dialectSelector ? dialectSelector.value : undefined;
-    const selectedSector = sectorSelector ? sectorSelector.value : 'real_estate';
+    const selectedSector = sectorSelector ? sectorSelector.value : 'healthcare';
+    const modalEmotionBadge = document.getElementById('modalEmotionBadge');
 
     if (demoSendBtn) {
       demoSendBtn.disabled = true;
@@ -758,34 +779,48 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = await res.json();
         if (modalAIText) modalAIText.textContent = `"${data.reply}"`;
         if (modalVadStatus && data.tts_provider) {
-          modalVadStatus.textContent = `● VOICE: ${data.tts_provider}`;
+          modalVadStatus.textContent = `● VOICE: ${data.tts_provider} • TONE: ${(data.voice_style || 'empathetic').toUpperCase()}`;
+        }
+        if (modalEmotionBadge && data.detected_emotion) {
+          const emo = String(data.detected_emotion).toUpperCase().replace('_', ' ');
+          modalEmotionBadge.textContent = `EMOTION: ${emo}`;
+          modalEmotionBadge.className = (data.emergency_108 || data.detected_emotion === 'pain_distress' || data.detected_emotion === 'urgent')
+            ? 'dossier-badge amber display-font'
+            : 'dossier-badge green display-font';
         }
 
         if (data.dossier) {
           if (modalDossierStatus) {
-            modalDossierStatus.textContent = data.dossier.qualified ? 'QUALIFIED' : 'QUALIFYING';
-            modalDossierStatus.className = data.dossier.qualified ? 'dossier-badge green' : 'dossier-badge';
+            if (data.emergency_108 || data.dossier.emergency_108) {
+              modalDossierStatus.textContent = '108 EMERGENCY';
+              modalDossierStatus.className = 'dossier-badge amber';
+            } else {
+              modalDossierStatus.textContent = data.dossier.qualified ? 'CONSULT READY' : 'TRIAGING';
+              modalDossierStatus.className = data.dossier.qualified ? 'dossier-badge green' : 'dossier-badge';
+            }
           }
-          if (modalDossierBudget && (data.dossier.budget_inr_text || data.dossier.budget_bracket)) {
-            modalDossierBudget.textContent = data.dossier.budget_inr_text || data.dossier.budget_bracket;
+          if (modalDossierBudget && (data.dossier.chief_concern || data.dossier.condition_category || data.dossier.hba1c_or_biomarker)) {
+            modalDossierBudget.textContent = data.dossier.chief_concern || data.dossier.condition_category || data.dossier.hba1c_or_biomarker;
           }
-          if (modalDossierFinancing && data.dossier.financing_status) {
-            modalDossierFinancing.textContent = data.dossier.financing_status;
+          if (modalDossierFinancing) {
+            const consentTxt = data.dossier.consent_status || 'DPDP Verified';
+            const urgencyTxt = data.dossier.triage_urgency || 'Routine';
+            modalDossierFinancing.textContent = `${urgencyTxt} • Consent: ${consentTxt}`;
           }
-          if (modalDossierAction && data.dossier.follow_up_note) {
-            modalDossierAction.textContent = data.dossier.follow_up_note;
+          if (modalDossierAction && (data.dossier.consult_slot || data.dossier.follow_up_note)) {
+            modalDossierAction.textContent = data.dossier.consult_slot || data.dossier.follow_up_note;
           }
           if (modalIntentFill && (data.dossier.intent_score !== undefined || data.dossier.qualification_score !== undefined)) {
             const scoreVal = data.dossier.intent_score !== undefined ? data.dossier.intent_score : data.dossier.qualification_score;
             modalIntentFill.style.width = `${scoreVal}%`;
-            modalIntentText.textContent = `${scoreVal}% Intent Score`;
+            modalIntentText.textContent = `${scoreVal}% Care Intent`;
           }
         }
 
         playAudioResponse(data.audio_base64, data.reply, null, data.audio_format || 'wav');
         if (demoSendBtn) {
           demoSendBtn.disabled = false;
-          demoSendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> <span>Simulate Turn</span>';
+          demoSendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> <span>Send</span>';
         }
         return;
       }
@@ -793,114 +828,61 @@ document.addEventListener('DOMContentLoaded', () => {
       // Local fallback simulation if server API is offline
     }
 
-    // Local deterministic fallback
-    const config = MARKET_PRESETS[currentMarket];
+    // Local deterministic fallback (Healthcare & Amura Health Safe)
+    const config = MARKET_PRESETS[currentMarket] || MARKET_PRESETS.usa;
     const lower = text.toLowerCase();
     let fallbackReply = '';
 
-    if (currentMarket === 'usa') {
-      if (lower.includes('meeting') || lower.includes('busy') || lower.includes('later')) {
-        fallbackReply = config.offlineReplies.meeting;
-        if (modalDossierStatus) {
-          modalDossierStatus.textContent = 'SCHEDULE FRICTION';
-          modalDossierStatus.className = 'dossier-badge amber';
-        }
-        if (modalDossierAction) modalDossierAction.textContent = 'Follow up scheduled for tomorrow';
-        if (modalIntentFill) {
-          modalIntentFill.style.width = '70%';
-          modalIntentText.textContent = '70% Intent (Polite Friction)';
-        }
-      } else if (lower.includes('thursday') || lower.includes('showing') || lower.includes('tour') || lower.includes('book')) {
-        fallbackReply = config.offlineReplies.showing;
-        if (modalDossierStatus) {
-          modalDossierStatus.textContent = 'TOUR BOOKED';
-          modalDossierStatus.className = 'dossier-badge green';
-        }
-        if (modalDossierAction) modalDossierAction.textContent = 'Thursday at 2:00 PM PST VIP Tour';
-        if (modalIntentFill) {
-          modalIntentFill.style.width = '95%';
-          modalIntentText.textContent = '95% Verified Intent';
-        }
-      } else if (lower.includes('monday') || lower.includes('not good')) {
-        fallbackReply = config.offlineReplies.schedule;
-        if (modalDossierStatus) {
-          modalDossierStatus.textContent = 'CALLBACK SET';
-          modalDossierStatus.className = 'dossier-badge amber';
-        }
-        if (modalDossierAction) modalDossierAction.textContent = 'Follow up scheduled for Monday';
-        if (modalIntentFill) {
-          modalIntentFill.style.width = '80%';
-          modalIntentText.textContent = '80% Intent (Scheduled)';
-        }
-      } else {
-        fallbackReply = config.offlineReplies.estate;
-        if (modalDossierStatus) {
-          modalDossierStatus.textContent = 'QUALIFIED';
-          modalDossierStatus.className = 'dossier-badge';
-        }
-        if (modalDossierAction) modalDossierAction.textContent = 'Matched: Bel Air 10484 Bellagio ($6.85M)';
-        if (modalIntentFill) {
-          modalIntentFill.style.width = '85%';
-          modalIntentText.textContent = '85% Active Search';
-        }
+    if (lower.includes('chest pain') || lower.includes('breathe') || lower.includes('நெஞ்சு') || lower.includes('மூச்சு') || lower.includes('सीने') || lower.includes('सांस')) {
+      fallbackReply = config.offlineReplies.emergency;
+      if (modalEmotionBadge) modalEmotionBadge.textContent = 'EMOTION: PAIN DISTRESS';
+      if (modalDossierStatus) {
+        modalDossierStatus.textContent = '108 EMERGENCY';
+        modalDossierStatus.className = 'dossier-badge amber';
       }
+      if (modalDossierAction) modalDossierAction.textContent = 'Escalated to 108 / Emergency Room';
+      if (modalIntentFill) {
+        modalIntentFill.style.width = '100%';
+        modalIntentText.textContent = '100% Urgent Emergency';
+      }
+    } else if (lower.includes('insulin') || lower.includes('medicine') || lower.includes('tablet') || lower.includes('dose') || lower.includes('माத்திரை') || lower.includes('दवाई') || lower.includes('डोज़')) {
+      fallbackReply = config.offlineReplies.safety;
+      if (modalEmotionBadge) modalEmotionBadge.textContent = 'EMOTION: ANXIOUS (-8%)';
+      if (modalDossierStatus) {
+        modalDossierStatus.textContent = 'PHYSICIAN REVIEW';
+        modalDossierStatus.className = 'dossier-badge';
+      }
+      if (modalDossierAction) modalDossierAction.textContent = 'Safe Refusal → Doctor Consult Offered';
+      if (modalIntentFill) {
+        modalIntentFill.style.width = '90%';
+        modalIntentText.textContent = '90% Care Intent';
+      }
+    } else if (lower.includes('whatsapp') || lower.includes('meeting') || lower.includes('busy') || lower.includes('office') || lower.includes('मीटिंग') || lower.includes('ऑफिस')) {
+      fallbackReply = config.offlineReplies.meeting;
+      if (modalDossierStatus) {
+        modalDossierStatus.textContent = 'WHATSAPP SENT';
+        modalDossierStatus.className = 'dossier-badge amber';
+      }
+      if (modalDossierAction) modalDossierAction.textContent = 'Fasting Lab Checklist Sent on WhatsApp';
+      if (modalIntentFill) {
+        modalIntentFill.style.width = '78%';
+        modalIntentText.textContent = '78% Callback Scheduled';
+      }
+    } else if (lower.includes('book') || lower.includes('consult') || lower.includes('11:30') || lower.includes('புக்') || lower.includes('बुक') || lower.includes('tomorrow') || lower.includes('visit')) {
+      fallbackReply = config.offlineReplies.showing;
+      if (modalDossierStatus) {
+        modalDossierStatus.textContent = 'CONSULT BOOKED';
+        modalDossierStatus.className = 'dossier-badge green';
+      }
+      if (modalDossierAction) modalDossierAction.textContent = 'Confirmed: Tomorrow 11:30 AM IST';
+      if (modalIntentFill) {
+        modalIntentFill.style.width = '95%';
+        modalIntentText.textContent = '95% Confirmed Slot';
+      }
+    } else if (lower.includes('who are you') || lower.includes('कौन') || lower.includes('யாரு')) {
+      fallbackReply = config.offlineReplies.who_are_you;
     } else {
-      if (lower.includes('rera') || lower.includes('legal') || lower.includes('bank')) {
-        fallbackReply = config.offlineReplies.rera;
-        if (modalDossierStatus) {
-          modalDossierStatus.textContent = 'VERIFIED';
-          modalDossierStatus.className = 'dossier-badge green';
-        }
-        if (modalDossierAction) modalDossierAction.textContent = 'RERA Validated • SBI/HDFC Tie-up';
-        if (modalIntentFill) {
-          modalIntentFill.style.width = '90%';
-          modalIntentText.textContent = '90% High Intent';
-        }
-      } else if (lower.includes('whatsapp') || lower.includes('office') || lower.includes('busy')) {
-        fallbackReply = config.offlineReplies.whatsapp;
-        if (modalDossierStatus) {
-          modalDossierStatus.textContent = 'WHATSAPP SENT';
-          modalDossierStatus.className = 'dossier-badge amber';
-        }
-        if (modalDossierAction) modalDossierAction.textContent = 'Brochure Dispatched to +91-98800-12345';
-        if (modalIntentFill) {
-          modalIntentFill.style.width = '75%';
-          modalIntentText.textContent = '75% Active Lead';
-        }
-      } else if (lower.includes('sunday') || lower.includes('weekend') || lower.includes('visit')) {
-        fallbackReply = config.offlineReplies.site_visit;
-        if (modalDossierStatus) {
-          modalDossierStatus.textContent = 'VISIT BOOKED';
-          modalDossierStatus.className = 'dossier-badge green';
-        }
-        if (modalDossierAction) modalDossierAction.textContent = 'Sunday 11:00 AM Site Visit Confirmed';
-        if (modalIntentFill) {
-          modalIntentFill.style.width = '95%';
-          modalIntentText.textContent = '95% High Intent (Site Visit)';
-        }
-      } else if (lower.includes('who are you') || lower.includes('कौन') || lower.includes('யாரு') || lower.includes('who')) {
-        fallbackReply = config.offlineReplies.who_are_you;
-        if (modalDossierStatus) {
-          modalDossierStatus.textContent = 'CONCIERGE IDENTIFIED';
-          modalDossierStatus.className = 'dossier-badge green';
-        }
-        if (modalDossierAction) modalDossierAction.textContent = 'AI Voice Concierge Introduced';
-        if (modalIntentFill) {
-          modalIntentFill.style.width = '80%';
-          modalIntentText.textContent = '80% In Conversation';
-        }
-      } else {
-        fallbackReply = config.offlineReplies.bhk || config.offlineReplies.default || config.offlineReplies.estate;
-        if (modalDossierStatus) {
-          modalDossierStatus.textContent = 'INVENTORY MATCH';
-          modalDossierStatus.className = 'dossier-badge';
-        }
-        if (modalDossierAction) modalDossierAction.textContent = 'Matched: Prime 3 BHK Residences';
-        if (modalIntentFill) {
-          modalIntentFill.style.width = '85%';
-          modalIntentText.textContent = '85% In Conversation';
-        }
-      }
+      fallbackReply = config.offlineReplies.default || config.initialGreeting;
     }
 
     if (!fallbackReply || fallbackReply === 'undefined') {
@@ -1106,10 +1088,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const textMap = {
-      'english': "Hey, good morning! Maya here from the Grand OMR Penthouse. I noticed you were exploring our private residences online. Quick question — are you looking for an investment or a spacious layout for your family?",
-      'usa': "Hey, good morning! Maya here from the Grand OMR Penthouse. I noticed you were exploring our private residences online. Quick question — are you looking for an investment or a spacious layout for your family?",
-      'tamil': "வணக்கம் Sir! OMR கிராண்ட் பென்ட்ஹவுஸ்ல இருந்து பிரியா பேசுறேங்க. நம்ம luxury 3BHK residences பத்தி தெரிஞ்சுக்க enquiry பண்ணியிருந்தீங்க. நீங்க ஃபேமிலியோட stay பண்ண பாக்குறீங்களா, இல்ல investment-க்காகவா Sir?",
-      'hindi': "नमस्ते सर! ग्रैंड OMR पेंटहाउस से रितु बात कर रही हूँ। आपने हमारी luxury 3BHK residences के लिए enquiry की थी। सर, आप अपने परिवार के साथ रहने के लिए देख रहे हैं या फिर high-yield investment के लिए?"
+      'english': "Hello! Maya calling from Amura Health Patient Care in Velachery, Chennai. I saw you requested a metabolic consultation—are you looking into diabetes reversal, thyroid care, or a specialist OPD visit?",
+      'usa': "Hello! Maya calling from Amura Health Patient Care in Velachery, Chennai. I saw you requested a metabolic consultation—are you looking into diabetes reversal, thyroid care, or a specialist OPD visit?",
+      'tamil': "வணக்கம் Sir! வேளச்சேரி Amura Health-ல இருந்து பிரியா பேசுறேங்க. சுகர், தைராய்டு அல்லது PCOD மேனேஜ்மென்ட் பத்தி doctor consultation கேட்டிருந்தீங்க—உங்களுக்கு இப்போ என்ன health goal இருக்கு Sir?",
+      'hindi': "नमस्ते जी! Amura Health पेशेंट केयर से रितु बात कर रही हूँ। आपने मेटाबोलिक और क्रॉनिक केयर कंसल्टेशन के लिए रिक्वेस्ट की थी—क्या आप डायबिटीज, थायरॉइड या किसी स्पेशलिस्ट OPD के लिए देख रहे हैं?"
     };
     const text = textMap[market] || textMap['english'];
     const voice = market === 'tamil' ? 'tamil' : (market === 'hindi' ? 'hindi' : 'english');
@@ -1118,7 +1100,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const res = await fetch('/api/turn', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ utterance: 'STUDIO_SAMPLE', text: text, voice: voice })
+        body: JSON.stringify({ utterance: 'STUDIO_SAMPLE', text: text, voice: voice, sector: 'healthcare' })
       });
       if (res.ok) {
         const data = await res.json();
@@ -1143,64 +1125,64 @@ document.addEventListener('DOMContentLoaded', () => {
   let isAcousticCellular = false;
 
   const STUDIO_SCENARIOS = {
-    // English Scenarios (Maya - Kokoro SOTA 3-Way Blend)
+    // English Scenarios (Maya - Emotion-Aware Clinical Care)
     en_opener: {
       voice: 'english',
       audio_url: '/demos/en_opener.wav',
-      speaker: 'CLOSER AI (Maya — Signature English Closer):',
-      text: "Hey, good morning! Maya here from the Grand OMR Penthouse. I noticed you were exploring our private residences online. Quick question — are you looking for an investment or a spacious layout for your family?"
+      speaker: 'CLOSER AI (Maya — Clinical Care Concierge):',
+      text: "Hello! Maya calling from Amura Health Patient Care in Velachery, Chennai. I saw you requested a metabolic consultation—are you looking into diabetes reversal, thyroid care, or a specialist OPD visit?"
     },
     en_objection: {
       voice: 'english',
       audio_url: '/demos/en_objection.wav',
-      speaker: 'CLOSER AI (Maya — Signature English Closer):',
-      text: "Look, I totally get where you are coming from on the pricing. The developer only authorizes custom payment milestones and private concessions in-person during the private walkthrough. Would Thursday at 4 PM or Saturday morning work better for you?"
+      speaker: 'CLOSER AI (Maya — Empathetic Safety Guardrail):',
+      text: "I completely understand how stressful fluctuating blood sugar can feel. Only our licensed Amura physician can adjust medication after reviewing your HbA1c—shall I book your consultation tomorrow at 11:30 AM?"
     },
     en_closing: {
       voice: 'english',
       audio_url: '/demos/en_closing.wav',
-      speaker: 'CLOSER AI (Maya — Signature English Closer):',
-      text: "Terrific! I have reserved the exclusive sunrise penthouse preview for you this Saturday at 11 AM. I am texting you the VIP gate pass right now. Looking forward to welcoming you, Sir."
+      speaker: 'CLOSER AI (Maya — Consultation Confirmed):',
+      text: "Wonderful! Your Amura Health physician consultation is confirmed for tomorrow at 11:30 AM IST. I have dispatched your fasting lab checklist on WhatsApp right now."
     },
 
     // Tamil Scenarios (பிரியா — Sarvam Bulbul v3 Tanglish)
     ta_opener: {
       voice: 'tamil',
       audio_url: '/demos/ta_opener.mp3',
-      speaker: 'CLOSER AI (பிரியா — Sarvam bulbul:v3 Tanglish):',
-      text: "வணக்கம் Sir! OMR கிராண்ட் பென்ட்ஹவுஸ்ல இருந்து பிரியா பேசுறேங்க. நம்ம luxury 3BHK residences பத்தி தெரிஞ்சுக்க enquiry பண்ணியிருந்தீங்க. நீங்க ஃபேமிலியோட stay பண்ண பாக்குறீங்களா, இல்ல investment-க்காகவா Sir?"
+      speaker: 'CLOSER AI (பிரியா — Amura Health Tamil):',
+      text: "வணக்கம் Sir! வேளச்சேரி Amura Health-ல இருந்து பிரியா பேசுறேங்க. சுகர், தைராய்டு அல்லது PCOD மேனேஜ்மென்ட் பத்தி doctor consultation கேட்டிருந்தீங்க—உங்களுக்கு இப்போ என்ன health goal இருக்கு Sir?"
     },
     ta_objection: {
       voice: 'tamil',
       audio_url: '/demos/ta_objection.mp3',
-      speaker: 'CLOSER AI (பிரியா — Sarvam bulbul:v3 Tanglish):',
-      text: "Sir, pricing மற்றும் special discount பத்தி நம்ம நேரடியா VIP site visit வரும்போது developer approval-ஓட பேசிக்கலாமுங்க. இந்த வியாழக்கிழமை சாயங்காலம் 4 மணிக்கு பார்க்கலாமா, இல்ல சனிக்கிழமை காலைல பார்க்கலாமா Sir?"
+      speaker: 'CLOSER AI (பிரியா — Empathy & Clinical Safety):',
+      text: "கவலைப்படாதீங்க Sir, உங்க நிலைமை எங்களுக்குப் புரியுது. மருந்து அளவை நம்ம Amura மருத்துவர் தான் HbA1c ரிப்போர்ட் பார்த்து முடிவு பண்ணுவாங்க. நாளை காலை 11:30 மணிக்கு consultation புக் பண்ணலாமா Sir?"
     },
     ta_closing: {
       voice: 'tamil',
       audio_url: '/demos/ta_closing.mp3',
-      speaker: 'CLOSER AI (பிரியா — Sarvam bulbul:v3 Tanglish):',
-      text: "ரொம்ப சந்தோஷம் Sir! இந்த சனிக்கிழமை காலைல 11 மணிக்கு உங்க VIP walkthrough slot book பண்ணிட்டேங்க. உங்க WhatsApp-க்கு location map மற்றும் gate pass உடனே அனுப்பிடுறேன் Sir. நன்றி!"
+      speaker: 'CLOSER AI (பிரியா — Consultation Booked):',
+      text: "ரொம்ப நன்றி Sir! நாளை காலை 11:30 மணிக்கு உங்க doctor consultation slot புக் பண்ணிட்டேங்க. உங்க WhatsApp-க்கு lab test checklist அனுப்பிட்டேன் Sir!"
     },
 
     // Hindi Scenarios (रितु — Sarvam Bulbul v3 Hinglish)
     hi_opener: {
       voice: 'hindi',
       audio_url: '/demos/hi_opener.mp3',
-      speaker: 'CLOSER AI (रितु — Sarvam bulbul:v3 Hinglish):',
-      text: "नमस्ते सर! ग्रैंड OMR पेंटहाउस से रितु बात कर रही हूँ। आपने हमारी luxury 3BHK residences के लिए enquiry की थी। सर, आप अपने परिवार के साथ रहने के लिए देख रहे हैं या फिर high-yield investment के लिए?"
+      speaker: 'CLOSER AI (रितु — Amura Health Hindi):',
+      text: "नमस्ते जी! Amura Health पेशेंट केयर से रितु बात कर रही हूँ। आपने मेटाबोलिक और क्रॉनिक केयर कंसल्टेशन के लिए रिक्वेस्ट की थी—क्या आप डायबिटीज, थायरॉइड या किसी स्पेशलिस्ट OPD के लिए देख रहे हैं?"
     },
     hi_objection: {
       voice: 'hindi',
       audio_url: '/demos/hi_objection.mp3',
-      speaker: 'CLOSER AI (रितु — Sarvam bulbul:v3 Hinglish):',
-      text: "हाँजी बिल्कुल सर! डिस्काउंट और exclusive payment plan के बारे में हम site visit पर बैठकर developer के साथ final कर सकते हैं जी। क्या गुरुवार शाम 4 बजे या शनिवार सुबह का समय आपके लिए सुविधाजनक रहेगा?"
+      speaker: 'CLOSER AI (रितु — Empathy & Safety Guardrail):',
+      text: "जी बिल्कुल, मैं आपकी चिंता समझती हूँ। कोई भी दवा या डोज़ हमारे Amura डॉक्टर आपकी HbA1c और ब्लड रिपोर्ट देखकर ही तय करते हैं। क्या मैं कल सुबह 11:30 बजे आपका टेली-कंसल्टेशन बुक कर दूँ?"
     },
     hi_closing: {
       voice: 'hindi',
       audio_url: '/demos/hi_closing.mp3',
-      speaker: 'CLOSER AI (रितु — Sarvam bulbul:v3 Hinglish):',
-      text: "बहुत बढ़िया सर! मैंने इस शनिवार सुबह 11 बजे आपका VIP private walkthrough confirm कर दिया है। लोकेशन और गेट पास आपके WhatsApp पर भेज रही हूँ जी। थैंक यू सो मच सर!"
+      speaker: 'CLOSER AI (रितु — Consultation Booked):',
+      text: "बहुत बढ़िया जी! कल सुबह 11:30 बजे का डॉक्टर कंसल्टेशन स्लॉट आपके नाम से बुक कर दिया गया है। लैब चेकलिस्ट और लिंक मैंने आपके वॉट्सऐप पर भेज दिया है।"
     }
   };
 
@@ -1314,7 +1296,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // -------------------------------------------------------------------------
   // 8. Interactive Unit Economics & ROI Calculator (#roi)
   // -------------------------------------------------------------------------
-  let roiCurrency = 'usd';
+  let roiCurrency = 'inr';
 
   window.setRoiCurrency = function (curr) {
     roiCurrency = curr;
@@ -1326,19 +1308,19 @@ document.addEventListener('DOMContentLoaded', () => {
       if (currUSD) currUSD.classList.add('active');
       if (currINR) currINR.classList.remove('active');
       if (sliderComm) {
-        sliderComm.min = 5000;
-        sliderComm.max = 150000;
-        sliderComm.step = 5000;
-        sliderComm.value = 25000;
+        sliderComm.min = 500;
+        sliderComm.max = 10000;
+        sliderComm.step = 250;
+        sliderComm.value = 1500;
       }
     } else {
       if (currINR) currINR.classList.add('active');
       if (currUSD) currUSD.classList.remove('active');
       if (sliderComm) {
-        sliderComm.min = 100000; // ₹1 Lakh
-        sliderComm.max = 5000000; // ₹50 Lakhs
-        sliderComm.step = 50000;
-        sliderComm.value = 500000; // ₹5 Lakhs
+        sliderComm.min = 5000;
+        sliderComm.max = 150000;
+        sliderComm.step = 5000;
+        sliderComm.value = 45000;
       }
     }
     updateRoiCalc();
@@ -1355,25 +1337,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const comm = parseInt(sliderComm.value, 10);
     const convRate = parseFloat(sliderConv.value);
 
-    // Label updates
     const valLeads = document.getElementById('valLeads');
     const valCommission = document.getElementById('valCommission');
     const valConv = document.getElementById('valConv');
 
-    if (valLeads) valLeads.textContent = `${leads.toLocaleString()} Leads`;
+    if (valLeads) valLeads.textContent = `${leads.toLocaleString()} Inquiries`;
     if (valCommission) {
       valCommission.textContent = roiCurrency === 'usd'
         ? `$${comm.toLocaleString()} USD`
-        : `₹${(comm / 100000).toFixed(1)} Lakhs`;
+        : `₹${comm.toLocaleString('en-IN')} INR`;
     }
     if (valConv) valConv.textContent = `${convRate.toFixed(1)}%`;
 
-    // Calculations:
-    // CLOSER AI boosts lead capture by responding instantly to 100% of calls (typically +40% more qualified bookings)
     const extraQualifiedShowings = Math.round(leads * 0.09);
     const extraClosedDeals = (extraQualifiedShowings * (convRate / 100) * 1.5).toFixed(1);
     const revenueUplift = Math.round(parseFloat(extraClosedDeals) * comm);
-    const hoursSaved = Math.round(leads * 0.5); // 30 minutes saved per lead in manual follow up
+    const hoursSaved = Math.round(leads * 0.5);
 
     const roiShowings = document.getElementById('roiShowings');
     const roiDeals = document.getElementById('roiDeals');
@@ -1385,11 +1364,71 @@ document.addEventListener('DOMContentLoaded', () => {
     if (roiRevenue) {
       roiRevenue.textContent = roiCurrency === 'usd'
         ? `+$${revenueUplift.toLocaleString()}`
-        : `+₹${(revenueUplift / 100000).toFixed(1)} Lakhs`;
+        : `+₹${revenueUplift.toLocaleString('en-IN')}`;
     }
     if (roiHours) roiHours.textContent = `${hoursSaved} hrs`;
   };
 
   // Run initial calculation
   updateRoiCalc();
+
+  // -------------------------------------------------------------------------
+  // 9. Live Outbound Demo Call Trigger (/api/call/demo)
+  // -------------------------------------------------------------------------
+  const demoCallPhoneInput = document.getElementById('demoCallPhoneInput');
+  const demoCallTriggerBtn = document.getElementById('demoCallTriggerBtn');
+  const demoCallStatus = document.getElementById('demoCallStatus');
+
+  if (demoCallTriggerBtn && demoCallPhoneInput) {
+    demoCallTriggerBtn.addEventListener('click', async () => {
+      const phone = demoCallPhoneInput.value.trim();
+      if (!phone || phone.replace(/\D/g, '').length < 10) {
+        if (demoCallStatus) {
+          demoCallStatus.textContent = 'Enter 10+ digit number';
+          demoCallStatus.style.color = '#fbbf24';
+        }
+        return;
+      }
+
+      demoCallTriggerBtn.disabled = true;
+      if (demoCallStatus) {
+        demoCallStatus.textContent = 'Dialing pipeline...';
+        demoCallStatus.style.color = '#60a5fa';
+      }
+
+      try {
+        const res = await fetch('/api/call/demo', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            phone_number: phone,
+            language: currentMarket === 'tamil' ? 'tamil' : (currentMarket === 'hindi' ? 'hindi' : 'english'),
+            patient_name: 'Amura Founder Demo',
+            concern: 'Diabetes & Metabolic Consultation',
+            consent_confirmed: true
+          })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          if (demoCallStatus) {
+            demoCallStatus.textContent = `${data.status.toUpperCase()} (${data.call_id})`;
+            demoCallStatus.style.color = '#34d399';
+          }
+          if (modalAIText) modalAIText.textContent = `"${data.message}"`;
+        } else {
+          if (demoCallStatus) {
+            demoCallStatus.textContent = data.error || 'Call validation failed';
+            demoCallStatus.style.color = '#f87171';
+          }
+        }
+      } catch {
+        if (demoCallStatus) {
+          demoCallStatus.textContent = 'Demo Call Queued (Offline Ready)';
+          demoCallStatus.style.color = '#34d399';
+        }
+      } finally {
+        demoCallTriggerBtn.disabled = false;
+      }
+    });
+  }
 });

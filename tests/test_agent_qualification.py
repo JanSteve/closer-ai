@@ -1,106 +1,145 @@
 """
-Unit tests for CLOSER AI Agent Lead Qualification & Pydantic Schema Extraction.
-Verifies entity extraction, objection handling, intent scoring, and persona differentiation.
+Unit tests for CLOSER AI Amura Health Clinical Intake Qualification & Pydantic Schema Extraction.
+Verifies clinical entity extraction, concern handling, intent scoring, and dossier serialization.
 """
 
+import os
+import tempfile
 import unittest
-from src.closer.agent.schemas import InboundLead, BuyerDossier
+from pathlib import Path
+from unittest.mock import patch
+
+import src.closer.memory.learning_db as ldb
 from src.closer.agent.conversation import ConversationEngine
+from src.closer.agent.schemas import BuyerDossier, InboundLead, PatientDossier
+
+_API_KEYS = (
+    "GROQ_API_KEY",
+    "OPENAI_API_KEY",
+    "OPENROUTER_API_KEY",
+    "GEMINI_API_KEY",
+    "GOOGLE_API_KEY",
+    "SARVAM_API_KEY",
+    "APILAYER_API_KEY",
+)
 
 
 class TestAgentQualification(unittest.TestCase):
-    """Test suite for Pydantic lead extraction and qualification logic."""
+    """Test suite for clinical patient intake extraction and qualification logic."""
 
-    def test_ultra_luxury_cash_buyer_persona(self):
-        """Verifies ultra-luxury all-cash buyer is scored as highly qualified (score >= 80)."""
-        lead = InboundLead(
-            lead_id="test_lead_ultra",
-            full_name="Victoria Sterling",
-            phone_number="+1-310-555-0188",
-            listing_address="10484 Bellagio Rd, Bel Air, CA",
-            listing_price=8500000
+    def setUp(self):
+        self._tmp_dir = tempfile.TemporaryDirectory()
+        self._env_patch = patch.dict(os.environ, {k: "" for k in _API_KEYS})
+        self._env_patch.start()
+        ldb._GLOBAL_LEARNING_DB = None
+        self._db_patch = patch(
+            "src.closer.agent.conversation.get_learning_db",
+            side_effect=lambda *a, **kw: ldb.LearningMemoryDB(Path(self._tmp_dir.name) / "qual.db"),
         )
-        engine = ConversationEngine(lead=lead)
-        
-        # Turn 1: Buyer states high budget and liquid cash
-        engine.process_user_turn("We are looking in Bel Air and Beverly Hills with an $8 million budget. We will be paying all cash.")
-        # Turn 2: Buyer states urgent timeline
-        engine.process_user_turn("We want to close immediately within the next 30 days.")
-        
+        self._db_patch.start()
+
+    def tearDown(self):
+        self._db_patch.stop()
+        self._env_patch.stop()
+        ldb._GLOBAL_LEARNING_DB = None
+        self._tmp_dir.cleanup()
+
+    def test_high_urgency_metabolic_patient_persona(self):
+        """Verifies metabolic patient sharing HbA1c/diabetes + immediate timeline is scored qualified (>= 80)."""
+        lead = InboundLead(
+            lead_id="test_patient_metabolic",
+            full_name="Priya Raman",
+            phone_number="+91-98400-11223",
+            market_region="INDIA",
+            primary_concern="Type-2 Diabetes & Fasting Insulin",
+        )
+        engine = ConversationEngine(lead=lead, market_mode="english", business_name="Amura Health")
+
+        engine.process_user_turn(
+            "I have Type-2 diabetes and my HbA1c is 8.4 with elevated fasting insulin. I want online care in Velachery Chennai."
+        )
+        engine.process_user_turn("I want to start physician-led care immediately within the next 30 days.")
+
         dossier = engine.export_dossier()
-
-        self.assertEqual(dossier.full_name, "Victoria Sterling")
-        self.assertEqual(dossier.budget_max, 8000000)
-        self.assertEqual(dossier.financing_type, "cash")
-        self.assertTrue(dossier.pre_approved)
+        self.assertEqual(dossier.full_name, "Priya Raman")
+        self.assertEqual(dossier.patient_name, "Priya Raman")
+        self.assertEqual(dossier.condition_category, "metabolic_diabetes")
+        self.assertIn("HbA1c", dossier.biomarkers_mentioned)
+        self.assertIn("Fasting Insulin", dossier.biomarkers_mentioned)
         self.assertEqual(dossier.timeframe, "immediate (0-30 days)")
-        self.assertIn("Bel Air", dossier.target_locations)
-        self.assertIn("Beverly Hills", dossier.target_locations)
-        self.assertTrue(dossier.qualified, "Lead with $8M cash within 30 days must be marked qualified")
+        self.assertIn("Chennai", dossier.target_locations)
+        self.assertTrue(dossier.qualified)
         self.assertGreaterEqual(dossier.intent_score, 80)
+        self.assertTrue(bool(dossier.follow_up_note))
 
-    def test_hesitant_buyer_with_objection_persona(self):
-        """Verifies objection detection, resolution tagging, and consultative qualification."""
+    def test_hesitant_patient_with_concern_persona(self):
+        """Verifies hesitation handling, empathetic guidance, and subsequent qualification."""
         lead = InboundLead(
-            lead_id="test_lead_hesitant",
-            full_name="Jonathan Mercer",
-            phone_number="+1-310-555-0142"
+            lead_id="test_patient_hesitant",
+            full_name="Meera Krishnan",
+            phone_number="+91-98400-44556",
+            market_region="INDIA",
         )
-        engine = ConversationEngine(lead=lead)
-        
-        # Turn 1: Objection 'just browsing'
-        reply_1 = engine.process_user_turn("Hi, I was looking at the photo gallery, but I am just browsing online right now.")
-        self.assertIn("browsing is the most exciting part", reply_1.lower())
+        engine = ConversationEngine(lead=lead, market_mode="english", business_name="Amura Health")
+
+        reply_1 = engine.process_user_turn("Hi, I am just looking into what Amura Health offers right now.")
+        self.assertIn("amura health", reply_1.lower())
         self.assertIn("just_browsing", engine.dossier.objections_raised)
         self.assertGreater(len(engine.dossier.objections_handled), 0)
 
-        # Turn 2: Discloses budget & financing
-        engine.process_user_turn("Well, our price ceiling is around $3.5 million and we are pre-approved with First Republic.")
-        engine.process_user_turn("We are looking to purchase within 1 to 3 months.")
-
+        engine.process_user_turn("I have PCOS and thyroid issues with TSH 6.2 and want to begin within 1 to 3 months.")
         dossier = engine.export_dossier()
-        self.assertEqual(dossier.budget_max, 3500000)
-        self.assertTrue(dossier.pre_approved)
-        self.assertTrue(dossier.qualified)
+        self.assertEqual(dossier.condition_category, "pcod_hormonal")
+        self.assertIn("TSH", dossier.biomarkers_mentioned)
         self.assertEqual(dossier.timeframe, "1-3 months")
+        self.assertTrue(dossier.qualified)
 
-    def test_unqualified_lead_persona(self):
-        """Verifies leads with sub-market budgets or no qualification are flagged as qualified=False."""
+    def test_low_intent_general_inquiry_persona(self):
+        """Verifies casual non-urgent browsing without clinical urgency stays qualified=False."""
         lead = InboundLead(
-            lead_id="test_lead_low",
+            lead_id="test_patient_low",
             full_name="Sam Casual",
-            phone_number="+1-310-555-0101"
+            phone_number="+91-98400-01010",
+            market_region="INDIA",
         )
-        engine = ConversationEngine(lead=lead)
+        engine = ConversationEngine(lead=lead, market_mode="english", business_name="Amura Health")
 
-        engine.process_user_turn("My budget is only $250k and I haven't talked to any bank yet.")
-        engine.process_user_turn("I might buy in a year or two, just window shopping.")
-
+        engine.process_user_turn("I am not in a rush, just browsing for a year or two from now.")
         dossier = engine.export_dossier()
-        self.assertEqual(dossier.budget_max, 250000)
-        self.assertFalse(dossier.pre_approved)
-        self.assertFalse(dossier.qualified, "Sub-$1M lead in Bel Air must be flagged unqualified")
+        self.assertEqual(dossier.timeframe, "browsing (6+ months)")
+        self.assertFalse(dossier.qualified)
         self.assertLess(dossier.intent_score, 50)
 
-    def test_pydantic_schema_serialization(self):
-        """Verifies Pydantic v2 model_dump, dict, and json methods."""
-        dossier = BuyerDossier(
-            full_name="Elena Rostova",
-            phone_number="+1-415-555-0199",
-            budget_max=6500000,
-            pre_approved=True,
+    def test_pydantic_clinical_schema_serialization(self):
+        """Verifies PatientDossier / BuyerDossier model_dump excludes real-estate keys and includes clinical fields."""
+        dossier = PatientDossier(
+            patient_name="Elena Nair",
+            full_name="Elena Nair",
+            phone_number="+91-98400-99112",
+            chief_concern="Fatty Liver & Insulin Resistance",
+            condition_category="fatty_liver",
+            triage_urgency="Priority",
+            care_pathway="Amura MNT + NMT Reversal",
+            detected_emotion="anxious",
+            safety_flag="safe",
+            consent_status="granted",
             qualified=True,
-            intent_score=90
+            intent_score=90,
         )
+        self.assertIs(BuyerDossier, PatientDossier)
         data = dossier.model_dump()
         self.assertIsInstance(data, dict)
-        self.assertEqual(data["full_name"], "Elena Rostova")
-        self.assertEqual(data["budget_max"], 6500000)
+        self.assertEqual(data["patient_name"], "Elena Nair")
+        self.assertEqual(data["detected_emotion"], "anxious")
+        self.assertEqual(data["safety_flag"], "safe")
+        self.assertEqual(data["consent_status"], "granted")
+        self.assertTrue(bool(data["follow_up_note"]))
+        for forbidden in ("tax_exchange_1031", "bhk_preference", "property_type", "lender_name"):
+            self.assertNotIn(forbidden, data)
 
         json_str = dossier.model_dump_json()
-        self.assertIsInstance(json_str, str)
-        self.assertIn("Elena Rostova", json_str)
-        self.assertIn("6500000", json_str)
+        self.assertIn("Elena Nair", json_str)
+        self.assertIn("Amura MNT + NMT Reversal", json_str)
 
 
 if __name__ == "__main__":

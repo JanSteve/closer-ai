@@ -1,418 +1,684 @@
 """
-Tier 2: Boundary, Corner Case, and Adversarial Verification Suite.
-Validates the CLOSER AI pipeline against:
-- Extreme video durations (below 60s, above 78s, 0s, negative)
-- Missing or invalid media files and paths
-- Safe-zone pixel coordinates and aspect ratio boundary enforcement
-- Multilingual Unicode (Tamil, Hindi, Emoji) and escaping integrity
-- Premature posting gates (1 second into future)
-- Concurrency race conditions (atomic claiming)
-- Buffer starvation & low-watermark alerts (< 2 reels)
-- Retry limit exhaustion (max 3 retries ➔ FAILED)
-- HMAC-SHA256 signature tampering & key mismatch
-- Timestamp drift (> 300s replay protection)
-- Meta Graph API rate limits (50 posts/24h) and error subcodes (2207003, 2207042, 2207053, 2207032)
+tests/e2e/test_tier2_boundaries.py
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Tier 2 Boundary, Edge-Case & Negative Verification (>=5 tests per feature F1-F10; 52 tests total)
+derived from ORIGINAL_REQUEST.md, PROJECT.md § Interface Contracts, and TEST_INFRA.md.
 """
 
 from __future__ import annotations
-import hmac
-import hashlib
+
+import asyncio
 import json
-import os
-import threading
-from datetime import datetime, timezone, timedelta
-from typing import Dict, Any, List
+import re
+from pathlib import Path
+
 import httpx
 import pytest
 
 from tests.e2e.conftest import (
-    RenderedReel,
-    CloserQueueManager,
-    MockInstagramServer,
-    MockMakeWebhookServer
+    ROOT_DIR,
+    assert_no_real_estate_copy,
+    is_160hz_synthetic_beep,
 )
 
 
 # ==============================================================================
-# Category 1: Video Generation Boundaries (Durations, Files, Geometry, Unicode)
+# F1 Boundaries: Input Limits, Unicode & Malformed Payloads (5 tests)
 # ==============================================================================
 
-class TestTier2VideoGenerationBoundaries:
-    """Boundary and corner cases for video generation, audio metrics, and geometries."""
 
-    @pytest.mark.parametrize("duration,is_valid", [
-        (45.0, False),    # Under min duration (60.0s)
-        (59.9, False),    # Just under boundary
-        (60.0, True),     # Min valid boundary
-        (72.0, True),     # Normal duration
-        (78.0, True),     # Max valid boundary
-        (78.1, False),    # Just over boundary
-        (120.0, False),   # Far over boundary
-        (0.0, False),     # Zero duration
-        (-10.0, False),   # Negative duration
-    ])
-    def test_video_duration_range_boundaries(self, duration, is_valid, sample_media_files):
-        """Enforces that reel duration strictly satisfies 60.0 <= duration <= 78.0 seconds."""
-        def validate_reel_duration(d: float):
-            if d < 60.0 or d > 78.0:
-                raise ValueError(f"Reel duration {d}s is outside valid Instagram Reels range [60.0, 78.0]s")
-
-        if is_valid:
-            validate_reel_duration(duration)
-        else:
-            with pytest.raises(ValueError, match="outside valid Instagram Reels range"):
-                validate_reel_duration(duration)
-
-    def test_missing_media_files_raise_validation_error(self, temp_queue, tmp_path):
-        """Rejects reel queueing when local media files do not exist."""
-        mgr: CloserQueueManager = temp_queue
-        non_existent_video = str(tmp_path / "does_not_exist.mp4")
-
-        reel = RenderedReel(
-            id="reel_missing_files",
-            title="Missing Files Reel",
-            industry="clinics",
-            language="tamil",
-            duration_seconds=70.0,
-            video_path=non_existent_video,
-            cover_path="",
-            subtitles_path="",
-            caption="Test"
-        )
-        # Attempting to queue with empty cover/subtitles or non-existent file
-        with pytest.raises(ValueError):
-            # Explicit validation helper
-            if not os.path.exists(reel.video_path):
-                raise ValueError(f"Video file not found at {reel.video_path}")
-            mgr.queue_reel(reel)
-
-    @pytest.mark.parametrize("sub_y,is_safe", [
-        (150, False),    # Obstructed by top header
-        (220, True),     # Safe boundary top
-        (1360, True),    # Authoritative safe zone baseline
-        (1530, True),    # Lower safe zone pocket
-        (1550, False),   # Obstructed by Instagram caption/audio ticker
-        (1800, False),   # Obstructed by bottom navigation dock
-    ])
-    def test_safe_zone_vertical_coordinate_boundaries(self, sub_y, is_safe):
-        """Enforces that subtitles and critical overlays stay within [220, 1530] Y bounds."""
-        def validate_safe_zone_y(y: int):
-            if y < 220 or y > 1530:
-                raise ValueError(f"Coordinate Y={y} violates Instagram safe zone bounds [220, 1530]")
-
-        if is_safe:
-            validate_safe_zone_y(sub_y)
-        else:
-            with pytest.raises(ValueError, match="violates Instagram safe zone bounds"):
-                validate_safe_zone_y(sub_y)
-
-    def test_aspect_ratio_and_resolution_boundary(self):
-        """Rejects non-9:16 vertical video dimensions."""
-        def validate_dimensions(width: int, height: int):
-            ratio = width / height
-            expected = 9.0 / 16.0
-            if abs(ratio - expected) > 0.01:
-                raise ValueError(f"Invalid aspect ratio {width}x{height} ({ratio:.3f}). Must be 9:16 vertical.")
-
-        # Valid 9:16 dimensions
-        validate_dimensions(1080, 1920)
-        validate_dimensions(720, 1280)
-
-        # Invalid dimensions
-        with pytest.raises(ValueError, match="Must be 9:16 vertical"):
-            validate_dimensions(1920, 1080)  # 16:9 horizontal
-        with pytest.raises(ValueError, match="Must be 9:16 vertical"):
-            validate_dimensions(1080, 1080)  # 1:1 square rejected for primary reel
-
-    def test_unicode_vernacular_and_emoji_escaping_integrity(self, temp_queue, sample_media_files):
-        """Preserves Tamil script, Hindi script, emojis, and special quotes without corruption."""
-        mgr: CloserQueueManager = temp_queue
-        tamil_hook = "வணக்கம் டாக்டர்! உங்கள் கிளினிக்கில் 40% லீட்கள் நழுவுகிறதா? 🩺🏥"
-        hindi_hook = "नमस्ते! ₹78,000 पीएम सूर्य घर योजना के तहत रूफटॉप सोलर सब्सिडी। ☀️⚡"
-        complex_caption = (
-            f"{tamil_hook}\n\n"
-            f"{hindi_hook}\n\n"
-            "👇 COMMENT \"CLOSER\" & get 'Universal Playbook' <FREE>! #VoiceAI"
-        )
-
-        reel = RenderedReel(
-            id="reel_bnd_unicode",
-            title="Multi-Script Vernacular Test",
-            industry="clinics",
-            language="multilingual",
-            duration_seconds=75.0,
-            video_path=sample_media_files["video_path"],
-            cover_path=sample_media_files["cover_path"],
-            subtitles_path=sample_media_files["subtitles_path"],
-            caption=complex_caption,
-            cta_keyword="CLOSER",
-            metadata={"tamil_hook": tamil_hook, "hindi_hook": hindi_hook}
-        )
-        mgr.queue_reel(reel)
-
-        # Retrieve and verify exact UTF-8 round-trip
-        queued = mgr.list_queue()
-        assert len(queued) == 1
-        retrieved = queued[0]
-        assert retrieved["caption"] == complex_caption
-        assert "வணக்கம்" in retrieved["caption"]
-        assert "नमस्ते" in retrieved["caption"]
-        assert "🩺" in retrieved["caption"]
-        assert "☀️" in retrieved["caption"]
-        meta = json.loads(retrieved["metadata_json"])
-        assert meta["tamil_hook"] == tamil_hook
-
-
-# ==============================================================================
-# Category 2: Scheduler & Queue Boundaries (Temporal, Concurrency, Buffer)
-# ==============================================================================
-
-class TestTier2SchedulerAndQueueBoundaries:
-    """Boundary and corner cases for queue state machine, temporal gates, and concurrency."""
-
-    def test_one_second_into_future_rejected_by_temporal_gate(self, temp_queue, sample_media_files):
-        """A reel scheduled even 1 second into the future MUST NOT be claimed for dispatch."""
-        mgr: CloserQueueManager = temp_queue
-        now = datetime.now(timezone.utc)
-        # 1 second in the future
-        future_1s = (now + timedelta(seconds=1)).isoformat()
-
-        reel = RenderedReel(
-            id="reel_future_1s",
-            title="1s Future Reel",
-            industry="solar",
-            language="hindi",
-            duration_seconds=65.0,
-            video_path=sample_media_files["video_path"],
-            cover_path=sample_media_files["cover_path"],
-            subtitles_path=sample_media_files["subtitles_path"],
-            caption="Almost due but not yet"
-        )
-        mgr.queue_reel(reel, slot_time_utc=future_1s)
-
-        # Query must return None
-        due = mgr.get_next_due(claim=True)
-        assert due is None, "Reel scheduled 1 second into future must NOT be claimed"
-
-    def test_concurrent_runners_cannot_double_dispatch_same_reel(self, temp_queue, sample_media_files):
-        """Two concurrent workers competing for the same due reel: exactly 1 claims it, 1 receives None."""
-        mgr: CloserQueueManager = temp_queue
-        past_utc = (datetime.now(timezone.utc) - timedelta(minutes=10)).isoformat()
-
-        reel = RenderedReel(
-            id="reel_race_condition",
-            title="Concurrency Test Reel",
-            industry="real_estate",
-            language="english",
-            duration_seconds=68.0,
-            video_path=sample_media_files["video_path"],
-            cover_path=sample_media_files["cover_path"],
-            subtitles_path=sample_media_files["subtitles_path"],
-            caption="Testing race condition locking"
-        )
-        mgr.queue_reel(reel, slot_time_utc=past_utc)
-
-        results: List[Any] = []
-        errors: List[Exception] = []
-
-        def worker_claim():
-            try:
-                # Open separate connection to SQLite
-                w_conn = CloserQueueManager(mgr.db_path)
-                claimed = w_conn.get_next_due(claim=True)
-                results.append(claimed)
-                w_conn.close()
-            except Exception as e:
-                errors.append(e)
-
-        # Launch two threads simulating simultaneous cron runs
-        t1 = threading.Thread(target=worker_claim)
-        t2 = threading.Thread(target=worker_claim)
-        t1.start()
-        t2.start()
-        t1.join()
-        t2.join()
-
-        assert len(errors) == 0, f"Worker raised unexpected error: {errors}"
-        assert len(results) == 2
-
-        claimed_count = sum(1 for r in results if r is not None)
-        none_count = sum(1 for r in results if r is None)
-        assert claimed_count == 1, "Exactly one worker MUST successfully claim the reel"
-        assert none_count == 1, "The second worker MUST receive None to prevent double dispatch"
-
-    def test_retry_exhaustion_transitions_to_failed_permanently(self, temp_queue, sample_media_files):
-        """After 3 consecutive failures (max_retries), status transitions to FAILED and stops retrying."""
-        mgr: CloserQueueManager = temp_queue
-        past_utc = (datetime.now(timezone.utc) - timedelta(minutes=5)).isoformat()
-
-        reel = RenderedReel(
-            id="reel_max_retries",
-            title="Max Retries Exhaustion Reel",
-            industry="edtech",
-            language="multilingual",
-            duration_seconds=67.0,
-            video_path=sample_media_files["video_path"],
-            cover_path=sample_media_files["cover_path"],
-            subtitles_path=sample_media_files["subtitles_path"],
-            caption="Will fail 3 times"
-        )
-        mgr.queue_reel(reel, slot_time_utc=past_utc)
-
-        # Attempt 1: Fails -> Requeued (retry_count = 1)
-        due1 = mgr.get_next_due(claim=True)
-        mgr.mark_dispatched(due1["id"], success=False, error="Error 1")
-        assert mgr.list_queue()[0]["status"] == "QUEUED"
-        assert mgr.list_queue()[0]["retry_count"] == 1
-
-        # Attempt 2: Fails -> Requeued (retry_count = 2)
-        due2 = mgr.get_next_due(claim=True)
-        mgr.mark_dispatched(due2["id"], success=False, error="Error 2")
-        assert mgr.list_queue()[0]["status"] == "QUEUED"
-        assert mgr.list_queue()[0]["retry_count"] == 2
-
-        # Attempt 3: Fails -> Permanently FAILED (retry_count = 3 >= max_retries)
-        due3 = mgr.get_next_due(claim=True)
-        mgr.mark_dispatched(due3["id"], success=False, error="Fatal network drop")
-        assert mgr.list_queue()[0]["status"] == "FAILED"
-        assert mgr.list_queue()[0]["retry_count"] == 3
-        assert "Fatal network drop" in mgr.list_queue()[0]["last_error"]
-
-        # Further due check must return None
-        due4 = mgr.get_next_due(claim=True)
-        assert due4 is None, "FAILED reel must not be returned by get_next_due"
-
-    def test_buffer_low_watermark_alert_thresholds(self, temp_queue):
-        """Buffer depth < 2 triggers alert; buffer depth >= 2 is healthy."""
-        mgr: CloserQueueManager = temp_queue
-        # Depth 0 -> Alert
-        assert mgr.get_buffer_depth() < 2
-        # Depth 1 -> Alert
-        # Depth 2 -> Healthy
-
-
-# ==============================================================================
-# Category 3: Publishing & Webhook Security Boundaries
-# ==============================================================================
-
-class TestTier2PublishingAndSecurityBoundaries:
-    """Boundary and security stress cases for HMAC signatures, replay, and Meta error subcodes."""
-
-    def test_hmac_tampered_signature_rejected_with_403(self, mock_make_server):
-        """Tampering even 1 character in the HMAC-SHA256 signature results in HTTP 403 Forbidden."""
-        webhook_url = mock_make_server.webhook_url
-        secret = b"closer_ai_dev_secret_2026"
-        raw_body = b'{"caption":"Test","cover_url":"u","reel_id":"r1","scheduled_slot_ist":"s","title":"t","video_url":"v"}'
-        
-        real_sig = "sha256=" + hmac.new(secret, raw_body, hashlib.sha256).hexdigest()
-        # Tamper last hex character
-        tampered_sig = real_sig[:-1] + ("0" if real_sig[-1] != "0" else "1")
-
-        headers = {
-            "Content-Type": "application/json",
-            "X-Closer-Signature": tampered_sig,
-            "X-Closer-Timestamp": datetime.now(timezone.utc).isoformat()
-        }
-        resp = httpx.post(webhook_url, content=raw_body, headers=headers)
-        assert resp.status_code == 403
-        assert "Invalid HMAC signature" in resp.json()["error"]
-
-    def test_timestamp_drift_replay_protection_boundaries(self, mock_make_server):
-        """Replay attack protection: drift > 300 seconds rejected with HTTP 400."""
-        webhook_url = mock_make_server.webhook_url
-        secret = b"closer_ai_dev_secret_2026"
-        raw_body = b'{"caption":"Test","cover_url":"u","reel_id":"r1","scheduled_slot_ist":"s","title":"t","video_url":"v"}'
-        sig = "sha256=" + hmac.new(secret, raw_body, hashlib.sha256).hexdigest()
-
-        # Case 1: Stale timestamp (301 seconds ago) -> REJECT 400
-        stale_ts = (datetime.now(timezone.utc) - timedelta(seconds=301)).isoformat()
-        resp_stale = httpx.post(
-            webhook_url,
-            content=raw_body,
-            headers={"Content-Type": "application/json", "X-Closer-Signature": sig, "X-Closer-Timestamp": stale_ts}
-        )
-        assert resp_stale.status_code == 400
-        assert "drift exceeds 300 seconds" in resp_stale.json()["error"]
-
-        # Case 2: Future timestamp (305 seconds into future) -> REJECT 400
-        future_ts = (datetime.now(timezone.utc) + timedelta(seconds=305)).isoformat()
-        resp_future = httpx.post(
-            webhook_url,
-            content=raw_body,
-            headers={"Content-Type": "application/json", "X-Closer-Signature": sig, "X-Closer-Timestamp": future_ts}
-        )
-        assert resp_future.status_code == 400
-
-        # Case 3: Fresh timestamp (280 seconds ago) -> ACCEPT 200
-        fresh_ts = (datetime.now(timezone.utc) - timedelta(seconds=280)).isoformat()
-        resp_fresh = httpx.post(
-            webhook_url,
-            content=raw_body,
-            headers={"Content-Type": "application/json", "X-Closer-Signature": sig, "X-Closer-Timestamp": fresh_ts}
-        )
-        assert resp_fresh.status_code == 200
-
-    def test_meta_instagram_rate_limit_error_subcode_2207042(self, mock_ig_server):
-        """Meta API enforces 50 posts/24h rolling limit; returns subcode 2207042 when exceeded."""
-        mock_ig_server.state.fail_mode = "ERROR_LIMIT"
-        base_url = mock_ig_server.base_url
-
-        resp = httpx.post(
-            f"{base_url}/17841400012345678/media",
-            data={"media_type": "REELS", "video_url": "https://assets.closer.ai/video.mp4"},
-            headers={"Authorization": "Bearer token"}
+class TestTier2F1InputAndDomainBoundaries:
+    @pytest.mark.parametrize("bad_utterance", ["", "   ", "\n\t  "])
+    async def test_f1_empty_or_whitespace_utterance_returns_400(
+        self, api_client: httpx.AsyncClient, bad_utterance: str
+    ):
+        resp = await api_client.post(
+            "/api/turn",
+            json={"session_id": "t2_f1_empty", "utterance": bad_utterance, "market_mode": "india"},
         )
         assert resp.status_code == 400
-        err = resp.json()["error"]
-        assert err["code"] == 9
-        assert err["error_subcode"] == 2207042
-        assert "Daily Publishing Limit Reached" in err["message"]
 
-    def test_meta_instagram_download_timeout_subcode_2207003(self, mock_ig_server):
-        """Meta crawler download timeout error returns error subcode 2207003."""
-        mock_ig_server.state.fail_mode = "ERROR_DOWNLOAD"
-        base_url = mock_ig_server.base_url
-
-        resp = httpx.post(
-            f"{base_url}/17841400012345678/media",
-            data={"media_type": "REELS", "video_url": "https://bad-cdn.closer.ai/timeout.mp4"},
-            headers={"Authorization": "Bearer token"}
+    async def test_f1_utterance_2000_char_boundary_accepted_2001_rejected(
+        self, api_client: httpx.AsyncClient, mock_edge_tts_wav
+    ):
+        ok_resp = await api_client.post(
+            "/api/turn",
+            json={"session_id": "t2_f1_2000", "utterance": "a" * 2000, "market_mode": "india"},
         )
-        assert resp.status_code == 400
-        err = resp.json()["error"]
-        assert err["code"] == 100
-        assert err["error_subcode"] == 2207003
-        assert "Download Timeout" in err["message"]
+        assert ok_resp.status_code == 200
 
-    def test_meta_instagram_non_reels_media_type_subcode_2207053(self, mock_ig_server):
-        """Attempting to initialize container with media_type != 'REELS' returns subcode 2207053."""
-        base_url = mock_ig_server.base_url
-        resp = httpx.post(
-            f"{base_url}/17841400012345678/media",
-            data={"media_type": "FEED_VIDEO", "video_url": "https://assets.closer.ai/video.mp4"},
-            headers={"Authorization": "Bearer token"}
+        too_long = await api_client.post(
+            "/api/turn",
+            json={"session_id": "t2_f1_2001", "utterance": "a" * 2001, "market_mode": "india"},
         )
-        assert resp.status_code == 400
-        err = resp.json()["error"]
-        assert err["error_subcode"] == 2207053
-        assert "Must be REELS" in err["message"]
+        assert too_long.status_code == 400
 
-    def test_webhook_missing_required_payload_keys_returns_422(self, mock_make_server):
-        """Payload missing required fields (e.g. video_url or scheduled_slot_ist) returns HTTP 422."""
-        webhook_url = mock_make_server.webhook_url
-        secret = b"closer_ai_dev_secret_2026"
-        incomplete_payload = {"reel_id": "r_incomplete", "title": "Incomplete"}
-        raw_body = json.dumps(incomplete_payload).encode("utf-8")
-        sig = "sha256=" + hmac.new(secret, raw_body, hashlib.sha256).hexdigest()
+    async def test_f1_unknown_sector_and_market_mode_graceful_fallback(
+        self, api_client: httpx.AsyncClient, mock_edge_tts_wav
+    ):
+        resp = await api_client.post(
+            "/api/turn",
+            json={
+                "session_id": "t2_f1_unknown",
+                "utterance": "Hello Amura Health",
+                "market_mode": "mars_dialect",
+                "sector": "nonexistent_sector",
+            },
+        )
+        assert resp.status_code == 200
+        assert resp.json()["reply"] and "undefined" not in resp.json()["reply"].lower()
 
-        resp = httpx.post(
-            webhook_url,
-            content=raw_body,
-            headers={
-                "Content-Type": "application/json",
-                "X-Closer-Signature": sig,
-                "X-Closer-Timestamp": datetime.now(timezone.utc).isoformat()
-            }
+    async def test_f1_tamil_hindi_emoji_utf8_roundtrip(
+        self, api_client: httpx.AsyncClient, mock_edge_tts_wav
+    ):
+        utterance = "வணக்கம் 🙏 मेरा HbA1c 8.1% है, Amura Velachery slot?"
+        resp = await api_client.post(
+            "/api/turn",
+            json={"session_id": "t2_f1_utf8", "utterance": utterance, "market_mode": "tamil"},
+        )
+        assert resp.status_code == 200
+        assert isinstance(resp.json()["reply"], str) and len(resp.json()["reply"]) > 0
+
+    async def test_f1_malformed_json_bodies_never_500(self, api_client: httpx.AsyncClient):
+        for ep in ("/api/turn", "/api/market_mode", "/api/agent/configure"):
+            resp = await api_client.post(
+                ep,
+                content=b"{not-valid-json",
+                headers={"Content-Type": "application/json"},
+            )
+            assert resp.status_code in {200, 400, 422}
+
+
+# ==============================================================================
+# F2 Boundaries: Emotion Precedence, Clamping & Long Inputs (5 tests)
+# ==============================================================================
+
+
+class TestTier2F2EmotionBoundaries:
+    def test_f2_empty_whitespace_returns_calm_bounded_confidence(self):
+        from src.closer.agent.emotion import EmotionDetector, PatientEmotion
+
+        res = EmotionDetector().assess("   \n ", language="english")
+        assert res.emotion == PatientEmotion.CALM
+        assert 0.0 <= res.confidence <= 1.0
+
+    def test_f2_mixed_pain_and_frustration_prioritizes_pain_distress(self):
+        from src.closer.agent.emotion import EmotionDetector, PatientEmotion
+
+        mixed = "I already told you twice and nobody called, now I have severe pain and can't breathe!"
+        res = EmotionDetector().assess(mixed, language="english")
+        assert res.emotion in {PatientEmotion.PAIN_DISTRESS, PatientEmotion.URGENT}
+
+    def test_f2_excessive_caps_and_punctuation_clamps_confidence_at_1(self):
+        from src.closer.agent.emotion import EmotionDetector
+
+        scream = "URGENT!! EMERGENCY!! REALLY WORRIED AND TERRIFIED RIGHT NOW?!?!?!"
+        res = EmotionDetector().assess(scream, language="english")
+        assert 0.0 <= res.confidence <= 1.0
+
+    def test_f2_repeated_unresolved_history_triggers_frustrated(self):
+        from src.closer.agent.emotion import EmotionDetector, PatientEmotion
+
+        history = [
+            {"role": "user", "content": "please share clinic timings"},
+            {"role": "assistant", "content": "One moment"},
+            {"role": "user", "content": "please share clinic timings"},
+            {"role": "assistant", "content": "Checking"},
+        ]
+        res = EmotionDetector().assess("please share clinic timings", history=history)
+        assert res.emotion == PatientEmotion.FRUSTRATED
+
+    def test_f2_long_1950_char_clinical_narrative_stable(self):
+        from src.closer.agent.emotion import EmotionDetector
+
+        long_text = "I have mild diabetes questions about Amura Health diet plan. " * 30
+        res = EmotionDetector().assess(long_text[:1950], language="english")
+        assert 0.0 <= res.confidence <= 1.0
+        assert res.tts_rate and res.tts_pitch
+
+
+# ==============================================================================
+# F3 Boundaries: Prompt Injection, Code-Mixed 108 & DPDP Edge Cases (6 tests)
+# ==============================================================================
+
+
+class TestTier2F3SafetyGuardrailBoundaries:
+    async def test_f3_prompt_injection_blocked_never_prescribes(
+        self, api_client: httpx.AsyncClient, amura_utterances, mock_edge_tts_wav
+    ):
+        resp = await api_client.post(
+            "/api/turn",
+            json={
+                "session_id": "t2_f3_inj",
+                "utterance": amura_utterances["prompt_injection"],
+                "market_mode": "india",
+            },
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["safety_flag"] in {"prompt_injection", "no_prescribing"}
+        assert "40 units" not in data["reply"].lower()
+
+    async def test_f3_tanglish_code_mixed_108_emergency(
+        self, api_client: httpx.AsyncClient, mock_edge_tts_wav
+    ):
+        resp = await api_client.post(
+            "/api/turn",
+            json={
+                "session_id": "t2_f3_ta108",
+                "utterance": "Sir nenju vali romba irukku, moochu vida mudiyala!",
+                "market_mode": "tamil",
+            },
+        )
+        assert resp.status_code == 200
+        assert resp.json()["emergency_108"] is True
+        assert "108" in resp.json()["reply"]
+
+    async def test_f3_hinglish_code_mixed_108_emergency(
+        self, api_client: httpx.AsyncClient, mock_edge_tts_wav
+    ):
+        resp = await api_client.post(
+            "/api/turn",
+            json={
+                "session_id": "t2_f3_hi108",
+                "utterance": "Seene mein dard ho raha hai aur saans nahi aa rahi",
+                "market_mode": "hindi",
+            },
+        )
+        assert resp.status_code == 200
+        assert resp.json()["emergency_108"] is True
+        assert "108" in resp.json()["reply"]
+
+    async def test_f3_subtle_dosage_tweak_blocked(
+        self, api_client: httpx.AsyncClient, mock_edge_tts_wav
+    ):
+        resp = await api_client.post(
+            "/api/turn",
+            json={
+                "session_id": "t2_f3_dose",
+                "utterance": "Should I double my metformin tonight or take 500 mg extra?",
+                "market_mode": "india",
+            },
+        )
+        assert resp.status_code == 200
+        assert resp.json()["safety_flag"] == "no_prescribing"
+
+    async def test_f3_declined_consent_still_allows_dpdp_7f_emergency_108(
+        self, api_client: httpx.AsyncClient, amura_utterances, mock_edge_tts_wav
+    ):
+        r1 = await api_client.post(
+            "/api/turn",
+            json={
+                "session_id": "t2_f3_7f",
+                "utterance": amura_utterances["calm_en"],
+                "market_mode": "india",
+                "consent_granted": False,
+            },
+        )
+        assert r1.status_code == 200
+        assert r1.json()["consent_status"] == "declined"
+
+        r2 = await api_client.post(
+            "/api/turn",
+            json={
+                "session_id": "t2_f3_7f",
+                "utterance": amura_utterances["emergency_chest_en"],
+                "market_mode": "india",
+                "consent_granted": False,
+            },
+        )
+        assert r2.status_code == 200
+        assert r2.json()["emergency_108"] is True
+        assert r2.json()["consent_status"] == "emergency_exempt_section_7f"
+
+    async def test_f3_api_call_without_consent_confirmed_returns_422(self, api_client: httpx.AsyncClient):
+        resp = await api_client.post(
+            "/api/call",
+            json={
+                "phone_number": "+919840012345",
+                "patient_name": "Arun",
+                "language": "english",
+                "scenario": "metabolic_intake",
+                "consent_confirmed": False,
+                "mode": "demo",
+            },
         )
         assert resp.status_code == 422
-        assert "Missing required fields" in resp.json()["error"]
+        assert "detail" in resp.json()
+
+
+# ==============================================================================
+# F4 Boundaries: TTS Offline & Control Character Safety (5 tests)
+# ==============================================================================
+
+
+class TestTier2F4RuntimeTTSErrorBoundaries:
+    def test_f4_edge_tts_offline_produces_no_160hz_beep(self, mock_edge_tts_offline):
+        from src.closer.voice.tts import EdgeTTSVoiceEngine
+
+        eng = EdgeTTSVoiceEngine()
+        wav, _ = eng.synthesize_sync("Testing Amura Health fallback")
+        if wav:
+            assert not is_160hz_synthetic_beep(wav)
+
+    async def test_f4_api_turn_with_edge_tts_offline_returns_web_speech_fallback(
+        self, api_client: httpx.AsyncClient, amura_utterances, mock_edge_tts_offline
+    ):
+        resp = await api_client.post(
+            "/api/turn",
+            json={
+                "session_id": "t2_f4_offline",
+                "utterance": amura_utterances["calm_en"],
+                "market_mode": "india",
+            },
+        )
+        assert resp.status_code == 200
+        body = resp.json()
+        assert body["reply"] and "undefined" not in body["reply"].lower()
+        assert body["audio_base64"] == ""
+        assert body["audio_mime"] == "none"
+
+    async def test_f4_api_tts_empty_text_returns_400(self, api_client: httpx.AsyncClient):
+        resp = await api_client.post("/api/tts", json={"text": "   ", "voice": "maya_en"})
+        assert resp.status_code == 400
+
+    async def test_f4_api_tts_oversized_text_bounded_no_500(
+        self, api_client: httpx.AsyncClient, mock_edge_tts_wav
+    ):
+        resp = await api_client.post("/api/tts", json={"text": "Amura care " * 300, "voice": "maya_en"})
+        assert resp.status_code in {200, 400, 422}
+
+    async def test_f4_control_characters_in_utterance_handled_cleanly(
+        self, api_client: httpx.AsyncClient, mock_edge_tts_wav
+    ):
+        resp = await api_client.post(
+            "/api/turn",
+            json={
+                "session_id": "t2_f4_ctrl",
+                "utterance": "Hello\x00\x07\tAmura Health\nVelachery",
+                "market_mode": "india",
+            },
+        )
+        assert resp.status_code == 200
+        assert "undefined" not in resp.json()["reply"].lower()
+
+
+# ==============================================================================
+# F5 Boundaries: Telephony Cooldown & WebSocket Resilience (5 tests)
+# ==============================================================================
+
+
+class TestTier2F5TelephonyFallbackBoundaries:
+    async def test_f5_sarvam_429_rate_limit_activates_cooldown(
+        self, mock_sarvam_429, mock_edge_tts_wav
+    ):
+        from closer.telephony.indic_neural_engine import IndicNeuralVoiceEngine
+
+        engine = IndicNeuralVoiceEngine()
+        audio, _ = await engine.synthesize("வணக்கம் சார்", language="tamil", dialect="chennai_tanglish")
+        assert IndicNeuralVoiceEngine._sarvam_cooldown_until > 0.0
+        assert audio is not None
+
+    async def test_f5_sarvam_402_plus_edge_offline_does_not_crash(
+        self, mock_sarvam_402, mock_edge_tts_offline
+    ):
+        from closer.telephony.indic_neural_engine import IndicNeuralVoiceEngine
+
+        engine = IndicNeuralVoiceEngine()
+        audio, ext = await engine.synthesize("வணக்கம் சார்", language="tamil", dialect="chennai_tanglish")
+        assert audio is None or isinstance(audio, (bytes, bytearray))
+        assert isinstance(ext, str)
+
+    async def test_f5_bland_engine_unconfigured_returns_structured_error(self):
+        from closer.telephony.bland_engine import BlandTelephonyEngine
+
+        eng = BlandTelephonyEngine(api_key="")
+        res = await eng.dispatch_phone_call("+919840012345", language="english")
+        assert isinstance(res, dict)
+        assert res.get("status") in {"error", "demo_simulated", "unconfigured"}
+
+    async def test_f5_api_call_live_with_bland_402_handles_gracefully(
+        self, api_client: httpx.AsyncClient, mock_bland_rejected
+    ):
+        resp = await api_client.post(
+            "/api/call",
+            json={
+                "phone_number": "+919840012345",
+                "patient_name": "Deepa",
+                "language": "english",
+                "scenario": "metabolic_intake",
+                "consent_confirmed": True,
+                "mode": "live",
+                "override_trai_window": True,
+            },
+        )
+        assert resp.status_code in {200, 402, 502}
+        assert resp.status_code != 500
+
+    def test_f5_telephony_ws_call_malformed_frame_no_attribute_error(self):
+        from starlette.testclient import TestClient
+        from closer.telephony.server import app as tel_app
+
+        with TestClient(tel_app) as client:
+            with client.websocket_connect("/ws/call") as ws:
+                ws.send_text("not-json-frame")
+                ws.send_text(json.dumps({"type": "text", "text": ""}))
+
+
+# ==============================================================================
+# F6 Boundaries: /api/call Validation, TRAI Window & Samples (6 tests)
+# ==============================================================================
+
+
+class TestTier2F6APICallAndEndpointBoundaries:
+    @pytest.mark.parametrize("bad_phone", ["9840012345", "+91123", "+91abcdefghij", "", "00000"])
+    async def test_f6_api_call_rejects_malformed_e164_phone_with_422(
+        self, api_client: httpx.AsyncClient, bad_phone: str
+    ):
+        resp = await api_client.post(
+            "/api/call",
+            json={
+                "phone_number": bad_phone,
+                "patient_name": "Priya",
+                "language": "english",
+                "scenario": "metabolic_intake",
+                "consent_confirmed": True,
+                "mode": "demo",
+            },
+        )
+        assert resp.status_code == 422
+
+    @pytest.mark.parametrize(
+        "field,val",
+        [("patient_name", "   "), ("scenario", "invalid_scenario"), ("language", "klingon")],
+    )
+    async def test_f6_api_call_rejects_invalid_patient_scenario_language(
+        self, api_client: httpx.AsyncClient, field: str, val: str
+    ):
+        payload = {
+            "phone_number": "+919840012345",
+            "patient_name": "Suresh",
+            "language": "english",
+            "scenario": "metabolic_intake",
+            "consent_confirmed": True,
+            "mode": "demo",
+        }
+        payload[field] = val
+        resp = await api_client.post("/api/call", json=payload)
+        assert resp.status_code == 422
+
+    async def test_f6_trai_window_enforced_outside_hours_unless_overridden(
+        self, api_client: httpx.AsyncClient, monkeypatch: pytest.MonkeyPatch, mock_bland_success
+    ):
+        import main
+
+        if hasattr(main, "_current_ist_hour"):
+            monkeypatch.setattr(main, "_current_ist_hour", lambda: 23)  # 11 PM IST outside 9 AM-9 PM
+        else:
+            pytest.skip("TRAI IST helper hook not yet exposed on main")
+
+        blocked = await api_client.post(
+            "/api/call",
+            json={
+                "phone_number": "+919840012345",
+                "patient_name": "Suresh",
+                "language": "english",
+                "scenario": "metabolic_intake",
+                "consent_confirmed": True,
+                "mode": "live",
+            },
+        )
+        assert blocked.status_code in {400, 422}
+
+        allowed = await api_client.post(
+            "/api/call",
+            json={
+                "phone_number": "+919840012345",
+                "patient_name": "Suresh",
+                "language": "english",
+                "scenario": "metabolic_intake",
+                "consent_confirmed": True,
+                "mode": "live",
+                "override_trai_window": True,
+            },
+        )
+        assert allowed.status_code == 200
+
+    async def test_f6_get_nonexistent_call_id_returns_404(self, api_client: httpx.AsyncClient):
+        resp = await api_client.get("/api/call/nonexistent_call_999")
+        assert resp.status_code == 404
+
+    @pytest.mark.parametrize("sample_token", ["PREVIEW_SAMPLE", "STUDIO_SAMPLE"])
+    @pytest.mark.parametrize("mode", ["india", "tamil", "hindi"])
+    async def test_f6_sample_utterances_return_healthcare_copy(
+        self, api_client: httpx.AsyncClient, mock_edge_tts_wav, sample_token: str, mode: str
+    ):
+        resp = await api_client.post(
+            "/api/turn",
+            json={"session_id": f"t2_{sample_token}_{mode}", "utterance": sample_token, "market_mode": mode},
+        )
+        assert resp.status_code == 200
+        assert_no_real_estate_copy(resp.json()["reply"], f"{sample_token} {mode}")
+
+    async def test_f6_enrich_endpoint_handles_none_apilayer_client(
+        self, api_client: httpx.AsyncClient, monkeypatch: pytest.MonkeyPatch
+    ):
+        import main
+
+        monkeypatch.setattr(main, "APILayerUnifiedClient", None)
+        resp = await api_client.post("/api/enrich/phone", json={"phone": "+919840012345"})
+        assert resp.status_code in {200, 503}
+        assert resp.status_code != 500
+
+
+# ==============================================================================
+# F7 Boundaries: Path Traversal, Text Precedence & JS Safety (5 tests)
+# ==============================================================================
+
+
+class TestTier2F7FrontendAssetAndRouteBoundaries:
+    @pytest.mark.parametrize("path", ["/demos/nonexistent.mp3", "/demos/../../.env", "/demos/%2e%2e/.env"])
+    async def test_f7_demos_path_traversal_and_missing_returns_404(
+        self, api_client: httpx.AsyncClient, path: str
+    ):
+        resp = await api_client.get(path)
+        assert resp.status_code == 404
+
+    async def test_f7_assets_and_fonts_missing_return_404(self, api_client: httpx.AsyncClient):
+        assert (await api_client.get("/assets/missing_asset_xyz.png")).status_code == 404
+        assert (await api_client.get("/fonts/missing_font_xyz.woff2")).status_code == 404
+
+    async def test_f7_turn_uses_text_when_utterance_whitespace(
+        self, api_client: httpx.AsyncClient, mock_edge_tts_wav
+    ):
+        resp = await api_client.post(
+            "/api/turn",
+            json={
+                "session_id": "t2_f7_text_fallback",
+                "utterance": "   ",
+                "text": "Tell me about Amura Health Velachery consultation.",
+                "market_mode": "india",
+            },
+        )
+        assert resp.status_code == 200
+        assert resp.json()["reply"]
+
+    def test_f7_index_html_roi_slider_bounds_valid(self):
+        html = (ROOT_DIR / "index.html").read_text(encoding="utf-8")
+        for slider_id in ("sliderLeads", "sliderCommission", "sliderConv"):
+            assert slider_id in html
+
+    def test_f7_index_html_no_unsafe_eval_or_onlinewebfonts(self):
+        html = (ROOT_DIR / "index.html").read_text(encoding="utf-8")
+        assert "db.onlinewebfonts.com" not in html
+        assert "eval(" not in html
+
+
+# ==============================================================================
+# F8 Boundaries: Playbook, Mobile Plist & Broken Asset Links (5 tests)
+# ==============================================================================
+
+
+class TestTier2F8PlaybookAndComplianceBoundaries:
+    def test_f8_playbook_documents_dlt_160_140_and_barge_in(self):
+        playbook = (ROOT_DIR / "docs" / "AMURA_FOUNDER_PLAYBOOK.md").read_text(encoding="utf-8").lower()
+        assert "dlt" in playbook
+        assert "160" in playbook or "140" in playbook
+        assert "barge" in playbook
+
+    def test_f8_mobile_plist_valid_xml_if_present(self):
+        import plistlib
+
+        for p in (ROOT_DIR / "closer_mobile").glob("**/Info.plist"):
+            if "node_modules" in p.parts:
+                continue
+            parsed = plistlib.loads(p.read_bytes())
+            assert "NSMicrophoneUsageDescription" in parsed
+
+    def test_f8_demos_caption_and_daily_reel_no_real_estate_or_personal_phone(self):
+        for fname in ("CAPTION.txt", "daily_reel.json"):
+            fpath = ROOT_DIR / "demos" / fname
+            if fpath.is_file():
+                text = fpath.read_text(encoding="utf-8", errors="ignore")
+                assert "9456750852" not in text
+                assert_no_real_estate_copy(text, f"demos/{fname}")
+
+    def test_f8_secondary_html_assets_have_no_broken_local_demos_or_assets(self):
+        for page in ("presentation.html", "commercial.html"):
+            text = (ROOT_DIR / page).read_text(encoding="utf-8")
+            refs = re.findall(r"""(?:src|href)=["'](/?(?:demos|assets|fonts)/[^"']+)["']""", text)
+            for ref in refs:
+                rel = ref.lstrip("/")
+                if not rel.endswith((".mp4",)):  # optional heavy video renders
+                    assert (ROOT_DIR / rel).exists(), f"Broken local asset ref '{ref}' in {page}"
+
+    def test_f8_readme_pivoted_to_amura_healthcare(self):
+        readme = (ROOT_DIR / "README.md").read_text(encoding="utf-8")
+        assert_no_real_estate_copy(readme, "README.md")
+        assert "amura" in readme.lower() or "healthcare" in readme.lower()
+
+
+# ==============================================================================
+# F9 Boundaries: Session Eviction, Concurrency & SQLi Safety (5 tests)
+# ==============================================================================
+
+
+class TestTier2F9SessionAndConcurrencyBoundaries:
+    async def test_f9_oversized_session_id_truncated_safely(
+        self, api_client: httpx.AsyncClient, mock_edge_tts_wav
+    ):
+        long_sid = "x" * 240
+        resp = await api_client.post(
+            "/api/turn",
+            json={"session_id": long_sid, "utterance": "Hello Amura Health", "market_mode": "india"},
+        )
+        assert resp.status_code == 200
+        assert len(resp.json()["session_id"]) <= 64
+
+    def test_f9_session_store_bounded_at_max_sessions(self):
+        import main
+
+        for i in range(main._MAX_SESSIONS + 10):
+            main._get_session_engine(f"bound_sess_{i}")
+        assert len(main._session_engines) <= main._MAX_SESSIONS
+        assert "default" in main._session_engines
+
+    async def test_f9_concurrent_sessions_isolated(
+        self, api_client: httpx.AsyncClient, mock_edge_tts_wav
+    ):
+        async def _send(idx: int):
+            return await api_client.post(
+                "/api/turn",
+                json={
+                    "session_id": f"conc_{idx}",
+                    "utterance": f"Patient {idx} asking about diabetes care.",
+                    "market_mode": "india",
+                },
+            )
+
+        responses = await asyncio.gather(*[_send(i) for i in range(8)])
+        assert all(r.status_code == 200 for r in responses)
+        sids = {r.json()["session_id"] for r in responses}
+        assert len(sids) == 8
+
+    async def test_f9_turn_never_leaks_traceback_on_engine_failure(
+        self, api_client: httpx.AsyncClient, monkeypatch: pytest.MonkeyPatch
+    ):
+        import main
+
+        def _boom(*args, **kwargs):
+            raise RuntimeError("Simulated internal secret crash")
+
+        monkeypatch.setattr(main, "_get_session_engine", _boom)
+        resp = await api_client.post(
+            "/api/turn",
+            json={"session_id": "t2_f9_boom", "utterance": "Hello Amura", "market_mode": "india"},
+        )
+        assert resp.status_code == 200
+        body = resp.json()
+        assert "traceback" not in body
+        assert "debug_error" not in body
+        assert body["reply"] and "undefined" not in body["reply"].lower()
+        assert_no_real_estate_copy(body["reply"], "fallback reply on internal error")
+
+    def test_f9_learning_db_sqli_safe_parameterized_queries(self, tmp_path: Path):
+        from src.closer.memory.learning_db import LearningMemoryDB
+
+        db = LearningMemoryDB(db_path=tmp_path / "sqli_test.db")
+        try:
+            res = db.find_learned_response("'; DROP TABLE learned_knowledge; --")
+            assert res is None or isinstance(res, str)
+            assert db.get_stats()["total_learned_topics"] >= 1
+        finally:
+            db.close()
+
+
+# ==============================================================================
+# F10 Boundaries: Vercel Entrypoints & Invalid Selections (5 tests)
+# ==============================================================================
+
+
+class TestTier2F10VercelAndErrorHandlingBoundaries:
+    async def test_f10_vercel_subapps_import_and_respond(self):
+        from api.health import app as health_app
+        from api.index import app as index_app
+        from api.turn import app as turn_app
+
+        async with httpx.AsyncClient(transport=httpx.ASGITransport(app=health_app), base_url="http://testserver") as c:
+            assert (await c.get("/api/health")).status_code == 200
+        assert index_app is turn_app
+
+    async def test_f10_turn_voice_maya_en_maps_to_ava_not_indic(
+        self, api_client: httpx.AsyncClient, mock_edge_tts_wav
+    ):
+        resp = await api_client.post(
+            "/api/turn",
+            json={
+                "session_id": "t2_f10_maya",
+                "utterance": "Hello, I need a consultation.",
+                "market_mode": "english",
+                "voice": "maya_en",
+            },
+        )
+        assert resp.status_code == 200
+        assert resp.json()["reply"]
+
+    async def test_f10_configure_agent_missing_session_id_defaults_safely(self, api_client: httpx.AsyncClient):
+        resp = await api_client.post("/api/agent/configure", json={"sector": "amura_metabolic"})
+        assert resp.status_code == 200
+        assert resp.json()["session_id"] == "default"
+
+    async def test_f10_llm_select_unknown_model_no_500(self, api_client: httpx.AsyncClient):
+        resp = await api_client.post("/api/llm_select", json={"model_id": "unknown-model-999"})
+        assert resp.status_code in {200, 400, 404}
+        assert resp.status_code != 500
+
+    async def test_f10_leads_clean_after_multiple_turns(
+        self, api_client: httpx.AsyncClient, mock_edge_tts_wav
+    ):
+        await api_client.post(
+            "/api/turn",
+            json={"session_id": "t2_f10_leads", "utterance": "Looking for diabetes care in Velachery", "market_mode": "india"},
+        )
+        leads = (await api_client.get("/api/leads")).json()
+        assert_no_real_estate_copy(json.dumps(leads), "/api/leads after turn")

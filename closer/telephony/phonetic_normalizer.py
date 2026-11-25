@@ -32,7 +32,14 @@ class IndicPhoneticNormalizer:
         (r"\bbudget[-–]க்கு\b", "பட்ஜெட்டுக்கு"),
         (r"\bsite visit[-–]க்கு\b", "site visit-க்கு"),
         
-        # Real estate conversational currency & units
+        # Healthcare & clinical acronyms for clear TTS pronunciation
+        (r"\bHbA1c\b", "H B A 1 C"),
+        (r"\bPCOD\b", "P C O D"),
+        (r"\bOPD\b", "O P D"),
+        (r"\bNMT\b", "Natural Molecule Therapy"),
+        (r"\bMNT\b", "Medical Nutrition Therapy"),
+        (r"\bTSH\b", "T S H"),
+        # Real estate conversational currency & units (kept for backward compatibility)
         (r"\b1\.5\s*(?:Crores?|Cr|கோடி)[-–]?(?:க்குள்ள|க்கு)?\b", "ஒன்றரை கோடிக்குள்ள"),
         (r"\b1\.5\s*(?:Crores?|Cr|கோடி)\b", "ஒன்றரை கோடி"),
         (r"\b2\.5\s*(?:Crores?|Cr|கோடி)\b", "இரண்டரை கோடி"),

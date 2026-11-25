@@ -1,5 +1,5 @@
 """
-Integrations module for CLOSER AI: Google Calendar, Follow Up Boss CRM, and Twilio Telephony.
+Integrations module for CLOSER AI: Clinic Calendar, Clinical EHR/CRM, Twilio Telephony, and APILayer.
 """
 
 from src.closer.integrations.calendar import CalendarManager

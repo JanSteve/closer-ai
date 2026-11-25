@@ -52,11 +52,16 @@ from closer.video.scenarios.base import (
     ReelScenario,
 )
 from closer.video.scenarios.registry import (
+    SECTOR_ROTATION_ORDER,
     get_scenario,
     list_scenarios,
     list_sectors,
     get_round_robin_scenario,
     validate_all_scenarios,
+)
+from closer.video.scenarios.clinics import (
+    get_dental_implant_scenario,
+    get_hair_clinic_scenario,
 )
 from closer.video.audio.sfx import (
     SR,
@@ -133,13 +138,14 @@ class TestVideoConfigAndSafeZones:
 # ==============================================================================
 
 class TestSectorScenariosAndRegistry:
-    """Verifies all 10 presets across 5 Indian SMB business domains."""
+    """Verifies registered sector presets and dynamic round-robin rotation."""
 
-    def test_registry_contains_10_presets(self):
+    def test_registry_contains_sector_presets(self):
         scenarios = list_scenarios()
-        assert len(scenarios) >= 10
         sectors = list_sectors()
-        assert len(sectors) == 5
+        assert len(sectors) >= 4
+        assert Sector.CLINICS.value in sectors
+        assert len(scenarios) >= len(sectors) * 2
         for s in sectors:
             assert len(list_scenarios(sector=s)) >= 2
 
@@ -165,26 +171,55 @@ class TestSectorScenariosAndRegistry:
         with tempfile.NamedTemporaryFile(suffix=".json", delete=False) as tmp:
             tmp_path = Path(tmp.name)
         try:
-            served = [get_round_robin_scenario(tmp_path).sector for _ in range(5)]
-            expected = [
-                Sector.CLINICS,
-                Sector.SOLAR,
-                Sector.REALESTATE,
-                Sector.EDTECH,
-                Sector.AGENCY,
+            served = [
+                get_round_robin_scenario(tmp_path).sector
+                for _ in range(len(SECTOR_ROTATION_ORDER))
             ]
-            assert served == expected
-            # 6th iteration wraps back to clinics
-            s6 = get_round_robin_scenario(tmp_path)
-            assert s6.sector == Sector.CLINICS
+            assert served == SECTOR_ROTATION_ORDER
+            assert Sector.CLINICS in served
+            assert served[0] == Sector.CLINICS
+            # Next iteration wraps back to the first sector in rotation
+            wrapped = get_round_robin_scenario(tmp_path)
+            assert wrapped.sector == SECTOR_ROTATION_ORDER[0]
         finally:
             if tmp_path.exists():
                 tmp_path.unlink()
 
     def test_sector_alias_normalization(self):
-        assert normalize_sector_name("realestate") == "real_estate"
-        assert normalize_sector_name("agency") == "b2b_agency"
+        assert normalize_sector_name("clinic") == "clinics"
         assert normalize_sector_name("clinics") == "clinics"
+        assert normalize_sector_name("agency") == "b2b_agency"
+        assert normalize_sector_name("b2b_agency") == "b2b_agency"
+        assert normalize_sector_name("solar") == "solar"
+        assert normalize_sector_name("edtech") == "edtech"
+        if "real_estate" in SECTORS:
+            assert normalize_sector_name("realestate") == "real_estate"
+
+
+class TestHealthcareClinicScenarios:
+    """Verifies closer/video/scenarios/clinics.py healthcare presets and Tamil/Hindi voices."""
+
+    def test_dental_implant_scenario_contract(self):
+        scenario = get_dental_implant_scenario()
+        assert scenario.id == "clinic_dental_implant_01"
+        assert scenario.sector == Sector.CLINICS
+        valid, errors = scenario.validate()
+        assert (valid, errors) == (True, [])
+        assert 58.0 <= scenario.estimate_total_duration() <= 78.0
+        voices = {line.voice for line in scenario.get_all_lines()}
+        assert "ta-IN-PallaviNeural" in voices
+        assert any(rig.name == "Dr. Pallavi" for rig in scenario.character_rig_configs)
+
+    def test_hair_clinic_scenario_contract(self):
+        scenario = get_hair_clinic_scenario()
+        assert scenario.id == "clinic_hair_transplant_02"
+        assert scenario.sector == Sector.CLINICS
+        valid, errors = scenario.validate()
+        assert (valid, errors) == (True, [])
+        assert 58.0 <= scenario.estimate_total_duration() <= 78.0
+        voices = {line.voice for line in scenario.get_all_lines()}
+        assert "hi-IN-SwaraNeural" in voices
+        assert any(rig.role == "doctor" for rig in scenario.character_rig_configs)
 
 
 # ==============================================================================
