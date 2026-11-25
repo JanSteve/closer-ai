@@ -78,6 +78,12 @@ except Exception:
     APILayerUnifiedClient = None
 
 try:
+    from closer.voice_engine import NeuralVoiceEngine, KOKORO_MODEL_PATH
+except Exception:
+    NeuralVoiceEngine = None
+    KOKORO_MODEL_PATH = None
+
+try:
     from closer.telephony.indic_neural_engine import IndicNeuralVoiceEngine
 except Exception:
     IndicNeuralVoiceEngine = None
@@ -537,7 +543,33 @@ async def process_turn(request: Request):
             spoken_en = reply.replace("...", ",").replace("—", ",")
             rate = rate or "+1%"
             pitch = pitch or "+0Hz"
-            if _app_tts_engine:
+
+            # Prefer local ElevenLabs-grade Kokoro-82M 3-Way SOTA Blend when ONNX weights are available
+            if NeuralVoiceEngine and KOKORO_MODEL_PATH and KOKORO_MODEL_PATH.exists() and not os.getenv("VERCEL"):
+                try:
+                    import tempfile as _tmp
+                    kokoro_eng = NeuralVoiceEngine(default_agent="english")
+                    rate_delta = float(str(rate).replace("%", "")) / 100.0 if "%" in str(rate) else 0.0
+                    kokoro_speed = max(0.88, min(1.10, 0.98 + rate_delta))
+                    with _tmp.NamedTemporaryFile(suffix=".wav", delete=False) as tf:
+                        tmp_wav = tf.name
+                    await kokoro_eng.synthesize_to_file(
+                        spoken_en, tmp_wav, agent="english", speed_override=kokoro_speed
+                    )
+                    if os.path.exists(tmp_wav) and os.path.getsize(tmp_wav) > 1000:
+                        with open(tmp_wav, "rb") as wf:
+                            audio_bytes = wf.read()
+                        audio_b64 = base64.b64encode(audio_bytes).decode("utf-8")
+                        audio_fmt = "wav"
+                        tts_provider = "Kokoro-82M SOTA Blend (ElevenLabs-Grade Local)"
+                    try:
+                        os.remove(tmp_wav)
+                    except OSError:
+                        pass
+                except Exception as k_exc:
+                    tts_error = f"Kokoro fallback: {type(k_exc).__name__}"
+
+            if not audio_b64 and _app_tts_engine:
                 try:
                     audio_bytes, _ = _app_tts_engine.synthesize_sync(spoken_en, voice=actual_voice, rate=rate, pitch=pitch)
                     if audio_bytes:

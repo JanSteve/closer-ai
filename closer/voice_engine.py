@@ -64,9 +64,9 @@ VOICE_PROFILES["pallavi"] = VOICE_PROFILES["tamil"]
 VOICE_PROFILES["swati"] = VOICE_PROFILES["hindi"]
 
 DEFAULT_FILLERS: Dict[str, str] = {
-    "english": "Look, let me check the private allocation for you...",
-    "tamil": "கண்டிப்பா Sir, நான் உடனே check பண்ணி சொல்றேங்க...",
-    "hindi": "जी बिल्कुल, मैं अभी inventory details check करके बताती हूँ जी...",
+    "english": "Sure, let me check our Amura Health physician schedule for you.",
+    "tamil": "கண்டிப்பா Sir, நான் உடனே நம்ம Amura doctor schedule check பண்ணி சொல்றேங்க.",
+    "hindi": "जी बिल्कुल, मैं अभी Amura डॉक्टर का कंसल्टेशन स्लॉट चेक करके बताती हूँ जी.",
 }
 DEFAULT_FILLERS["signature"] = DEFAULT_FILLERS["english"]
 DEFAULT_FILLERS["pallavi"] = DEFAULT_FILLERS["tamil"]
@@ -120,8 +120,9 @@ class NeuralVoiceEngine:
         text: str,
         output_path: str,
         agent: Optional[str] = None,
-        sentence_pause: float = 0.40,
-        clause_pause: float = 0.20,
+        sentence_pause: float = 0.14,
+        clause_pause: float = 0.04,
+        speed_override: Optional[float] = None,
     ) -> str:
         """Synthesizes text to an audio file with automatic Indic phonetic normalization."""
         target_agent = (agent or self.current_agent).lower()
@@ -140,19 +141,27 @@ class NeuralVoiceEngine:
                 style_nicole = kokoro.get_voice_style("af_nicole")
                 style_bella = kokoro.get_voice_style("af_bella")
                 voice_style = (0.55 * style_heart) + (0.30 * style_nicole) + (0.15 * style_bella)
-                speed = float(profile.get("speed", 0.95))
+                speed = float(speed_override) if speed_override else float(profile.get("speed", 0.98))
 
-                samples, sample_rate = await loop.run_in_executor(
-                    None,
-                    lambda: kokoro.create(
-                        text=clean_text,
-                        voice=voice_style,
-                        speed=speed,
-                        lang="en-us",
-                        sentence_pause=sentence_pause,
-                        clause_pause=clause_pause,
-                    ),
-                )
+                def _run_kokoro():
+                    try:
+                        return kokoro.create(
+                            text=clean_text,
+                            voice=voice_style,
+                            speed=speed,
+                            lang="en-us",
+                            sentence_pause=sentence_pause,
+                            clause_pause=clause_pause,
+                        )
+                    except TypeError:
+                        return kokoro.create(
+                            text=clean_text,
+                            voice=voice_style,
+                            speed=speed,
+                            lang="en-us",
+                        )
+
+                samples, sample_rate = await loop.run_in_executor(None, _run_kokoro)
                 wav_path = output_path if output_path.endswith(".wav") else output_path.rsplit(".", 1)[0] + ".wav"
                 sf.write(wav_path, samples, sample_rate)
                 return wav_path
