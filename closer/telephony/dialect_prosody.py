@@ -103,6 +103,13 @@ _TAMIL_SPOKEN_REWRITES: List[Tuple[str, str]] = [
     (r"(?i)\bpayment\s+plan\b", "பேமெண்ட் பிளான்"),
     (r"(?i)\bpayment\s+options?\b", "பேமெண்ட் ஆப்ஷன்ஸ்"),
     (r"(?i)\bfloor\s+plan\b", "ஃப்ளோர் பிளான்"),
+    # Healthcare / Amura Health spoken Tanglish naturalization
+    (r"மருத்துவ\s*ஆலோசனை", "doctor consultation"),
+    (r"பரிசோதனை\s*முடிவுகளை", "lab reports-அ"),
+    (r"பரிசோதனை", "lab test"),
+    (r"முன்பதிவு\s*செய்யலாமா", "book பண்ணலாமா"),
+    (r"உறுதி\s*செய்யப்பட்டது", "confirm பண்ணியாச்சுங்க"),
+    (r"சந்தேகம்", "doubt"),
 ]
 
 # Formal/textbook Hindi -> warm Delhi/Mumbai spoken Hinglish
@@ -117,6 +124,9 @@ _HINDI_SPOKEN_REWRITES: List[Tuple[str, str]] = [
     (r"कृपया", "प्लीज़"),
     (r"वॉट्सऐप", "व्हाट्सएप"),
     (r"जानकारी\s*साझा\s*करने\s*के\s*लिए\s*बहुत\s*धन्यवाद", "बताने के लिए थैंक यू सो मच जी"),
+    (r"चिकित्सकीय\s*सलाह", "डॉक्टर की सलाह"),
+    (r"समीक्षा\s*करके", "अच्छे से देखकर"),
+    (r"पंजीकृत", "रजिस्टर्ड"),
 ]
 
 _DIALECT_FILLERS: Dict[str, Dict[str, str]] = {

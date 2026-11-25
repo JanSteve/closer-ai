@@ -603,12 +603,32 @@ document.addEventListener('DOMContentLoaded', () => {
   let isVoiceCallActive = false;
   let recognition = null;
   let isAiSpeaking = false;
+  let currentAiSpeechText = '';
+  let activeTurnAbortController = null;
+  let lastEmotionProsody = { rate: 1.0, pitch: 1.0 };
+
+  function interruptCurrentSpeech() {
+    const wasSpeaking = isAiSpeaking || (demoAudioPlayer && !demoAudioPlayer.paused);
+    const interrupted = wasSpeaking ? currentAiSpeechText : '';
+    if (activeTurnAbortController) {
+      try { activeTurnAbortController.abort(); } catch {}
+      activeTurnAbortController = null;
+    }
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    if (demoAudioPlayer) {
+      demoAudioPlayer.pause();
+      demoAudioPlayer.currentTime = 0;
+    }
+    isAiSpeaking = false;
+    stopSpeakingUI();
+    return { wasInterrupted: wasSpeaking, interruptedText: interrupted };
+  }
 
   function playAudioResponse(audioBase64, fallbackText, onEndedCallback, audioFormat = 'wav') {
     isAiSpeaking = true;
-    if (recognition) {
-      try { recognition.abort(); } catch {}
-    }
+    currentAiSpeechText = fallbackText || '';
 
     if (audioBase64) {
       lastAudioBase64 = audioBase64;
@@ -627,7 +647,7 @@ document.addEventListener('DOMContentLoaded', () => {
         isAiSpeaking = false;
         if (onEndedCallback) onEndedCallback();
         if (isVoiceCallActive) {
-          setTimeout(startListening, 300);
+          setTimeout(startListening, 250);
         }
       };
       demoAudioPlayer.onerror = () => {
@@ -641,43 +661,55 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function speakBrowserTTS(text, onEndedCallback) {
-    if (!('speechSynthesis' in window)) {
+    if (!('speechSynthesis' in window) || !text) {
       isAiSpeaking = false;
       if (onEndedCallback) onEndedCallback();
-      if (isVoiceCallActive) setTimeout(startListening, 300);
+      if (isVoiceCallActive) setTimeout(startListening, 250);
       return;
     }
     window.speechSynthesis.cancel();
     isAiSpeaking = true;
+    currentAiSpeechText = text;
 
-    const cleanText = text.replace(/₹/g, 'Rupees ').replace(/\$/g, 'Dollars ');
+    const cleanText = text.replace(/₹/g, 'Rupees ').replace(/\$/g, 'Dollars ').replace(/\.\.\./g, ', ');
     const utterance = new SpeechSynthesisUtterance(cleanText);
 
-    const voiceVal = voiceSelector ? voiceSelector.value : 'en-US-AriaNeural';
-    const isIndia = voiceVal.includes('en-IN') || currentMarket === 'india';
+    const voiceVal = voiceSelector ? voiceSelector.value : 'maya_en';
+    const isTamil = currentMarket === 'tamil' || voiceVal.includes('ta') || voiceVal.includes('priya');
+    const isHindi = currentMarket === 'hindi' || voiceVal.includes('hi') || voiceVal.includes('ritu');
     const voices = window.speechSynthesis.getVoices();
 
-    const targetVoice = voices.find((v) => {
-      if (isIndia) return v.lang.includes('IN') || v.lang.includes('en-GB');
-      return v.lang.includes('US') || v.lang.includes('en');
-    });
+    let targetVoice = null;
+    if (isTamil) {
+      utterance.lang = 'ta-IN';
+      targetVoice = voices.find((v) => v.lang.toLowerCase().includes('ta') && /natural|google|pallavi|valluvar/i.test(v.name))
+        || voices.find((v) => v.lang.toLowerCase().includes('ta'));
+    } else if (isHindi) {
+      utterance.lang = 'hi-IN';
+      targetVoice = voices.find((v) => v.lang.toLowerCase().includes('hi') && /natural|google|swara|lekha/i.test(v.name))
+        || voices.find((v) => v.lang.toLowerCase().includes('hi'));
+    } else {
+      utterance.lang = 'en-IN';
+      targetVoice = voices.find((v) => /natural|ava|samantha|neerja|google us|google uk/i.test(v.name) && v.lang.startsWith('en'))
+        || voices.find((v) => v.lang.includes('IN') || v.lang.includes('US') || v.lang.startsWith('en'));
+    }
 
     if (targetVoice) utterance.voice = targetVoice;
-    utterance.rate = 1.0;
-    utterance.pitch = 1.0;
+    utterance.rate = lastEmotionProsody.rate || 0.98;
+    utterance.pitch = lastEmotionProsody.pitch || 1.02;
 
     utterance.onstart = () => startSpeakingUI();
     utterance.onend = () => {
       stopSpeakingUI();
       isAiSpeaking = false;
       if (onEndedCallback) onEndedCallback();
-      if (isVoiceCallActive) setTimeout(startListening, 300);
+      if (isVoiceCallActive) setTimeout(startListening, 250);
     };
     utterance.onerror = () => {
       stopSpeakingUI();
       isAiSpeaking = false;
       if (onEndedCallback) onEndedCallback();
-      if (isVoiceCallActive) setTimeout(startListening, 300);
+      if (isVoiceCallActive) setTimeout(startListening, 250);
     };
 
     window.speechSynthesis.speak(utterance);
@@ -751,27 +783,34 @@ document.addEventListener('DOMContentLoaded', () => {
   async function executeTurn(utteranceText) {
     if (!utteranceText || !utteranceText.trim()) return;
     const text = utteranceText.trim();
-    const selectedVoice = voiceSelector ? voiceSelector.value : 'en-US-AriaNeural';
+    const { wasInterrupted, interruptedText } = interruptCurrentSpeech();
+    const selectedVoice = voiceSelector ? voiceSelector.value : 'maya_en';
     const selectedDialect = dialectSelector ? dialectSelector.value : undefined;
     const selectedSector = sectorSelector ? sectorSelector.value : 'healthcare';
     const modalEmotionBadge = document.getElementById('modalEmotionBadge');
+    const modalMemoryTag = document.getElementById('modalMemoryTag');
 
     if (demoSendBtn) {
       demoSendBtn.disabled = true;
-      demoSendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Processing...</span>';
+      demoSendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> <span>Listening...</span>';
     }
     startSpeakingUI();
+
+    activeTurnAbortController = new AbortController();
 
     try {
       const res = await fetch('/api/turn', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        signal: activeTurnAbortController.signal,
         body: JSON.stringify({
           session_id: closerSessionId,
           utterance: text,
           voice: selectedVoice,
           dialect: selectedDialect,
-          sector: selectedSector
+          sector: selectedSector,
+          barge_in: wasInterrupted,
+          interrupted_text: interruptedText || undefined
         })
       });
 
@@ -779,14 +818,26 @@ document.addEventListener('DOMContentLoaded', () => {
         const data = await res.json();
         if (modalAIText) modalAIText.textContent = `"${data.reply}"`;
         if (modalVadStatus && data.tts_provider) {
-          modalVadStatus.textContent = `● VOICE: ${data.tts_provider} • TONE: ${(data.voice_style || 'empathetic').toUpperCase()}`;
+          modalVadStatus.textContent = `● VOICE: ${data.tts_provider} • TONE: ${(data.voice_style || 'empathetic').toUpperCase()}${data.barge_in_handled ? ' • BARGE-IN' : ''}`;
         }
+        // Calibrate browser TTS prosody from backend emotion
+        const rateNum = parseFloat(String(data.tts_rate || '0').replace('%', '')) || 0;
+        lastEmotionProsody = {
+          rate: Math.max(0.85, Math.min(1.12, 1.0 + rateNum / 100)),
+          pitch: data.detected_emotion === 'anxious' || data.detected_emotion === 'pain_distress' ? 0.96 : 1.02
+        };
         if (modalEmotionBadge && data.detected_emotion) {
           const emo = String(data.detected_emotion).toUpperCase().replace('_', ' ');
           modalEmotionBadge.textContent = `EMOTION: ${emo}`;
           modalEmotionBadge.className = (data.emergency_108 || data.detected_emotion === 'pain_distress' || data.detected_emotion === 'urgent')
             ? 'dossier-badge amber display-font'
             : 'dossier-badge green display-font';
+        }
+        if (modalMemoryTag && data.session_memory) {
+          const fields = data.session_memory.captured_fields || [];
+          modalMemoryTag.textContent = fields.length
+            ? `${fields.join(' • ')} (${data.session_memory.turn_count} turns)`
+            : `Transcript recorded (${data.session_memory.turn_count || 1} turns)`;
         }
 
         if (data.dossier) {
@@ -982,6 +1033,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (btnLiveVoiceCall) {
     btnLiveVoiceCall.addEventListener('click', () => {
       if (!isVoiceCallActive) {
+        interruptCurrentSpeech();
         isVoiceCallActive = true;
         if (!recognition) recognition = initSpeechEngine();
         if (!recognition) {
@@ -1428,6 +1480,42 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       } finally {
         demoCallTriggerBtn.disabled = false;
+      }
+    });
+  }
+
+  // -------------------------------------------------------------------------
+  // 10. Post-Call Doctor Summary Dispatch (/api/call/doctor-summary)
+  // -------------------------------------------------------------------------
+  const btnSendDoctorSummary = document.getElementById('btnSendDoctorSummary');
+  const doctorDispatchResult = document.getElementById('doctorDispatchResult');
+
+  if (btnSendDoctorSummary) {
+    btnSendDoctorSummary.addEventListener('click', async () => {
+      btnSendDoctorSummary.disabled = true;
+      if (doctorDispatchResult) {
+        doctorDispatchResult.style.display = 'block';
+        doctorDispatchResult.textContent = 'Analyzing patient transcript & preparing doctor brief...';
+      }
+      try {
+        const res = await fetch('/api/call/doctor-summary', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: closerSessionId, channel: 'both' })
+        });
+        const data = await res.json();
+        if (res.ok && data.success && doctorDispatchResult) {
+          doctorDispatchResult.innerHTML =
+            `<strong>Doctor Brief Ready (${data.brief.urgency}):</strong> ${data.brief.concern}<br>` +
+            `<a href="${data.whatsapp_link}" target="_blank" rel="noopener noreferrer" style="color:#34d399;text-decoration:underline;margin-right:10px;">Send via WhatsApp ↗</a>` +
+            `<a href="${data.mailto_link}" style="color:#60a5fa;text-decoration:underline;">Send via Email (${data.doctor_email}) ↗</a>`;
+        }
+      } catch {
+        if (doctorDispatchResult) {
+          doctorDispatchResult.textContent = 'Doctor summary analyzed locally (ready to dispatch).';
+        }
+      } finally {
+        btnSendDoctorSummary.disabled = false;
       }
     });
   }

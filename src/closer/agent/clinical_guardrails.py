@@ -53,11 +53,26 @@ _EMERGENCY_PATTERNS: List[Tuple[str, str]] = [
 ]
 
 _INJECTION_PATTERNS: List[str] = [
-    r"ignore\s+(all\s+)?previous\s+instructions",
-    r"(reveal|output|print|show)\s+(your\s+)?(system\s+prompt|hidden\s+instructions|rules)",
-    r"bypass\s+(safety|guardrails|clinical\s+rules)",
-    r"\bjailbreak\b",
-    r"pretend\s+you\s+are\s+a\s+doctor\s+and\s+prescribe",
+    r"ignore\s+(all\s+)?(?:previous|prior|above)\s+instructions",
+    r"(reveal|output|print|show|repeat|dump)\s+(your\s+)?(system\s+prompt|hidden\s+instructions|rules|instructions\s+above)",
+    r"bypass\s+(safety|guardrails|clinical\s+rules|restrictions)",
+    r"\b(jailbreak|dan\s+mode|developer\s+mode|god\s+mode|unrestricted\s+mode)\b",
+    r"(pretend|act\s+as|roleplay)\s+(?:you\s+are|like)\s+(?:a\s+doctor|an?\s+unrestricted|someone\s+with\s+no\s+rules)",
+    r"(hypothetical(?:ly)?|for\s+(?:educational|research|fiction)\s+purposes?).*(prescribe|diagnose|hack|bypass|api\s*key)",
+    r"\b(forget\s+your\s+rules|override\s+clinical\s+safety|disregard\s+guidelines)\b",
+]
+
+_CONFIDENTIAL_PATTERNS: List[str] = [
+    r"\b(api[\s_-]?key|secret[\s_-]?key|env\s+var|\.env|password|credentials|database\s+schema|sqlite|source\s+code|backend\s+code)\b",
+    r"\b(other\s+patients?|patient\s+list|patient\s+database|someone\s+else'?s\s+(?:report|record|phone|data))\b",
+    r"\b(doctor'?s?\s+personal\s+(?:phone|number|address)|founder'?s?\s+private\s+(?:number|email)|internal\s+margin|revenue\s+data)\b",
+    r"(மற்ற\s+நோயாளி|டாக்டர்\s+பர்சனல்\s+நம்பர்|பாஸ்வேர்ட்|சீக்ரெட்)",
+    r"(दूसरे\s+मरीज़|डॉक्टर\s+का\s+पर्सनल\s+नंबर|पासवर्ड|सीक्रेट|डेटाबेस)",
+]
+
+_OFFTOPIC_RESTRICTED_PATTERNS: List[str] = [
+    r"\b(hack\s+into|exploit|sql\s+injection|phishing|malware|ransomware|build\s+a\s+bomb|weapon|illegal\s+drugs?)\b",
+    r"\b(write\s+python\s+code|crypto\s+signals?|stock\s+tips?|betting|gambling)\b",
 ]
 
 _PRESCRIBING_PATTERNS: List[str] = [
@@ -206,8 +221,46 @@ class ClinicalSafetyGuardrails:
                     action="block",
                     override_reply=(
                         "I am Amura Health's clinical front-desk coordinator. "
-                        "I cannot override clinical safety guardrails, reveal internal instructions, or issue medical diagnoses or prescriptions. "
+                        "I cannot override clinical safety guardrails, roleplay past restrictions, reveal internal instructions, or issue medical diagnoses or prescriptions. "
                         "How can I help you schedule a physician consultation?"
+                    ),
+                    dpdp_emergency_exemption=False,
+                    red_flags=[],
+                )
+
+        # 2b. Confidential / PHI / Internal Infrastructure Protection
+        for pattern in _CONFIDENTIAL_PATTERNS:
+            if re.search(pattern, t_low, re.IGNORECASE):
+                if lang == "tamil":
+                    c_msg = "மன்னிக்கவும், நோயாளிகளின் தனிப்பட்ட தகவல்கள், மருத்துவர்களின் தனிப்பட்ட எண்கள் அல்லது நிறுவனத்தின் ரகசியத் தகவல்களைப் பகிர முடியாது. உங்கள் மருத்துவ ஆலோசனைக்கு உதவட்டுமா?"
+                elif lang == "hindi":
+                    c_msg = "क्षमा करें, मैं अन्य मरीज़ों का डेटा, डॉक्टरों के पर्सनल नंबर या सिस्टम से जुड़ी गोपनीय जानकारी साझा नहीं कर सकती। क्या मैं आपकी डॉक्टर कंसल्टेशन में मदद करूँ?"
+                else:
+                    c_msg = (
+                        "I cannot share confidential internal details, system credentials, doctor personal contacts, or other patients' health records under DPDP privacy policy. "
+                        "I'm happy to help with your own appointment or Amura Health care inquiries."
+                    )
+                return SafetyDecision(
+                    allowed=False,
+                    emergency_108=False,
+                    category="confidential_blocked",
+                    action="block",
+                    override_reply=c_msg,
+                    dpdp_emergency_exemption=False,
+                    red_flags=[],
+                )
+
+        # 2c. Illegal / Off-topic Restriction
+        for pattern in _OFFTOPIC_RESTRICTED_PATTERNS:
+            if re.search(pattern, t_low, re.IGNORECASE):
+                return SafetyDecision(
+                    allowed=False,
+                    emergency_108=False,
+                    category="off_topic_restricted",
+                    action="block",
+                    override_reply=(
+                        "I am strictly scoped to legal, clinically appropriate Amura Health patient care, OPD scheduling, and metabolic program support. "
+                        "How can I assist with your health consultation today?"
                     ),
                     dpdp_emergency_exemption=False,
                     red_flags=[],

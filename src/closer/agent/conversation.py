@@ -237,16 +237,21 @@ class ConversationEngine:
         self,
         user_utterance: str,
         consent_granted: Optional[bool] = None,
+        barge_in: bool = False,
+        interrupted_text: Optional[str] = None,
     ) -> str:
         """
         Receives patient transcript turn, runs pre-LLM ClinicalSafetyGuardrails and EmotionDetector,
-        extracts clinical entities, handles schedule friction/objections/booking,
+        extracts clinical entities, handles mid-speech barge-in re-parsing & memory continuity,
         and returns a guaranteed non-empty clinical care response.
         """
         clean_input = (user_utterance or "").strip()
         if not clean_input:
             self.dossier.follow_up_note = self.dossier.follow_up_note or "Awaiting caller input."
             return f"I'm listening — whenever you're ready, please share how {self.business_name} can help you today."
+
+        if barge_in and interrupted_text:
+            self.messages.append({"role": "assistant", "content": f"[INTERRUPTED MID-SPEECH]: {interrupted_text[:120]}"})
 
         self.messages.append({"role": "user", "content": clean_input})
         self.turn_count += 1
@@ -264,6 +269,9 @@ class ConversationEngine:
         )
         self.last_safety = safety
         self.last_emotion = emotion
+        if not hasattr(self, "emotion_history"):
+            self.emotion_history = []
+        self.emotion_history.append(emotion.emotion.value)
 
         # Sync dossier emotion, safety & consent immediately
         self.dossier.detected_emotion = emotion.emotion.value
@@ -297,11 +305,15 @@ class ConversationEngine:
                 )
             else:
                 self.dossier.follow_up_note = f"Guardrail ({safety.category}) enforced cleanly."
-            self._update_telemetry(clean_input, safety.override_reply)
-            self.messages.append({"role": "assistant", "content": safety.override_reply})
-            return safety.override_reply
+            reply_out = safety.override_reply
+            if barge_in and safety.category not in ("prompt_injection", "confidential_blocked", "off_topic_restricted"):
+                prefix = "சரிங்க Sir — " if self.market_mode == "tamil" else ("जी बिल्कुल — " if self.market_mode == "hindi" else "Got it, go right ahead — ")
+                reply_out = prefix + reply_out
+            self._update_telemetry(clean_input, reply_out)
+            self.messages.append({"role": "assistant", "content": reply_out})
+            return reply_out
 
-        # 2. Extract clinical entities & biomarkers
+        # 2. Extract clinical entities & biomarkers (updates persistent session memory)
         self._extract_entities(clean_input)
 
         # 3. Route by language / sector
@@ -1315,3 +1327,25 @@ class ConversationEngine:
             transcript=self.messages,
             dossier=dossier_data,
         )
+
+    def get_memory_summary(self) -> Dict[str, Any]:
+        """Returns captured clinical facts so the assistant never re-asks answered questions."""
+        d = self.export_dossier()
+        remembered: List[str] = []
+        concern = getattr(d, "chief_concern", None) or getattr(d, "condition_category", None)
+        labs = getattr(d, "biomarker_hba1c", None) or getattr(d, "hba1c_or_biomarker", None) or getattr(d, "lab_reports_summary", None)
+        slot = getattr(d, "consult_slot", None) or getattr(d, "appointment_datetime", None)
+        consent = getattr(d, "consent_status", None)
+        if concern:
+            remembered.append(f"Concern: {concern}")
+        if labs:
+            remembered.append(f"Labs: {labs}")
+        if slot:
+            remembered.append(f"Slot: {slot}")
+        if consent and consent != "pending":
+            remembered.append(f"Consent: {consent}")
+        return {
+            "turn_count": self.turn_count,
+            "captured_fields": remembered,
+            "emotion_history": list(getattr(self, "emotion_history", [])),
+        }

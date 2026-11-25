@@ -413,6 +413,8 @@ async def process_turn(request: Request):
         sector = data.get("sector")
         business_name = data.get("business_name")
         explicit_mode = data.get("market_mode")
+        barge_in = bool(data.get("barge_in", False))
+        interrupted_text = data.get("interrupted_text")
 
         if not utterance.strip() and custom_text.strip():
             utterance = custom_text.strip()
@@ -470,7 +472,15 @@ async def process_turn(request: Request):
             else:
                 reply = "Hello! Maya calling from Amura Health Patient Care in Velachery, Chennai. I noticed you requested a metabolic health consultation—are you looking into diabetes reversal, thyroid care, or a specialist OPD visit?"
         elif engine:
-            reply = engine.process_user_turn(utterance)
+            reply = engine.process_user_turn(
+                utterance,
+                barge_in=barge_in,
+                interrupted_text=str(interrupted_text) if interrupted_text else None,
+            )
+            if barge_in and not (dossier_peek := getattr(engine, "dossier", None) and getattr(engine.dossier, "emergency_108", False)):
+                if not any(reply.startswith(p) for p in ("Got it,", "சரிங்க", "जी बिल्कुल", "Oh, go ahead")):
+                    prefix = "சரிங்க Sir — " if inferred_mode == "tamil" else ("जी बिल्कुल — " if inferred_mode == "hindi" else "Got it, go right ahead — ")
+                    reply = prefix + reply
         else:
             reply = f"Thank you for contacting Amura Health Patient Care. How can I assist you with your consultation today?"
 
@@ -576,9 +586,11 @@ async def process_turn(request: Request):
             "tts_rate": rate or "+0%",
             "tts_pitch": pitch or "+0Hz",
             "emergency_108": bool(dossier.get("emergency_108", False)),
-            "safety_flag": "emergency_108" if dossier.get("emergency_108") else (getattr(engine, "last_safety_category", None) or "safe"),
+            "safety_flag": "emergency_108" if dossier.get("emergency_108") else (dossier.get("safety_flag") or "safe"),
             "safety_category": "emergency_108" if dossier.get("emergency_108") else "safe",
             "consent_status": dossier.get("consent_status", "pending"),
+            "barge_in_handled": barge_in,
+            "session_memory": engine.get_memory_summary() if (engine and hasattr(engine, "get_memory_summary")) else {"turn_count": 1, "captured_fields": []},
             "audio_base64": audio_b64,
             "audio_format": audio_fmt,
             "tts_provider": tts_provider,
@@ -702,6 +714,40 @@ async def trigger_demo_phone_call(request: Request):
         },
         "message": f"Demo call pipeline validated for {cleaned_digits} ({lang_key.title()}). {fallback_note}",
     })
+
+
+@app.post("/api/call/doctor-summary")
+async def send_doctor_call_summary(request: Request):
+    """Analyzes the patient call session and dispatches the clinical brief to the doctor's Email / WhatsApp."""
+    try:
+        data = await request.json()
+    except Exception:
+        data = {}
+
+    session_id = str(data.get("session_id", "default") or "default")
+    channel = str(data.get("channel", "both") or "both").lower()
+    doctor_email = data.get("doctor_email")
+    doctor_whatsapp = data.get("doctor_whatsapp")
+
+    eng = _get_session_engine(session_id)
+    dossier = eng.export_dossier().model_dump() if eng else {"full_name": "Patient Inquiry", "chief_concern": "Metabolic Care"}
+    transcript = getattr(eng, "messages", []) if eng else []
+    emotions = getattr(eng, "emotion_history", []) if eng else []
+
+    from src.closer.integrations.doctor_dispatch import analyze_call_for_doctor, dispatch_to_doctor
+    brief = analyze_call_for_doctor(
+        dossier=dossier,
+        transcript=transcript,
+        emotion_history=emotions,
+        business_name=getattr(eng, "business_name", "Amura Health (Velachery, Chennai)") if eng else "Amura Health (Velachery, Chennai)",
+    )
+    result = dispatch_to_doctor(
+        brief=brief,
+        channel=channel,
+        doctor_email=doctor_email,
+        doctor_whatsapp=doctor_whatsapp,
+    )
+    return JSONResponse(content=result)
 
 
 # -----------------------------------------------------------------------------
