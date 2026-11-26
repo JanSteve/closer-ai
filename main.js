@@ -971,6 +971,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const liveVoiceText = document.getElementById('liveVoiceText');
 
   let micStream = null;
+  let mediaRecorder = null;
+  let recordedChunks = [];
+  let speechFatalError = false;
+  let noSpeechRetries = 0;
 
   async function ensureMicPermission() {
     if (micStream && micStream.active) return true;
@@ -989,14 +993,71 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  function initSpeechEngine() {
-    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRec) {
+  function startMediaRecorderFallback() {
+    if (!micStream || typeof MediaRecorder === 'undefined') {
+      isVoiceCallActive = false;
+      if (btnLiveVoiceCall) btnLiveVoiceCall.classList.remove('listening');
+      if (liveVoiceIcon) liveVoiceIcon.className = 'fa-solid fa-microphone';
+      if (liveVoiceText) liveVoiceText.textContent = 'Start Voice Call (Speak)';
       if (modalVadStatus) {
-        modalVadStatus.textContent = '● BROWSER SPEECH API UNAVAILABLE — TYPE BELOW & CLICK SEND';
+        modalVadStatus.textContent = '● VOICE INPUT UNAVAILABLE HERE — TYPE BELOW & CLICK SEND';
         modalVadStatus.style.color = '#fbbf24';
       }
       if (demoUtteranceInput) demoUtteranceInput.focus();
+      return;
+    }
+    recordedChunks = [];
+    try {
+      mediaRecorder = new MediaRecorder(micStream);
+    } catch {
+      isVoiceCallActive = false;
+      return;
+    }
+    mediaRecorder.ondataavailable = (ev) => {
+      if (ev.data && ev.data.size > 0) recordedChunks.push(ev.data);
+    };
+    mediaRecorder.onstop = async () => {
+      const blob = new Blob(recordedChunks, { type: 'audio/webm' });
+      recordedChunks = [];
+      if (blob.size < 400) return;
+      if (modalVadStatus) {
+        modalVadStatus.textContent = '● TRANSCRIBING VOICE...';
+        modalVadStatus.style.color = '#38bdf8';
+      }
+      try {
+        const fd = new FormData();
+        fd.append('audio', blob, 'speech.webm');
+        fd.append('language', currentMarket === 'tamil' ? 'ta' : (currentMarket === 'hindi' ? 'hi' : 'en'));
+        const res = await fetch('/api/stt', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (data.transcript && data.transcript.trim()) {
+          if (demoUtteranceInput) demoUtteranceInput.value = data.transcript.trim();
+          executeTurn(data.transcript.trim());
+        } else if (modalVadStatus) {
+          modalVadStatus.textContent = '● COULD NOT TRANSCRIBE IN WEBVIEW — TYPE BELOW OR OPEN IN CHROME';
+          modalVadStatus.style.color = '#fbbf24';
+          if (demoUtteranceInput) demoUtteranceInput.focus();
+        }
+      } catch {
+        if (modalVadStatus) {
+          modalVadStatus.textContent = '● TYPE BELOW & CLICK SEND (CHROME NEEDED FOR LIVE MIC)';
+          modalVadStatus.style.color = '#fbbf24';
+        }
+      }
+    };
+    mediaRecorder.start();
+    if (btnLiveVoiceCall) btnLiveVoiceCall.classList.add('listening');
+    if (liveVoiceIcon) liveVoiceIcon.className = 'fa-solid fa-stop';
+    if (liveVoiceText) liveVoiceText.textContent = 'Recording... (Click to Send)';
+    if (modalVadStatus) {
+      modalVadStatus.textContent = '● RECORDING VOICE — SPEAK NOW, THEN CLICK BUTTON TO SEND';
+      modalVadStatus.style.color = '#ef4444';
+    }
+  }
+
+  function initSpeechEngine() {
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRec || speechFatalError) {
       return null;
     }
     const rec = new SpeechRec();
@@ -1005,12 +1066,12 @@ document.addEventListener('DOMContentLoaded', () => {
     rec.maxAlternatives = 1;
 
     rec.onstart = () => {
+      noSpeechRetries = 0;
       if (btnLiveVoiceCall && isVoiceCallActive) {
         btnLiveVoiceCall.classList.add('listening');
         if (liveVoiceIcon) liveVoiceIcon.className = 'fa-solid fa-circle-dot';
         if (liveVoiceText) liveVoiceText.textContent = 'Listening (Speak Now)...';
       }
-      startSpeakingUI();
       if (modalVadStatus) {
         modalVadStatus.textContent = '● LISTENING (MIC ACTIVE — SAY "HELLO")';
         modalVadStatus.style.color = '#ef4444';
@@ -1031,7 +1092,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (demoUtteranceInput) {
         demoUtteranceInput.value = (finalText || interimText).trim();
       }
-      // Mid-speech barge-in if user starts speaking clearly while AI is talking
       if ((interimText.trim().length > 2 || finalText.trim().length > 0) && isAiSpeaking) {
         interruptCurrentSpeech();
       }
@@ -1045,6 +1105,7 @@ document.addEventListener('DOMContentLoaded', () => {
     rec.onerror = (e) => {
       console.warn('Speech recognition notice:', e.error);
       if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
+        speechFatalError = true;
         isVoiceCallActive = false;
         if (btnLiveVoiceCall) btnLiveVoiceCall.classList.remove('listening');
         if (liveVoiceIcon) liveVoiceIcon.className = 'fa-solid fa-microphone';
@@ -1055,20 +1116,30 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         return;
       }
-      if (e.error === 'network' && modalVadStatus) {
-        modalVadStatus.textContent = '● SPEECH SERVICE NETWORK ISSUE — USE CHROME OR TYPE BELOW';
-        modalVadStatus.style.color = '#fbbf24';
+      if (e.error === 'network' || e.error === 'audio-capture') {
+        // Prevent infinite blinking loop in webviews; switch cleanly to MediaRecorder push-to-send
+        speechFatalError = true;
+        try { rec.abort(); } catch {}
+        if (isVoiceCallActive) {
+          startMediaRecorderFallback();
+        }
+        return;
+      }
+      if (e.error === 'no-speech') {
+        noSpeechRetries += 1;
       }
     };
 
     rec.onend = () => {
-      if (isVoiceCallActive && !isAiSpeaking) {
+      if (speechFatalError) return;
+      if (isVoiceCallActive && !isAiSpeaking && noSpeechRetries < 3) {
         setTimeout(() => {
-          if (isVoiceCallActive && !isAiSpeaking) {
+          if (isVoiceCallActive && !isAiSpeaking && !speechFatalError) {
             startListening();
           }
-        }, 250);
-      } else if (!isVoiceCallActive) {
+        }, 400);
+      } else {
+        isVoiceCallActive = false;
         if (btnLiveVoiceCall) btnLiveVoiceCall.classList.remove('listening');
         if (liveVoiceIcon) liveVoiceIcon.className = 'fa-solid fa-microphone';
         if (liveVoiceText) liveVoiceText.textContent = 'Start Voice Call (Speak)';
@@ -1080,8 +1151,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function startListening() {
     if (!isVoiceCallActive || isAiSpeaking) return;
+    if (speechFatalError || !(window.SpeechRecognition || window.webkitSpeechRecognition)) {
+      startMediaRecorderFallback();
+      return;
+    }
     if (!recognition) recognition = initSpeechEngine();
-    if (!recognition) return;
+    if (!recognition) {
+      startMediaRecorderFallback();
+      return;
+    }
     recognition.lang = currentMarket === 'tamil' ? 'ta-IN' : (currentMarket === 'hindi' ? 'hi-IN' : 'en-IN');
     try {
       recognition.start();
@@ -1099,16 +1177,15 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
         isVoiceCallActive = true;
-        if (!recognition) recognition = initSpeechEngine();
-        if (!recognition) {
-          isVoiceCallActive = false;
-          return;
-        }
+        noSpeechRetries = 0;
         btnLiveVoiceCall.classList.add('listening');
         if (liveVoiceText) liveVoiceText.textContent = 'Connecting Mic...';
         startListening();
       } else {
         isVoiceCallActive = false;
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+          try { mediaRecorder.stop(); } catch {}
+        }
         if (demoAudioPlayer) demoAudioPlayer.pause();
         if (recognition) {
           try { recognition.abort(); } catch {}
