@@ -65,7 +65,7 @@ _INJECTION_PATTERNS: List[str] = [
 _CONFIDENTIAL_PATTERNS: List[str] = [
     r"\b(api[\s_-]?key|secret[\s_-]?key|env\s+var|\.env|password|credentials|database\s+schema|sqlite|source\s+code|backend\s+code)\b",
     r"\b(other\s+patients?|patient\s+list|patient\s+database|someone\s+else'?s\s+(?:report|record|phone|data))\b",
-    r"\b((?:doctor|dr\.?|physician|founder|ceo|saravanan|godwin)(?:\s+[a-z]+)?'?s?\s+(?:personal|private|home)\s+(?:phone|number|mobile|address|email)|internal\s+margin|revenue\s+data)\b",
+    r"\b((?:doctor|dr\.?|physician|founder|ceo|saravanan|godwin|his|her)(?:\s+[a-z]+)?'?s?\s+(?:personal|private|home|direct)\s+(?:phone|number|mobile|cell|whatsapp|address|email)|(?:dr\.?|doctor|godwin|saravanan)(?:\s+[a-z]+)?'?s?\s+(?:whatsapp|cell|mobile)\b|internal\s+margin|revenue\s+data)\b",
     r"(மற்ற\s+நோயாளி|டாக்டர்\s+பர்சனல்\s+நம்பர்|பாஸ்வேர்ட்|சீக்ரெட்)",
     r"(दूसरे\s+मरीज़|डॉक्टर\s+का\s+पर्सनल\s+नंबर|पासवर्ड|सीक्रेट|डेटाबेस)",
 ]
@@ -214,16 +214,30 @@ class ClinicalSafetyGuardrails:
         # 2. Prompt Injection / Jailbreak blocking
         for pattern in _INJECTION_PATTERNS:
             if re.search(pattern, t_low, re.IGNORECASE):
+                if lang == "tamil":
+                    inj_msg = (
+                        "நான் Amura Health மருத்துவ ஆலோசனை ஒருங்கிணைப்பாளர். "
+                        "பாதுகாப்பு விதிகளை மீறவோ, உள் விவரங்களைப் பகிரவோ, மருந்து பரிந்துரைக்கவோ முடியாது. "
+                        "உங்கள் மருத்துவர் ஆலோசனையை முன்பதிவு செய்ய உதவட்டுமா?"
+                    )
+                elif lang == "hindi":
+                    inj_msg = (
+                        "मैं Amura Health की क्लिनिकल केयर कोऑर्डिनेटर हूँ। "
+                        "मैं सुरक्षा नियम नहीं तोड़ सकती और न ही कोई दवा या निदान बता सकती हूँ। "
+                        "क्या मैं आपका डॉक्टर कंसल्टेशन बुक करूँ?"
+                    )
+                else:
+                    inj_msg = (
+                        "I am Amura Health's clinical front-desk coordinator. "
+                        "I cannot override clinical safety guardrails, roleplay past restrictions, reveal internal instructions, or issue medical diagnoses or prescriptions. "
+                        "How can I help you schedule a physician consultation?"
+                    )
                 return SafetyDecision(
                     allowed=False,
                     emergency_108=False,
                     category="prompt_injection",
                     action="block",
-                    override_reply=(
-                        "I am Amura Health's clinical front-desk coordinator. "
-                        "I cannot override clinical safety guardrails, roleplay past restrictions, reveal internal instructions, or issue medical diagnoses or prescriptions. "
-                        "How can I help you schedule a physician consultation?"
-                    ),
+                    override_reply=inj_msg,
                     dpdp_emergency_exemption=False,
                     red_flags=[],
                 )
