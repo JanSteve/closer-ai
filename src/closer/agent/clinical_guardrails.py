@@ -65,7 +65,7 @@ _INJECTION_PATTERNS: List[str] = [
 _CONFIDENTIAL_PATTERNS: List[str] = [
     r"\b(api[\s_-]?key|secret[\s_-]?key|env\s+var|\.env|password|credentials|database\s+schema|sqlite|source\s+code|backend\s+code)\b",
     r"\b(other\s+patients?|patient\s+list|patient\s+database|someone\s+else'?s\s+(?:report|record|phone|data))\b",
-    r"\b(doctor'?s?\s+personal\s+(?:phone|number|address)|founder'?s?\s+private\s+(?:number|email)|internal\s+margin|revenue\s+data)\b",
+    r"\b((?:doctor|dr\.?|physician|founder|ceo|saravanan|godwin)(?:\s+[a-z]+)?'?s?\s+(?:personal|private|home)\s+(?:phone|number|mobile|address|email)|internal\s+margin|revenue\s+data)\b",
     r"(மற்ற\s+நோயாளி|டாக்டர்\s+பர்சனல்\s+நம்பர்|பாஸ்வேர்ட்|சீக்ரெட்)",
     r"(दूसरे\s+मरीज़|डॉक्टर\s+का\s+पर्सनल\s+नंबर|पासवर्ड|सीक्रेट|डेटाबेस)",
 ]
