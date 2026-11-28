@@ -175,16 +175,26 @@ def normalize_speech_text(text: str) -> str:
     clean = re.sub(r"(?:Ticket\s*)?#?CC-(\d+)", r"Ticket C-C \1", clean, flags=re.IGNORECASE)
     clean = re.sub(r"(?:Ticket\s*)?#?AM-(\d+)", r"Ticket A-M \1", clean, flags=re.IGNORECASE)
 
+    has_indic = any("\u0900" <= c <= "\u097f" or "\u0b80" <= c <= "\u0bff" for c in clean)
+
     # 5. Time & Scheduling Normalization
-    clean = re.sub(r"\b(\d{1,2}):00\s*(am|a\.m\.)\b", r"\1 A-M", clean, flags=re.IGNORECASE)
-    clean = re.sub(r"\b(\d{1,2}):00\s*(pm|p\.m\.)\b", r"\1 P-M", clean, flags=re.IGNORECASE)
-    clean = re.sub(r"\b(\d{1,2}):(\d{2})\s*(am|a\.m\.)\b", r"\1 \2 A-M", clean, flags=re.IGNORECASE)
-    clean = re.sub(r"\b(\d{1,2}):(\d{2})\s*(pm|p\.m\.)\b", r"\1 \2 P-M", clean, flags=re.IGNORECASE)
-    clean = re.sub(r"\b(\d{1,2})\s*(am|a\.m\.)\b", r"\1 A-M", clean, flags=re.IGNORECASE)
-    clean = re.sub(r"\b(\d{1,2})\s*(pm|p\.m\.)\b", r"\1 P-M", clean, flags=re.IGNORECASE)
-    clean = re.sub(r"\bpst\b", "Pacific Time", clean, flags=re.IGNORECASE)
-    clean = re.sub(r"\best\b", "Eastern Time", clean, flags=re.IGNORECASE)
-    clean = re.sub(r"\bist\b", "Indian Standard Time", clean, flags=re.IGNORECASE)
+    if has_indic:
+        # In spoken Tamil/Hindi, EdgeTTS already adds 'மணி/நிமிடம்' or 'बजकर/मिनट' when reading HH:MM,
+        # so remove redundant trailing 'மணி' / 'बजे' after HH:MM and drop 'IST'.
+        clean = re.sub(r"(\d{1,2}:\d{2})\s*மணி(?:க்கு)?", lambda m: f"{m.group(1)} மணிக்கு" if "மணிக்கு" in m.group(0) else m.group(1), clean)
+        clean = re.sub(r"(\d{1,2}):(\d{2})\s*மணிக்கு", lambda m: f"{m.group(1)} மணிக்கு" if m.group(2) == "00" else f"{m.group(1)} {m.group(2)}க்கு", clean)
+        clean = re.sub(r"(\d{1,2}:\d{2})\s*बजे", r"\1", clean)
+        clean = re.sub(r"\s*\bIST\b", "", clean)
+    else:
+        clean = re.sub(r"\b(\d{1,2}):00\s*(am|a\.m\.)\b", r"\1 AM", clean, flags=re.IGNORECASE)
+        clean = re.sub(r"\b(\d{1,2}):00\s*(pm|p\.m\.)\b", r"\1 PM", clean, flags=re.IGNORECASE)
+        clean = re.sub(r"\b(\d{1,2}):(\d{2})\s*(am|a\.m\.)\b", r"\1:\2 AM", clean, flags=re.IGNORECASE)
+        clean = re.sub(r"\b(\d{1,2}):(\d{2})\s*(pm|p\.m\.)\b", r"\1:\2 PM", clean, flags=re.IGNORECASE)
+        clean = re.sub(r"\b(\d{1,2})\s*(am|a\.m\.)\b", r"\1 AM", clean, flags=re.IGNORECASE)
+        clean = re.sub(r"\b(\d{1,2})\s*(pm|p\.m\.)\b", r"\1 PM", clean, flags=re.IGNORECASE)
+        clean = re.sub(r"\bpst\b", "Pacific Time", clean, flags=re.IGNORECASE)
+        clean = re.sub(r"\best\b", "Eastern Time", clean, flags=re.IGNORECASE)
+        clean = re.sub(r"\bist\b", "I-S-T", clean, flags=re.IGNORECASE)
 
     # 6. Street & Address Expansions
     clean = re.sub(r"\b([A-Z][a-zA-Z]+)\s+Blvd\.?\b", r"\1 Boulevard", clean)
@@ -199,21 +209,21 @@ def normalize_speech_text(text: str) -> str:
     clean = re.sub(r"\[(?:pause|cognitive_pause|break)(?::\s*\d+m?s)?\]", "... ", clean, flags=re.IGNORECASE)
     clean = re.sub(r"<break\s+[^>]*\/?>", "... ", clean, flags=re.IGNORECASE)
 
-    # 8. Acoustic Breathing Pauses (English)
+    # 8. Smooth Connected Conversational Flow (no robotic '...' gaps)
     clean = re.sub(
         r"^(Gotcha|Understood|Certainly|Wonderful|I understand|Totally understand|Right|Fair enough)\b(?:\.{2,}|[,!.]*)\s*",
-        r"\1... ",
+        r"\1, ",
         clean,
         flags=re.IGNORECASE,
     )
-    clean = re.sub(r"^(Mm-hmm|mm-hmm|Mmhmm|mmhmm)\b(?:\.{2,}|[,!.]*)\s*", "Mm-hmm... ", clean, flags=re.IGNORECASE)
-    clean = re.sub(r"^(Uh|uh|Um|um)\b(?:\.{2,}|[,!.]*)\s*", lambda m: f"{m.group(1).capitalize()}... ", clean, flags=re.IGNORECASE)
-    clean = re.sub(r"^(Well)\b(?:\.{2,}|[,!.]*)\s*", "Well... ", clean, flags=re.IGNORECASE)
+    clean = re.sub(r"^(Mm-hmm|mm-hmm|Mmhmm|mmhmm)\b(?:\.{2,}|[,!.]*)\s*", "Mm-hmm, ", clean, flags=re.IGNORECASE)
+    clean = re.sub(r"^(Uh|uh|Um|um)\b(?:\.{2,}|[,!.]*)\s*", lambda m: f"{m.group(1).capitalize()}, ", clean, flags=re.IGNORECASE)
+    clean = re.sub(r"^(Well)\b(?:\.{2,}|[,!.]*)\s*", "Well, ", clean, flags=re.IGNORECASE)
 
-    clean = re.sub(r"([.!?।]\s+)(mm-hmm|mmhmm)\b(?:\.{2,}|[,!.]*)\s*", r"\1Mm-hmm... ", clean, flags=re.IGNORECASE)
+    clean = re.sub(r"([.!?।]\s+)(mm-hmm|mmhmm)\b(?:\.{2,}|[,!.]*)\s*", r"\1Mm-hmm, ", clean, flags=re.IGNORECASE)
     clean = re.sub(
         r"([.!?।]\s+)(uh|um)\b(?:\.{2,}|[,!.]*)\s*",
-        lambda m: f"{m.group(1)}{m.group(2).capitalize()}... ",
+        lambda m: f"{m.group(1)}{m.group(2).capitalize()}, ",
         clean,
         flags=re.IGNORECASE,
     )
